@@ -14,7 +14,6 @@ public class CorrectForPCs {
 		String vectorFolder = "E:/Groningen/Data/PublicSamples/100SamplesTest/Rsample/TESTexpression/";
 		String PCsToAdjust = "0";//calling this function with 0 will just rotate the matrix back without adjusting for any PCs.
 		
-		
 		checkArgs(args);
 		if(!System.getProperty("user.dir").contains("E:\\Groningen\\Workspace"))
 		{
