@@ -12,6 +12,7 @@ import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
+import java.util.Enumeration;
 import java.util.Hashtable;
 import java.nio.file.Path;
 
@@ -337,7 +338,7 @@ public class Matrix
 	}
 	public void print(int maxX, int maxY, String fileName, int decimals)
 	{
-		Timer timer = null;
+		//Timer timer = null;
 	
 		if(maxX > this.rowNames.length || maxX < 0)
 			maxX = this.rowNames.length;
@@ -346,7 +347,7 @@ public class Matrix
 	
 		if(rowNames.length*colNames.length>10000000)//if the files is big report how far its along occasionally
 		{
-			timer = new Timer();
+			//timer = new Timer();
 		}
 				
 		try 
@@ -400,7 +401,7 @@ public class Matrix
 				if(x%(100000000/maxY)==0 && x>0)//print time 
 				{
 					
-					double percentage = (((double)x)/((double)maxX));
+					//double percentage = (((double)x)/((double)maxX));
 					//System.out.println(df.format(percentage*100) + " % of the file has been saved");
 					//timer.print(percentage);
 				}
@@ -501,7 +502,7 @@ public class Matrix
 		temp.colNames[0] = "Average";
 		for(int y = 0; y < colNames.length; y++)
 		{
-			temp.values[y][0] = getAverage(y);
+			temp.values[y][0] = getAverageCol(y);
 		}
 		return temp;
 	}
@@ -526,7 +527,7 @@ public class Matrix
 		avg /= colNames.length;
 		return avg;
 	}
-	public double getAverage(int col)
+	public double getAverageCol(int col)
 	{
 		double avg = 0;
 		for(int x = 0; x < rowNames.length; x++)
@@ -541,20 +542,35 @@ public class Matrix
 	public void adjustForAverageCol(Matrix columnAverages, int col)
 	{
 		double average = 0;
-		if(columnAverages != null)
-			average = getAverage(col);
+		if(columnAverages == null)
+			average = getAverageCol(col);
 		else
 			average = columnAverages.values[col][0];
 		for(int x = 0; x < rowNames.length; x++)
 		{
+			//System.out.println("x =" + x + " col =" + col + " values[x][col]=" + values[x][col] + " average=" + average);
 			values[x][col]-= average;
 		}
 	}
 	public void adjustForAverageRow(Matrix rowAverages, int row)
 	{
 		double average = 0;
+		Hashtable<String, Integer> averagesRowHash = null;
 		if(rowAverages != null)
-			average = rowAverages.values[row][0];
+		{
+			averagesRowHash = rowAverages.rowNamesToHash();
+//			System.out.println("this.rowNames[row]"+this.rowNames[row]);
+//			System.out.println("averagesRowHash.get(this.rowNames[row]) = "+averagesRowHash.get(this.rowNames[row]));
+//			System.out.println("averagesRowHash size = "+averagesRowHash.size());
+//			System.out.println("averagesRowHash SRR1028344 = "+averagesRowHash.containsKey("SRR1028344"));
+//			System.out.println("averagesRowHash element ERR315329 = "+averagesRowHash.containsKey("ERR315329"));
+//			System.out.println("averagesRowHash element = "+averagesRowHash.keys().nextElement());
+//			Enumeration<String> key = averagesRowHash.keys();key.nextElement();
+//			System.out.println("averagesRowHash element = "+key.nextElement());
+//			System.out.println("rowAverages = "+rowAverages);
+			
+			average = rowAverages.values[averagesRowHash.get(this.rowNames[row])][0];
+		}
 		else
 			average = getAverageRow(row);
 		for(int c = 0; c < colNames.length; c++)
@@ -600,6 +616,27 @@ public class Matrix
 		return qNormVector;
 	}
 	
+//	private Matrix getQuantValuePerRow(Matrix sortedCols) 
+//	{
+//		Matrix qNormVector = new Matrix(sortedCols.rowNames.length, 1);
+//		for(int r = 0; r < sortedCols.rowNames.length; r++)
+//		{
+//			qNormVector.values[r][0] = getMedian(sortedCols.values[r]);
+//			//System.out.println(qNormVector.values[r][0]);
+//		}
+//		qNormVector.rowNames = sortedCols.rowNames;
+//		qNormVector.colNames = new String[]{"Averages"};
+//		return qNormVector;
+//	}
+//
+//	private double getMedian(double[] row) 
+//	{
+//		double median = 0;
+//		Arrays.sort(row);
+//		median = row[row.length/2];
+//		return median;
+//	}
+
 	public Matrix quantileNormVectorCenteredLog2(String saveNameQnormVector)//Calculated the averages for each rank
 	{
 		Matrix qNormVector = quantileNormVector();
@@ -658,12 +695,13 @@ public class Matrix
 		}
 		
 		double[][] column= new double[this.rowNames.length][2];
-		for(int y = 0; y < this.colNames.length; y++)
+		for(int y = 0; y < this.colNames.length; y++)//sort each column
 		{
 			for(int x = 0; x < this.rowNames.length; x++)
 			{
 				column[x][0] = this.values[x][y];
 				column[x][1] = x;
+				//System.out.println(this.rowNames[x] +" "+ x + " val:" +this.values[x][y]);
 			}
 			
 			Arrays.sort(column, new Comparator<double[]>()
@@ -679,14 +717,14 @@ public class Matrix
 						return 0;
 					}
 				}
-			});
+			});			
 			
 			int qNormVectorIndAdj = 0;//to adjust for values that are equal to another value in the same column
 			int pos = 0;
 			double val = 0;
 			for(int x = 0; x < column.length; x++)
 			{
-				//far to complicated if else to achieve something simple, but its late :S				
+				//far to complicated if else to achieve something simple, but its late :S	
 				if(x>0 && column[x][0] != column[x-1][0] && (x+1<column.length && column[x][0] != column[x+1][0]))//if this value is not equal to next or previous value
 				{
 					qNormVectorIndAdj=0;
@@ -695,8 +733,9 @@ public class Matrix
 				}
 				else
 				{
-					if (x>0 && column[x][0] != column[x-1][0])//if this value is different from the last one recalculate the number to use
+					if (x==0 || (x>0 && column[x][0] != column[x-1][0]))//if this value is different from the last one recalculate the number to use (or if it is the first value)
 					{
+						qNormVectorIndAdj=0;
 						int extra = 1;
 						while(x+extra<column.length && column[x][0] == column[x+extra][0])
 						{
@@ -706,11 +745,6 @@ public class Matrix
 						pos = x+(qNormVectorIndAdj/2);
 					}
 
-//					if(pos >= qNormVector.values.length)//Sometimes quant vector is shorter then the target file
-//														//(because we use quant vector from public to normalize the expression file)
-//														//This introduces minor bias. I might fix later
-//						pos=qNormVector.values.length-1;
-					
 					if(qNormVectorIndAdj % 2 == 0 || pos == qNormVector.values.length-1)
 						val = qNormVector.values[pos][0];
 					else
@@ -718,9 +752,9 @@ public class Matrix
 						val = (qNormVector.values[pos][0]+qNormVector.values[pos+1][0])/2;
 					}
 				}
-				
-				this.values[(int) column[x][1]][y] = val;
-				
+
+				//System.out.println("x =" + x + "Initial value: " + column[x][0] + "vNew value: " + val + " outputRow: " + (int) column[x][1] + " quantVectorRow: " + x + " c: " + y + " rowname = " + this.rowNames[(int) column[x][1]]);
+				this.values[(int) column[x][1]][y] = val;		
 			}
 		}
 		
