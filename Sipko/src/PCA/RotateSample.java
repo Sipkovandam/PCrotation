@@ -11,11 +11,14 @@ public class RotateSample {
 
 	public static void main(String[] args) throws IOException 
 	{
-		String sampleFile = "E:/Groningen/Data/PublicSamples/100SamplesTest/Rsample/" + "TESTexpression.txt";
+		//String sampleFile = "E:/Groningen/Data/PublicSamples/100SamplesTest/Rsample/" + "TESTexpression.txt";
+		//String vectorFolder = "E:/Groningen/Data/PublicSamples/100SamplesTest/Rsample/TESTexpression/";
+		
+		String sampleFile = "E:/Groningen/Data/PublicSamples/100SamplesTest/Rsample/" + "RandomSamples.txt";
 		String vectorFolder = "E:/Groningen/Data/PublicSamples/100SamplesTest/Rsample/TESTexpression/";
 		
 		checkArgs(args);
-		if(!System.getProperty("user.dir").contains("E:\\Groningen\\Workspace"))
+		if(!System.getProperty("user.dir").contains("C:\\Users\\Sipko\\git\\PCrotation\\Sipko") && args.length !=0)
 		{
 			sampleFile = args[0];
 			vectorFolder = args[1]+"/";
@@ -47,7 +50,10 @@ public class RotateSample {
 		pca.PCA.log(" 6. Adjusting for column averages (centering to target PC space)");
 		singleSample.adjustForAverageAllCols(new Matrix(vectorFolder+"SAMPLE_QuantNorm_columnAverages.txt"));
 		pca.PCA.log(" 7. Adjusting for row averages (centering to target PC space)");
-		singleSample.adjustForAverageAllrows(new Matrix(vectorFolder+"SAMPLE_QuantNorm_rowAverages.txt"));
+		Matrix averages = singleSample.calcAvgRows();
+		String rowAveragesFileName = writeFolder+"rowAverages.txt";
+		averages.write(rowAveragesFileName);
+		//singleSample.adjustForAverageAllrows(averages);
 		String centeredFN = writeFolder+ "Quantile_adjusted.centered.txt";
 		pca.PCA.log(" 8. Writing PC centered file to: " + centeredFN);
 		singleSample.write(centeredFN);
@@ -62,7 +68,7 @@ public class RotateSample {
 	}
 	public static void checkArgs(String[] args)
 	{
-		if(System.getProperty("user.dir").contains("E:\\Groningen\\Workspace"))
+		if(System.getProperty("user.dir").contains("C:\\Users\\Sipko\\git\\PCrotation\\Sipko"))
 			return;
 		if(args.length!= 2)
 		{
