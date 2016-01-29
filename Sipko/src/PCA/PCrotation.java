@@ -26,6 +26,12 @@ public class PCrotation
 			case "correctforpcs":
 				CorrectForPCs.main(argsToPass);
 				break;
+			case "correctforpcslude":
+				CorrectSampleForPCsLudeApproach.main(argsToPass);
+				break;
+			case "getrows":
+				GetRows.main(argsToPass);
+				break;
 			default:
 				printUsage();
 			    System.exit(1);
