@@ -28,8 +28,13 @@ public class CorrectForPCs {
 		}
 		
 		String writeFolder = sampleFile.replace(".txt", "_Adj/");
-		
 		MatrixStruct[] PCscoresSample = RotateSample.rotate(sampleFile, vectorFolder, writeFolder);
+		pca.PCA.log("9.1 Calculating zScores");
+		String zScoreStats = vectorFolder+"pcZscores_Stats.txt";
+		MatrixStruct zScoreMatrix = PCscoresSample[0].copy();
+		Zscore.changeToZscores(zScoreMatrix, zScoreStats);
+		zScoreMatrix.write(writeFolder+"pcZscoresSamples.txt");
+		pca.PCA.log("9.2 Writing zScores");
 		/**set PCs to 0 (correcting for principal components)**/
 		ArrayList<Integer> PCsToCorrect = parsePCs(PCsToAdjust);
 		//int[] PCsToCorrect = new int[]{1,2,3,4,5};
@@ -38,19 +43,22 @@ public class CorrectForPCs {
 		
 		//can also adjust by Names of the PC, but need to know the actual PC names in the file
 		//String[] PCsToCorrect = new String[]{"PC1","PC2","PC3","PC4","PC5"};
-		//PCscoresSingleSample[0].setZeroRows(PCsToCorrect);
+		//PCscoresSingleSample.setZeroRows(PCsToCorrect);
 		
 		/**Rotate sample back to original expression**/
-		pca.PCA.log("11. Rotate sample back to original expression");
 		String saveNameSingleRotatedBack = writeFolder + "SAMPLE_RotatedBack.txt";
 		MatrixStruct geneEigenVectors = new MatrixStruct(vectorFolder+"GENE.eigenvectors.txt");
+		String signalPerPCFolder = writeFolder+ "signalPerPC/";
+//		pca.PCA.log("11. Calculating expression for each gene for each PC for each sample");
+//		calculateGeneExpressionPerPC(PCscoresSample,geneEigenVectors,signalPerPCFolder);
+		pca.PCA.log("12. Rotate sample back to original expression");
 		MatrixStruct[] rotatedBack = PCA.rotateBack(geneEigenVectors,PCscoresSample[0], null, saveNameSingleRotatedBack);
-		
+		rotatedBack[0].setColHeaders(PCscoresSample[2].getRowHeaders());
 		String rotatedAdjusted = writeFolder+"Adjusted_PC"+PCsToAdjust+".txt";;
 		rotatedBack[0].write(rotatedAdjusted);
 		rotatedBack[0].transpose();
 		rotatedBack[0].write(rotatedAdjusted.replace(".txt","_transposed.txt"));
-		pca.PCA.log("Corrected file written to:" + rotatedAdjusted);
+		pca.PCA.log("Corrected file written to: " + rotatedAdjusted);
 //		/**Add averages that were initially removed**/
 //		pca.PCA.log("12. Adding column averages again");
 //		rotatedBack[0].addAveragesCols(new MatrixStruct(vectorFolder+"SAMPLE_QuantNorm_columnAverages.txt"));
@@ -65,6 +73,29 @@ public class CorrectForPCs {
 //		String transposedWriteName = writeName.replace(".txt", "_transposed.txt"); 
 //		pca.PCA.log("16. Writing transposed file to" + transposedWriteName);
 //		rotatedBack[0].write(transposedWriteName);
+	}
+
+	private static void calculateGeneExpressionPerPC(MatrixStruct[] PCscoresSample, MatrixStruct geneEigenVectors, String signalPerPCFolder) throws IOException {
+		RotateSample.makeFolder(signalPerPCFolder);
+		for(int sample = 0; sample < PCscoresSample[0].cols();sample++)
+		{
+			pca.PCA.log("Sample: " + PCscoresSample[0].getColHeaders()[sample] + " " +sample +"/" +PCscoresSample[0].cols());
+			MatrixStruct samplePCsignals = new MatrixStruct(geneEigenVectors.cols(), geneEigenVectors.rows());
+			samplePCsignals.setRowHeaders(geneEigenVectors.getColHeaders());//geneEigenVectors.colHeaders are genes
+			samplePCsignals.setColHeaders(geneEigenVectors.getRowHeaders());//geneEigenVectors.rowHeaders are PCs
+			for(int pc = 0; pc < geneEigenVectors.rows(); pc++)
+			{
+				for(int gene = 0; gene < geneEigenVectors.cols(); gene++)
+				{
+					if(gene == 0 && pc == 0 && sample == 2)
+						System.out.println(PCscoresSample[0].matrix.get(pc, sample)+"*"+ geneEigenVectors.matrix.get(pc,gene) + "=" + PCscoresSample[0].matrix.get(pc, sample)*geneEigenVectors.matrix.get(pc,gene));
+					//multiply PCscore * eigenvectorCoefficient for that gene for the current PC
+					double geneValue =  PCscoresSample[0].matrix.get(pc, sample)*geneEigenVectors.matrix.get(pc,gene);
+					samplePCsignals.matrix.set(gene, pc, geneValue);
+				}	
+			}
+			samplePCsignals.write(signalPerPCFolder+PCscoresSample[0].getColHeaders()[sample]+".txt");
+		}
 	}
 
 	public static ArrayList<Integer> parsePCs(String PCsToAdjust) 

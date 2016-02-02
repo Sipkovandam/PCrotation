@@ -30,10 +30,20 @@ public class RotateSample {
 	public static MatrixStruct[] rotate(String sampleFile, String vectorFolder, String writeFolder) throws IOException
 	{
 		/**6. Calculate PCscores for single sample**/
-		makeFolder(writeFolder);
 		pca.PCA.log(" 1. Loading sample matrix");
 		Matrix singleSample = new Matrix(sampleFile);//expressionMatrix.getRow(0);
-		
+		singleSample = center(singleSample, vectorFolder, writeFolder);
+		pca.PCA.log(" 8. Rotating file to PC space: ");
+		MatrixStruct singleSampleStruct = new MatrixStruct(singleSample.rowNames, singleSample.colNames, singleSample.values);
+		String averagesFN = vectorFolder + "GENE_PC.averages.txt";//used as input
+		String saveNameSingleSampleScore = writeFolder + "SAMPLE.PC.txt";
+		MatrixStruct geneEigenVectors = new MatrixStruct(vectorFolder+"GENE.eigenvectors.txt");
+		MatrixStruct[] scoreResults = PCA.scores(geneEigenVectors,singleSampleStruct, Paths.get(averagesFN), saveNameSingleSampleScore);
+		pca.PCA.log("Files Written to: " + writeFolder);
+		return scoreResults;
+	}
+	public static Matrix center(Matrix singleSample, String vectorFolder, String writeFolder) {
+		makeFolder(writeFolder);
 		pca.PCA.log(" 2. Transposing");
 		singleSample.transpose();
 		Matrix quantVector = new Matrix(vectorFolder+"SAMPLE_QuantileVector.txt");
@@ -53,18 +63,11 @@ public class RotateSample {
 		Matrix averages = singleSample.calcAvgRows();
 		String rowAveragesFileName = writeFolder+"rowAverages.txt";
 		averages.write(rowAveragesFileName);
-		//singleSample.adjustForAverageAllrows(averages);
+		singleSample.adjustForAverageAllrows(averages);
 		String centeredFN = writeFolder+ "Quantile_adjusted.centered.txt";
-		pca.PCA.log(" 8. Writing PC centered file to: " + centeredFN);
+		pca.PCA.log(" 7. Writing PC centered file to: " + centeredFN);
 		singleSample.write(centeredFN);
-		pca.PCA.log(" 9. Rotating file to PC space: ");
-		MatrixStruct singleSampleStruct = new MatrixStruct(singleSample.rowNames, singleSample.colNames, singleSample.values);
-		String averagesFN = vectorFolder + "GENE_PC.averages.txt";//used as input
-		String saveNameSingleSampleScore = writeFolder + "SAMPLE.PC.txt";
-		MatrixStruct geneEigenVectors = new MatrixStruct(vectorFolder+"GENE.eigenvectors.txt");
-		MatrixStruct[] scoreResults = PCA.scores(geneEigenVectors,singleSampleStruct, Paths.get(averagesFN), saveNameSingleSampleScore);
-		pca.PCA.log("Files Written to: " + writeFolder);
-		return scoreResults;
+		return singleSample;
 	}
 	public static void checkArgs(String[] args)
 	{
@@ -80,7 +83,7 @@ public class RotateSample {
 			System.exit(1);
 		}
 	}
-	private static void makeFolder(String writeFolder) 
+	static void makeFolder(String writeFolder) 
 	{
 		File folder = new File(writeFolder);
 		if(!folder.exists())

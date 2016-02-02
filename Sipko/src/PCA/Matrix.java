@@ -14,6 +14,9 @@ import java.util.Arrays;
 import java.util.Comparator;
 import java.util.Enumeration;
 import java.util.Hashtable;
+
+import pca.MatrixStruct;
+
 import java.nio.file.Path;
 
 public class Matrix 
@@ -61,6 +64,15 @@ public class Matrix
 	{
 		readFile(fileName,false,false);
 	}
+	public Matrix(MatrixStruct expressionMatrixStruct) 
+	{
+		this.rowNames = expressionMatrixStruct.getRowHeaders();
+		this.colNames = expressionMatrixStruct.getColHeaders();
+		this.values = new double[this.rowNames.length][];
+		for(int r = 0; r < this.rowNames.length; r++)
+			this.values[r] = expressionMatrixStruct.getRowValues(r);
+	}
+
 	public void readFile(String fileName,boolean hasRowNames, boolean hasColName)
 	{
 		readFile(fileName, hasRowNames, hasColName, -1, -1);
@@ -99,6 +111,11 @@ public class Matrix
 	
 	public void readFile(String fileName,boolean hasRowNames, boolean hasColNames,int maxX, int maxY)
 	{
+		if(!new File(fileName).exists())
+		{
+			System.out.println("File does not exist: " + fileName + "\n Exiting");
+			System.exit(1);
+		}
 		int nRows = 0;
 		if(maxX<1)
 			nRows = getRowNumber(fileName)-1;
