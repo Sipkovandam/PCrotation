@@ -565,7 +565,6 @@ public class Matrix
 			average = columnAverages.values[col][0];
 		for(int x = 0; x < rowNames.length; x++)
 		{
-			//System.out.println("x =" + x + " col =" + col + " values[x][col]=" + values[x][col] + " average=" + average);
 			values[x][col]-= average;
 		}
 	}

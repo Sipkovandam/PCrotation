@@ -11,14 +11,14 @@ public class RotateSample {
 
 	public static void main(String[] args) throws IOException 
 	{
-		//String sampleFile = "E:/Groningen/Data/PublicSamples/100SamplesTest/Rsample/" + "TESTexpression.txt";
-		//String vectorFolder = "E:/Groningen/Data/PublicSamples/100SamplesTest/Rsample/TESTexpression/";
+//		String sampleFile = "E:/Groningen/Data/PublicSamples/100SamplesTest/Rsample/" + "RandomSamples.txt";
+//		String vectorFolder = "E:/Groningen/Data/PublicSamples/100SamplesTest/Rsample/TESTexpression/";
 		
-		String sampleFile = "E:/Groningen/Data/PublicSamples/100SamplesTest/Rsample/" + "RandomSamples.txt";
-		String vectorFolder = "E:/Groningen/Data/PublicSamples/100SamplesTest/Rsample/TESTexpression/";
+		String sampleFile = "E:/Groningen/Data/PublicSamples/Test7/" + "4DownSyndrome3Normal3Cancer_countsRND.txt";
+		String vectorFolder = "E:/Groningen/Data/PublicSamples/Test7/est_counts_nocancernocelllineSTdevCorrected/";
 		
 		checkArgs(args);
-		if(!System.getProperty("user.dir").contains("C:\\Users\\Sipko\\git\\PCrotation\\Sipko") && args.length !=0)
+		if(!System.getProperty("user.dir").contains("C:\\Users\\Sipko\\git\\PCrotation\\Sipko") || args.length !=0)
 		{
 			sampleFile = args[0];
 			vectorFolder = args[1]+"/";
@@ -29,43 +29,81 @@ public class RotateSample {
 	}
 	public static MatrixStruct[] rotate(String sampleFile, String vectorFolder, String writeFolder) throws IOException
 	{
+		return rotate(sampleFile, vectorFolder, writeFolder, true, true);
+	}
+	
+	public static MatrixStruct[] rotate(String sampleFile, String vectorFolder, String writeFolder, boolean STdevCorrect, boolean log2) throws IOException
+	{
 		/**6. Calculate PCscores for single sample**/
 		pca.PCA.log(" 1. Loading sample matrix");
 		Matrix singleSample = new Matrix(sampleFile);//expressionMatrix.getRow(0);
-		singleSample = center(singleSample, vectorFolder, writeFolder);
-		pca.PCA.log(" 8. Rotating file to PC space: ");
+		singleSample = center(singleSample, vectorFolder, writeFolder, STdevCorrect, log2);
+		
 		MatrixStruct singleSampleStruct = new MatrixStruct(singleSample.rowNames, singleSample.colNames, singleSample.values);
-		String averagesFN = vectorFolder + "GENE_PC.averages.txt";//used as input
 		String saveNameSingleSampleScore = writeFolder + "SAMPLE.PC.txt";
+		pca.PCA.log(" 11. Loading gene eigen vector file: ");
 		MatrixStruct geneEigenVectors = new MatrixStruct(vectorFolder+"GENE.eigenvectors.txt");
-		MatrixStruct[] scoreResults = PCA.scores(geneEigenVectors,singleSampleStruct, Paths.get(averagesFN), saveNameSingleSampleScore);
+		pca.PCA.log(" 12. Rotating file to PC space: ");
+		MatrixStruct[] scoreResults = PCA.scores(geneEigenVectors,singleSampleStruct, saveNameSingleSampleScore,false, false);
+		
 		pca.PCA.log("Files Written to: " + writeFolder);
 		return scoreResults;
 	}
-	public static Matrix center(Matrix singleSample, String vectorFolder, String writeFolder) {
+	public static Matrix center(Matrix singleSample, String vectorFolder, String writeFolder) throws IOException
+	{
+		return center(singleSample, vectorFolder, writeFolder, true, true);
+	}
+	public static Matrix center(Matrix singleSample, String vectorFolder, String writeFolder, boolean STdevCorrect, boolean log2) throws IOException 
+	{
 		makeFolder(writeFolder);
+		
 		pca.PCA.log(" 2. Transposing");
 		singleSample.transpose();
 		Matrix quantVector = new Matrix(vectorFolder+"SAMPLE_QuantileVector.txt");
+		
 		pca.PCA.log(" 3. Removing rows that do not exist in the quantile normalization vector");
 		singleSample.keepRows(quantVector);
+
 		pca.PCA.log(" 4. Quantile normalization adjustion");
 		singleSample.quantileNormAdjust(quantVector);
 		String quantileAdjustedFN = writeFolder+ "Quantile_adjusted.txt";
+		
 		pca.PCA.log(" 5. Writing quantile normalization adjusted file to:" + quantileAdjustedFN);
-		pca.PCA.log("Log transforming");
-		singleSample.log2Transform();//Doing this after the quantile normalization now
 		singleSample.write(quantileAdjustedFN);
+		
+		if(log2)
+		{
+			pca.PCA.log(" 6. Log transforming");
+			singleSample.log2Transform();//Doing this after the quantile normalization now
+			singleSample.write(quantileAdjustedFN.replace(".txt", "_log2.txt"));
+		}
+		
 		singleSample.transpose();
-		pca.PCA.log(" 6. Adjusting for column averages (centering to target PC space)");
+
+		if(STdevCorrect)
+		{
+			MatrixStruct singleSampleStruct = new MatrixStruct(singleSample.rowNames, singleSample.colNames, singleSample.values);
+			pca.PCA.log(" 7. Adjusting for STdevs");
+			String stdevFile = vectorFolder+ "gene_STDevs.txt";
+			MatrixStruct stDevs = new MatrixStruct(stdevFile);
+			singleSampleStruct.divideBy(stDevs, false);
+			singleSampleStruct.write(writeFolder+"Centered.DivideBySTdev.txt");
+			singleSample = new Matrix(singleSampleStruct);
+		}
+		
+		pca.PCA.log(" 8. Adjusting for column averages (centering to target PC space)");
 		singleSample.adjustForAverageAllCols(new Matrix(vectorFolder+"SAMPLE_QuantNorm_columnAverages.txt"));
-		pca.PCA.log(" 7. Adjusting for row averages (centering to target PC space)");
+		String centeredColsFN = writeFolder+ "Quantile_adjusted.centeredColsOnly.txt";
+		singleSample.write(centeredColsFN);
+		
+		pca.PCA.log(" 9. Adjusting for row averages (centering to target PC space)");
 		Matrix averages = singleSample.calcAvgRows();
 		String rowAveragesFileName = writeFolder+"rowAverages.txt";
 		averages.write(rowAveragesFileName);
 		singleSample.adjustForAverageAllrows(averages);
 		String centeredFN = writeFolder+ "Quantile_adjusted.centered.txt";
-		pca.PCA.log(" 7. Writing PC centered file to: " + centeredFN);
+		
+		pca.PCA.log(" 10. Writing PC centered file to: " + centeredFN);
 		singleSample.write(centeredFN);
 		return singleSample;
 	}

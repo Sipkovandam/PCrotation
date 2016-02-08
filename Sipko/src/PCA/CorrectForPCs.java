@@ -7,16 +7,15 @@ import pca.MatrixStruct;
 import pca.PCA;
 
 public class CorrectForPCs {
-
+//depricated class
 	public static void main(String[] args) throws IOException 
 	{
+//		String sampleFile = "E:/Groningen/Data/PublicSamples/Test7/" + "4DownSyndrome3Normal3Cancer_countsRND.txt";
+//		String vectorFolder = "E:/Groningen/Data/PublicSamples/Test7/est_counts_nocancernocelllineCorrelationMatrixPCAoverGenes/";
+		
 		String sampleFile = "E:/Groningen/Data/PublicSamples/100SamplesTest/Rsample/" + "RandomSamples.txt";
 		String vectorFolder = "E:/Groningen/Data/PublicSamples/100SamplesTest/Rsample/TESTexpression/";
-		
-		//String expFile = "E:/Groningen/Data/PublicSamples/ComputerTest/Rtest/" + "rSample1.txt";
-		//String vectorFolder = "E:/Groningen/Data/PublicSamples/ComputerTest/Rtest/rSample/";
-		//
-		
+
 		String PCsToAdjust = "0";//calling this function with 0 will just rotate the matrix back without adjusting for any PCs.
 		
 		checkArgs(args);
@@ -28,13 +27,14 @@ public class CorrectForPCs {
 		}
 		
 		String writeFolder = sampleFile.replace(".txt", "_Adj/");
-		MatrixStruct[] PCscoresSample = RotateSample.rotate(sampleFile, vectorFolder, writeFolder);
+		MatrixStruct[] PCscoresSample = RotateSample.rotate(sampleFile, vectorFolder, writeFolder, true,true);
 		pca.PCA.log("9.1 Calculating zScores");
 		String zScoreStats = vectorFolder+"pcZscores_Stats.txt";
 		MatrixStruct zScoreMatrix = PCscoresSample[0].copy();
 		Zscore.changeToZscores(zScoreMatrix, zScoreStats);
-		zScoreMatrix.write(writeFolder+"pcZscoresSamples.txt");
 		pca.PCA.log("9.2 Writing zScores");
+		zScoreMatrix.write(writeFolder+"pcZscoresSamples.txt");
+
 		/**set PCs to 0 (correcting for principal components)**/
 		ArrayList<Integer> PCsToCorrect = parsePCs(PCsToAdjust);
 		//int[] PCsToCorrect = new int[]{1,2,3,4,5};
@@ -52,7 +52,7 @@ public class CorrectForPCs {
 //		pca.PCA.log("11. Calculating expression for each gene for each PC for each sample");
 //		calculateGeneExpressionPerPC(PCscoresSample,geneEigenVectors,signalPerPCFolder);
 		pca.PCA.log("12. Rotate sample back to original expression");
-		MatrixStruct[] rotatedBack = PCA.rotateBack(geneEigenVectors,PCscoresSample[0], null, saveNameSingleRotatedBack);
+		MatrixStruct[] rotatedBack = PCA.rotateBack(geneEigenVectors,PCscoresSample[0], saveNameSingleRotatedBack);
 		rotatedBack[0].setColHeaders(PCscoresSample[2].getRowHeaders());
 		String rotatedAdjusted = writeFolder+"Adjusted_PC"+PCsToAdjust+".txt";;
 		rotatedBack[0].write(rotatedAdjusted);

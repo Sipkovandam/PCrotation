@@ -32,6 +32,9 @@ public class PCrotation
 			case "getrows":
 				GetRows.main(argsToPass);
 				break;
+			case "correctbasedonzscore":
+				CorrectBasedOnZscore.main(argsToPass);
+				break;
 			default:
 				printUsage();
 			    System.exit(1);
