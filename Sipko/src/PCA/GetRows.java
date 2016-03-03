@@ -1,21 +1,53 @@
 package PCA;
 
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.util.Hashtable;
+
 public class GetRows 
 {
 
-	public static void main(String args[])
+	public static void main(String args[]) throws IOException
 	{
-		String fileName = "E:/Groningen/Data/PublicSamples/NoCancerSamples/est_counts_22214_samples.txt";
-		String fileName2 = "E:/Groningen/Data/PublicSamples/DownSyndrome/18DownSyndrome26Normal274Cancer.txt";
-		String writeName = "E:/Groningen/Data/PublicSamples/DownSyndrome/18DownSyndrome26Normal274Cancer_counts.txt";
+		String fileName = "E:/Groningen/Data/PublicSamples/Test9/DownSyndromeSamples_AndControls.txt";
+		String fileName2 = "E:/Groningen/Data/PublicSamples/Test9/PublicSamplesWithoutDownSyndrome.txt";
+		String writeName = "E:/Groningen/Data/PublicSamples/Test9/validate.txt";
+		String replace = null;
 		
 		checkArgs(args);
 		if(!System.getProperty("user.dir").contains("C:\\Users\\Sipko\\git\\PCrotation\\Sipko"))
 		{
-			fileName = args[0];
-			fileName2 = args[1];
-			writeName = args[2];
+			for(int a = 0; a < args.length; a++)
+			{
+				String arg = args[a].split("=")[0];
+				String value = args[a].split("=")[1];
+				switch (arg.toLowerCase()){
+					case "filename":
+						fileName = value;
+						break;
+					case "getgenes":
+						fileName2 = value;
+						break;
+					case "writename":
+						writeName = value;
+						break;
+					case "remove":
+						replace = value;
+						break;
+					default:
+						checkArgs(args);
+						System.out.println("Incorrect argument supplied; exiting");
+						System.exit(1);
+				}
+			}
 		}
+		
+		
 		
 		Matrix file2 = null;
 		
@@ -27,25 +59,41 @@ public class GetRows
 			file2.rowNames = rowNames;
 			file2.colNames[0] = "-";
 		}
-		Matrix file1 = new Matrix(fileName);
-		file1.keepRows(file2);
-		file1.write(writeName);
+		
+		BufferedReader reader = new BufferedReader(new FileReader(new File(fileName)));
+		BufferedWriter writer = new BufferedWriter(new FileWriter(new File(writeName)));
+		String line = reader.readLine();
+		writer.write(line+"\n");//write the first line by default (headers)
+		Hashtable<String, Integer> toGet = file2.namesToHash(file2.rowNames);
+		while((line = reader.readLine()) != null)
+		{	
+			if(replace != null)
+				line = line.replace(replace, "");
+			String rowName = line.split("\t")[0];
+			
+			if(toGet.containsKey(rowName))
+			{
+				writer.write(line+"\n");
+			}
+		}
+		writer.close();
+		reader.close();
 		System.out.println("File written to:" + writeName);
 	}
 	public static void checkArgs(String[] args)
 	{
 		if(System.getProperty("user.dir").contains("C:\\Users\\Sipko\\git\\PCrotation\\Sipko"))
 			return;
-		if(args.length != 3)
+		if(args.length < 3)
 		{
 			System.out.println("Arguments supplied =" + args.length);
 			System.out.println("This script retrieves rows for which rowNames are present in 1 file "
 					+ "from another matrix file (automagically keeps header row).\n"
 					+ "It uses the following 2 arguments:\n"
-					+ "1. File to retriever rows from\n"
-					+ "2.1 File with the rows to keep in the first column(header row is ignored)\n"
-					+ "2.2 Alternatively you can use a comma separated list of rowNames you wish to retrive (SRR001,SR002,...)\n"
-					+ "3. Name of the file to write to \n"
+					+ "1. fileName=<fileName> -  File to retrieve rows from\n"
+					+ "2.1 getGenes=<fileName> -  File with the rows to keep in the first column(header row is ignored)\n"
+					+ "2.2 getGenes=<gene1,gene2,gene3> - Alternatively you can use a comma separated list of rowNames you wish to retrive (SRR001,SR002,...)\n"
+					+ "3. writeName=<fileName> - Name of the file to write to \n"
 					+ "Make sure each file has at least 2 columns and rows (just at a bunch of 0's in the 2nd column if you must) \n");
 			System.exit(1);
 		}

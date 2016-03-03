@@ -415,13 +415,13 @@ public class Matrix
 					}
 				}
 				printOrWrite("\n", writer);
-				if(x%(100000000/maxY)==0 && x>0)//print time 
-				{
-					
-					//double percentage = (((double)x)/((double)maxX));
-					//System.out.println(df.format(percentage*100) + " % of the file has been saved");
-					//timer.print(percentage);
-				}
+//				if(x%(100000000/maxY)==0 && x>0)//print time 
+//				{
+//					
+//					double percentage = (((double)x)/((double)maxX));
+//					System.out.println(df.format(percentage*100) + " % of the file has been saved");
+//					timer.print(percentage);
+//				}
 			}
 			if(writer != null)
 				writer.close();
@@ -862,9 +862,7 @@ public class Matrix
 		{
 			if(fileName != null)
 			{
-					
-						writer = new BufferedWriter(new FileWriter(new File(fileName)));
-					
+				writer = new BufferedWriter(new FileWriter(new File(fileName)));	
 			}
 			String format = "#";
 			
@@ -904,9 +902,11 @@ public class Matrix
 					else
 					{
 						printOrWrite("\t"+values[y][x],writer);
-					}
+					}	
 				}
+				printOrWrite("\n",writer);
 			}
+			writer.close();
 		}catch (IOException e)
 		{
 			e.printStackTrace();
@@ -974,6 +974,5 @@ public class Matrix
 				
 			//System.out.println("Current runtime = " + runTime()/1000/1000/1000/60/24 + "days");
 		}
-		
 	}
 }

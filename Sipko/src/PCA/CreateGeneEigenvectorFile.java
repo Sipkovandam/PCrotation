@@ -25,6 +25,7 @@ public class CreateGeneEigenvectorFile
 	public static void main(String[] args) throws IOException, NotConvergedException
 	{
 		String expFile = "E:/Groningen/Data/PublicSamples/100SamplesTest/Rsample/" + "TESTexpression.txt";
+		//String expFile = "E:/Groningen/Data/PublicSamples/100SamplesTest/Rsample/" + "4DownSyndrome3Normal3Cancer_counts.txt";
 		String chromLocationsFile = "E:/Groningen/Data/GenePositionInfo_23X_24Y_25MT_26rest.txt";
 
 		String writeFolder = expFile.replace(".txt", "/");
@@ -33,9 +34,13 @@ public class CreateGeneEigenvectorFile
 		boolean writeAll = true;
 		boolean correctInputForSTdevs = false;
 		boolean log2 = true;
-		double randomValue = 1;
-		double duplicateCutoff = 0.999;
-		double highestExpressed = 1;
+		boolean tpm = false;	
+		boolean STdevCutoff = false;
+		
+		double randomValue = 0;
+		double duplicateCutoff = 1;
+		double highestExpressed = 1;//1 = all genes, 0.5 = 50% highest expressed genes only (removes 50% lowest expressed genes after quantile normalization (then re-normalizes)).
+		
 		
 		if(args.length == 0)
 			checkArgs(args);
@@ -72,6 +77,12 @@ public class CreateGeneEigenvectorFile
 				case "highestexpressed":
 					highestExpressed = Double.parseDouble(value);
 					break;
+				case "tpm":
+					tpm = Boolean.parseBoolean(value);
+					break;
+				case "stdevcutoff":
+					STdevCutoff = Boolean.parseBoolean(value);
+					break;
 				default:
 					checkArgs(args);
 					System.out.println("Incorrect argument supplied; exiting");
@@ -79,12 +90,13 @@ public class CreateGeneEigenvectorFile
 			}
 		}
 
-		writeParameters(expFile, writeFolder, chromLocationsFile, writeAll, log2, correctInputForSTdevs, randomValue, duplicateCutoff, highestExpressed);
+		writeParameters(expFile, writeFolder, chromLocationsFile, writeAll, log2, correctInputForSTdevs, randomValue, duplicateCutoff, highestExpressed,tpm, STdevCutoff);
 		
-		run(expFile, writeFolder, chromLocationsFile, writeAll, log2, correctInputForSTdevs, randomValue, duplicateCutoff, highestExpressed);
+		run(expFile, writeFolder, chromLocationsFile, writeAll, log2, correctInputForSTdevs, randomValue, duplicateCutoff, highestExpressed, tpm, STdevCutoff);
 	}
 	private static void writeParameters(String expFile, String writeFolder, String chromLocationsFile, boolean writeAll,
-			boolean log2, boolean correctInputForSTdevs, double randomValue, double duplicateCutoff, double highestExpressed) throws IOException {
+			boolean log2, boolean correctInputForSTdevs, double randomValue, double duplicateCutoff, double highestExpressed,
+			boolean tpm, boolean STdevCutoff) throws IOException {
 		makeFolder(writeFolder);
 		DateFormat dateFormat = new SimpleDateFormat("dd/MM/yyyy HH:mm:ss");
 		Date date = new Date();
@@ -99,6 +111,8 @@ public class CreateGeneEigenvectorFile
 		writer.write("randomValue\t" + randomValue + "\n");
 		writer.write("duplicateCutoff\t" + duplicateCutoff + "\n");
 		writer.write("TopXhighestExpressed\t" + highestExpressed + "\n");
+		writer.write("tpm\t" + tpm + "\n");
+		writer.write("STdevCutoff\t" + STdevCutoff + "\n");
 		writer.close();
 	}
 	static void checkArgs(String[] args) 
@@ -114,11 +128,12 @@ public class CreateGeneEigenvectorFile
 				+ "randomValue=<number> - adds a random value*<number> to numbers smaller then <number> (default=1)\n"
 				+ "writeFolder=<folderName> - folder to write the results in (default=filename.replace(.txt,/)\n"
 				+ "duplicate=<number> - correlation cutoff to consider samples as duplicates (default=0.999)\n"
+				+ "tpm=<false/true> - whether expression values is tpm normalized (if so no Quantile normalization is applied) (default=false)\n"
 				+ "highestExpressed=<number> - Percentage of genes to keep (genes most highly expressed on average)");
 		System.exit(1);
 	}
 	public static void run(String expFile, String writeFolder, String chromLocationsFile, boolean writeAll, 
-			boolean log2, boolean correctInputForSTdevs, double randomAddValue, double removeDuplicates, double highestExpressed) throws IOException, NotConvergedException
+			boolean log2, boolean correctInputForSTdevs, double randomAddValue, double removeDuplicates, double highestExpressed, boolean tpm, boolean STdevCutoff) throws IOException, NotConvergedException
 	{		
 		pca.PCA.log(" 1. Reading expression file");
 		MatrixStruct expressionMatrixStruct = new MatrixStruct(expFile);
@@ -158,38 +173,52 @@ public class CreateGeneEigenvectorFile
 		
 		if(highestExpressed >0 && highestExpressed < 1)
 		{
-			pca.PCA.log(" Quantile normalization before taking averageCutoff");
-			expressionMatrix.quantileNormAdjust(expressionMatrix.quantileNormVector());
-			
-			String averagesFN = writeFolder+"QuantNormalizedAveragesAllGenes.txt";
+			if(!tpm)
+			{
+				pca.PCA.log(" Quantile normalization before taking averageCutoff");
+				expressionMatrix.quantileNormAdjust(expressionMatrix.quantileNormVector());
+			}	
+			String averagesFN = writeFolder+"NormalizedAveragesAllGenes.txt";
 			expressionMatrix.calcAvgRows()
 							.write(averagesFN);
 			
 			expressionMatrixStruct = new MatrixStruct(expressionMatrix.rowNames, expressionMatrix.colNames, expressionMatrix.values);
 			pca.PCA.log("  . Removing the " + ((1.0-highestExpressed)*100) + " percent lowest expressed genes" );
-			CorrectBasedOnZscore.keepTopPercentage(expressionMatrixStruct,averagesFN, highestExpressed, averagesFN.replace(".txt", "top_" + highestExpressed+ ".txt"));
+			
+			if(STdevCutoff)
+			{
+				MatrixStruct stDevs = expressionMatrixStruct.stDevRows();
+				String stdevFN = writeFolder + "gene_STDevsForCutoff.txt";
+				stDevs.write(stdevFN);
+				PCcorrection.keepTopPercentage(expressionMatrixStruct,stdevFN, highestExpressed, averagesFN.replace(".txt", "top_" + highestExpressed+ ".txt"), true);
+			}
+			else
+				PCcorrection.keepTopPercentage(expressionMatrixStruct,averagesFN, highestExpressed, averagesFN.replace(".txt", "top_" + highestExpressed+ ".txt"), false);
 			
 			expressionMatrix = new Matrix(expressionMatrixStruct);
 		}
 		
-		pca.PCA.log(" 6. Calculating quantile normalization vector");
-		Matrix qNormVector = expressionMatrix.quantileNormVector();
-		if(writeAll)qNormVector.write(writeFolder+ "SAMPLE_QuantileVector.txt");
+		if(!tpm)
+		{
+			pca.PCA.log(" 6. Calculating quantile normalization vector");
+			Matrix qNormVector = expressionMatrix.quantileNormVector();
+			if(writeAll)qNormVector.write(writeFolder+ "SAMPLE_QuantileVector.txt");
 		
-		pca.PCA.log(" 7. Quantile normalization");
-		expressionMatrix.quantileNormAdjust(qNormVector);
 		
-		String quantFNnotLogged = writeFolder+ "SAMPLE_QuantileNormalized.txt";
-		pca.PCA.log(" 8. Writing quantile normalized data in: " + quantFNnotLogged);
-		if(writeAll)expressionMatrix.write(quantFNnotLogged);
+			pca.PCA.log(" 7. Quantile normalization");
+			expressionMatrix.quantileNormAdjust(qNormVector);
+			String quantFNnotLogged = writeFolder+ "SAMPLE_QuantileNormalized.txt";
+			pca.PCA.log(" 8. Writing quantile normalized data in: " + quantFNnotLogged);
+			if(writeAll)expressionMatrix.write(quantFNnotLogged);
+		}
 		
 		if(log2)
 		{
 			pca.PCA.log(" 9. Log2 transforming");
 			expressionMatrix.log2Transform();
-			String quantFN = writeFolder+ "SAMPLE_QuantileNormalizedLog2.txt";
+			String quantFN = writeFolder+ "SAMPLE_NormalizedLog2.txt";
 			
-			pca.PCA.log("10. Writing logged SAMPLE_QuantileNormalizedLog2 normalized data in: " + quantFN);
+			pca.PCA.log("10. Writing logged SAMPLE_Log2 normalized data in: " + quantFN);
 			if(writeAll)expressionMatrix.write(quantFN);
 		}
 		
@@ -206,14 +235,14 @@ public class CreateGeneEigenvectorFile
 			pca.PCA.log("13 Divide all gene values by STdev for each gene");	
 			expressionStruct.divideBy(stDevs,false);//false corrects columns, true corrects rows
 			
-			pca.PCA.log("14 Writing matrix devided by gene STdevs");
+			pca.PCA.log("14 Writing matrix divided by gene STdevs");
 			expressionStruct.write(writeFolder + "_DividedBySGenesSTdev.txt");
 			expressionMatrix = new Matrix(expressionStruct);
 		}	
 
 		pca.PCA.log("15. Calculating column averages");
 		Matrix colAverages = expressionMatrix.calcAvgCols();//NOTE: this is a vector that is based on rows already being corrected for averages.
-		colAverages.write(writeFolder+ "SAMPLE_QuantNorm_columnAverages.txt");
+		colAverages.write(writeFolder+ "SAMPLE_Norm_columnAverages.txt");
 		
 		pca.PCA.log("16. Centering: Adjusting for column averages");
 		expressionMatrix.adjustForAverageAllCols(colAverages);
@@ -221,7 +250,7 @@ public class CreateGeneEigenvectorFile
 		
 		pca.PCA.log("17. Calculating row averages");
 		Matrix rowAverages = expressionMatrix.calcAvgRows();
-		rowAverages.write(writeFolder+ "SAMPLE_QuantNorm_rowAverages.txt");
+		rowAverages.write(writeFolder+ "SAMPLE_Norm_rowAverages.txt");
 		
 		pca.PCA.log("18. Adjusting for row averages");
 		expressionMatrix.adjustForAverageAllrows(rowAverages);
@@ -287,12 +316,15 @@ public class CreateGeneEigenvectorFile
 		adjustedMatrix.setColHeaders(expression.getColHeaders());
 		int a = 0;
 		int outRow = 0;
+		if(rowsToRemove.size()==0)
+			return expression;
 		for(int r = 0; r < expression.rows(); r++)
 		{
 			int skip = rowsToRemove.get(a);
 			if(skip == r)
 			{
-				a++;
+				if(a<rowsToRemove.size()-1)
+					a++;
 				continue;
 			}
 			adjustedMatrix.setRow(outRow, expression.getRowHeaders()[r], expression.getRowValues(r));

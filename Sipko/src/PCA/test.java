@@ -1,24 +1,23 @@
 package PCA;
 
+import java.io.IOException;
 import java.util.Arrays;
 import java.util.stream.Collectors;
+
+import pca.MatrixStruct;
 
 public class test 
 {
 	
-	public static void main(String[] args)
+	public static void main(String[] args) throws IOException
 	{
-		System.out.println("test");
-		
-//		double[] rowValues = new double[]{1,2,3,4,5};
-//		Arrays.stream(rowValues).map(val -> val*2).toArray();
-//				
-//		for(double val : rowValues)
-//			System.out.print(val+ " ");
-		String[] a = new String[]{"a", "b", "c"};
-		int[] b = new int[]{1,2,3};
-		System.out.println(b.toString());
-
+		String testFN = "E:/Groningen/Data/LifeLines/Phenotypes/Kallisto mapping counts/AC1C40ACXX-1-18_220/test.txt";
+		MatrixStruct test = new MatrixStruct(testFN);
+		MatrixStruct geneLength = new MatrixStruct("");
+		test.transpose();
+		//test.TPM(geneLengths, true);
+		test.transpose();
+		test.write(testFN.replace(".txt", "test_TPM.txt"));
 	}
 	public void print()
 	{

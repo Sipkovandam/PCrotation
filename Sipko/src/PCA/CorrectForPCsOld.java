@@ -6,7 +6,7 @@ import java.util.ArrayList;
 import pca.MatrixStruct;
 import pca.PCA;
 
-public class CorrectForPCs {
+public class CorrectForPCsOld {
 //depricated class
 	public static void main(String[] args) throws IOException 
 	{
@@ -27,7 +27,7 @@ public class CorrectForPCs {
 		}
 		
 		String writeFolder = sampleFile.replace(".txt", "_Adj/");
-		MatrixStruct[] PCscoresSample = RotateSample.rotate(sampleFile, vectorFolder, writeFolder, true,true);
+		MatrixStruct[] PCscoresSample = RotateSample.rotate(sampleFile, vectorFolder, writeFolder, true,true,false);
 		pca.PCA.log("9.1 Calculating zScores");
 		String zScoreStats = vectorFolder+"pcZscores_Stats.txt";
 		MatrixStruct zScoreMatrix = PCscoresSample[0].copy();
