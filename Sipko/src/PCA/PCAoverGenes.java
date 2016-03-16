@@ -43,8 +43,7 @@ public class PCAoverGenes
 			pca.PCA.log(" 0. Sorting IDs based on chromosome locations");
 			pca.PCA.log(" 1. Transposing");
 			expressionMatrixStruct.transpose();
-			MatrixStruct chromLocs = new MatrixStruct(chromLocationsFile);
-			expressionMatrixStruct = SortChromosome.sort(expressionMatrixStruct, chromLocs);
+			expressionMatrixStruct = SortChromosome.sort(expressionMatrixStruct, chromLocationsFile);
 		}
 		else
 		{
@@ -61,7 +60,7 @@ public class PCAoverGenes
 		expressionMatrixStruct = null;
 		
 		pca.PCA.log(" 2. Removing genes without variance");
-		expressionMatrix.removeNoVariance();
+		expressionMatrix.removeNoVariance(null);
 		String removedGenesFN = writeFolder+"noVarRemoved.txt";
 		if(writeAll)expressionMatrix.write(removedGenesFN);
 		

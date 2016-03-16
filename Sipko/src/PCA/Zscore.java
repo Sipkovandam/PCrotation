@@ -45,7 +45,7 @@ public class Zscore
 			{
 				double[] rowValues = samples.getRowValues(r);
 				mean = org.apache.commons.math3.stat.StatUtils.mean(rowValues);
-				double variance = org.apache.commons.math3.stat.StatUtils.variance(rowValues);
+				double variance = org.apache.commons.math3.stat.StatUtils.populationVariance(rowValues);
 				stDev = java.lang.Math.pow(variance,0.5);
 				scoreStats.matrix.set(r, 0, mean);
 				scoreStats.matrix.set(r, 1, stDev);

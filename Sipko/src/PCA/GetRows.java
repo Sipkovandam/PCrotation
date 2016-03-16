@@ -33,6 +33,9 @@ public class GetRows
 					case "getgenes":
 						fileName2 = value;
 						break;
+					case "rowstoget":
+						fileName2 = value;
+						break;
 					case "writename":
 						writeName = value;
 						break;
@@ -91,8 +94,8 @@ public class GetRows
 					+ "from another matrix file (automagically keeps header row).\n"
 					+ "It uses the following 2 arguments:\n"
 					+ "1. fileName=<fileName> -  File to retrieve rows from\n"
-					+ "2.1 getGenes=<fileName> -  File with the rows to keep in the first column(header row is ignored)\n"
-					+ "2.2 getGenes=<gene1,gene2,gene3> - Alternatively you can use a comma separated list of rowNames you wish to retrive (SRR001,SR002,...)\n"
+					+ "2.1 rowstoget=<fileName> -  File with the rows to keep in the first column(header row is ignored)\n"
+					+ "2.2 rowstoget=<gene1,gene2,gene3> - Alternatively you can use a comma separated list of rowNames you wish to retrive (SRR001,SR002,...)\n"
 					+ "3. writeName=<fileName> - Name of the file to write to \n"
 					+ "Make sure each file has at least 2 columns and rows (just at a bunch of 0's in the 2nd column if you must) \n");
 			System.exit(1);

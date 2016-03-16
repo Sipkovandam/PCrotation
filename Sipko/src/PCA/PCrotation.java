@@ -7,7 +7,7 @@ import no.uib.cipr.matrix.NotConvergedException;
 
 public class PCrotation 
 {
-	public static void main(String[] args) throws IOException, NotConvergedException
+	public static void main(String[] args) throws IOException, NotConvergedException, InterruptedException
 	{
 		if(args.length == 0)
 		{
@@ -20,6 +20,9 @@ public class PCrotation
 			case "geneeigenvectors":
 				CreateGeneEigenvectorFile.main(argsToPass);
 				break;
+			case "geneeigenvectorsdirect":
+				CreateEigenVectorsOverGenesDirect.main(argsToPass);
+				break;	
 //			case "rotatesamples":
 //				RotateSample.main(argsToPass);
 //				break;
@@ -28,6 +31,9 @@ public class PCrotation
 //				break;
 			case "getrows":
 				GetRows.main(argsToPass);
+				break;
+			case "getcolumns":
+				GetCols.main(argsToPass);
 				break;
 			case "correctforpcs":
 				PCcorrection.main(argsToPass);
@@ -38,9 +44,12 @@ public class PCrotation
 			case "transpose":
 				Transpose.main(argsToPass);
 				break;
-//			case "identifysimilarsamples":
-//				IdentifySimilarSamples.main(argsToPass);
-//				break;
+			case "getoutliers":
+				IdentifyDiseaseGenes.main(argsToPass);
+				break;
+			case "ranksamples":
+				IdentifySimilarSamples.main(argsToPass);
+				break;
 			default:
 				printUsage();
 			    System.exit(1);
@@ -51,10 +60,13 @@ public class PCrotation
 	{
 		System.out.println("This script can be called with the following arguments:\n"
 				+ "1. geneEigenVectors\n"
-				+ "2. correctforpcs\n"
-				+ "3. getrows\n"
-				+ "4. mergefiles\n"
-				+ "5. transpose\n"
+				+ "2. correctForPCs\n"
+				+ "3. getRows\n"
+				+ "4. getColumns\n"
+				+ "5. mergeFiles\n"
+				+ "6. transpose\n"
+				+ "7. getOutliers\n"
+				+ "8. rankSamples\n"
 				+ "Supply one of these arguments for futher information\n"
 				+ "If you plan to use a large matrixes call this script like e.g.:"
 				+ "java -jar -Xmx50g PCA.jar geneEigenVectors expressionFile.txt");

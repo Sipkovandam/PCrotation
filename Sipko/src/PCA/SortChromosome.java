@@ -25,8 +25,7 @@ public class SortChromosome
 		}
 		
 		MatrixStruct sample = new MatrixStruct(sampleFile);
-		MatrixStruct geneLocations = new MatrixStruct(geneLocationFile);
-		sample = sort(sample, geneLocations);
+		sample = sort(sample, geneLocationFile);
 		String writeName = sampleFile.replace(".txt", "_locationSorted.txt");
 		sample.write(writeName);
 		System.out.println("File written to: " + writeName);
@@ -48,9 +47,14 @@ public class SortChromosome
 		}
 	}
 	
-	public static MatrixStruct sort(MatrixStruct samples, MatrixStruct chromLocs)
+	public static MatrixStruct sort(MatrixStruct samples, String chromLocationsFile)
 	{
 		//only sort those that are in the sample
+		if(chromLocationsFile == null)
+			return samples;
+	
+		pca.PCA.log("Sorting IDs based on chromosome locations");
+		MatrixStruct chromLocs = new MatrixStruct(chromLocationsFile);
 		chromLocs.keepRows(samples);
 		samples.rows();
 		System.out.println("IDs present in both files = " + chromLocs.rows());
@@ -79,6 +83,7 @@ public class SortChromosome
 		}
 		System.out.println("Missing " + unsorted + " IDs in the file used for the sort order."
 				+ "The rows for which IDs were missing have been added at the end of the sorted list");
+		
 		return sortedSample;
 	}
 	private static String[] sortChromMatrix(MatrixStruct chromLocs) 

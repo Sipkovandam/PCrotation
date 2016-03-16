@@ -5,7 +5,7 @@ public class Transpose
 
 	public static void main (String[] args)
 	{
-		String fileName = "E:/Groningen/Data/LifeLines/CountsGENES.txt";//
+		String fileName = "E:/Groningen/Data/PublicSamples/Test11/100000Samples_IndirectPCA_correlation_afterCenter/SAMPLE_covariance.txt";//
 		
 		if(!System.getProperty("user.dir").contains("C:\\Users\\Sipko\\git\\PCrotation\\Sipko"))
 		{
@@ -27,7 +27,7 @@ public class Transpose
 		
 		Matrix matrix = new Matrix(fileName);
 		//matrix.print(5,5);
-		System.out.println(matrix.rowNames.length);
+		System.out.println("Rows = " + matrix.rowNames.length + " columns = " + matrix.colNames.length);
 		matrix.writeTransposed(fileName.replace(".txt", "_transposed.txt"));
 		
 //		matrix.write(fileName.replace(".txt", "_first10.txt"), -1,10);

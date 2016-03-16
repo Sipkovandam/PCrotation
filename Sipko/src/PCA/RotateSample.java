@@ -18,6 +18,7 @@ public class RotateSample {
 		String vectorFolder = "E:/Groningen/Data/PublicSamples/Test7/est_counts_nocancernocelllineSTdevCorrected/";
 		
 		boolean tpm = false;
+		boolean correctTotalReadCount = false;
 		
 		checkArgs(args);
 		if(!System.getProperty("user.dir").contains("C:\\Users\\Sipko\\git\\PCrotation\\Sipko") || args.length !=0)
@@ -27,20 +28,20 @@ public class RotateSample {
 		}
 		String writeFolder = sampleFile.replace(".txt", "_Adj/");
 		
-		rotate(sampleFile, vectorFolder, writeFolder, tpm);	
+		rotate(sampleFile, vectorFolder, writeFolder, tpm, correctTotalReadCount);	
 	}
-	public static MatrixStruct[] rotate(String sampleFile, String vectorFolder, String writeFolder, boolean tpm) throws IOException
+	public static MatrixStruct[] rotate(String sampleFile, String vectorFolder, String writeFolder, boolean tpm, boolean correctTotalReadCount) throws IOException
 	{
-		return rotate(sampleFile, vectorFolder, writeFolder, true, true, tpm);
+		return rotate(sampleFile, vectorFolder, writeFolder, true, true, tpm, correctTotalReadCount);
 	}
 	
-	public static MatrixStruct[] rotate(String sampleFile, String vectorFolder, String writeFolder, boolean STdevCorrect, boolean log2, boolean tpm) throws IOException
+	public static MatrixStruct[] rotate(String sampleFile, String vectorFolder, String writeFolder, boolean STdevCorrect, boolean log2, boolean tpm, boolean correctTotalReadCount) throws IOException
 	{
 		/**6. Calculate PCscores for single sample**/
 		pca.PCA.log(" 1. Loading sample matrix");
 		Matrix singleSample = new Matrix(sampleFile);//expressionMatrix.getRow(0);
-		System.out.println("rows = " + singleSample.rowNames.length + "cols = " + singleSample.colNames.length);
-		singleSample = center(singleSample, vectorFolder, writeFolder, STdevCorrect, log2, tpm);
+		System.out.println("rows = " + singleSample.rowNames.length + " columns = " + singleSample.colNames.length);
+		singleSample = center(singleSample, vectorFolder, writeFolder, STdevCorrect, log2, tpm, correctTotalReadCount);
 
 		MatrixStruct singleSampleStruct = new MatrixStruct(singleSample.rowNames, singleSample.colNames, singleSample.values);
 		String saveNameSingleSampleScore = writeFolder + "SAMPLE.PC.txt";
@@ -54,9 +55,9 @@ public class RotateSample {
 	}
 	public static Matrix center(Matrix singleSample, String vectorFolder, String writeFolder) throws IOException
 	{
-		return center(singleSample, vectorFolder, writeFolder, true, true,false);
+		return center(singleSample, vectorFolder, writeFolder, true, true,false,false);
 	}
-	public static Matrix center(Matrix singleSample, String vectorFolder, String writeFolder, boolean STdevCorrect, boolean log2,boolean tpm) throws IOException 
+	public static Matrix center(Matrix singleSample, String vectorFolder, String writeFolder, boolean STdevCorrect, boolean log2,boolean tpm, boolean correctTotalReadCount) throws IOException 
 	{
 		makeFolder(writeFolder);
 		
@@ -78,6 +79,13 @@ public class RotateSample {
 			String quantileAdjustedFN = writeFolder+ "Quantile_adjusted.txt";	
 			pca.PCA.log(" 5. Writing quantile normalization adjusted file to:" + quantileAdjustedFN);
 			singleSample.write(quantileAdjustedFN);
+		}
+		
+		if(correctTotalReadCount)
+		{
+			pca.PCA.log(" 6. Correcting for total read count");
+			String correctedNotLogged =  writeFolder+ "SAMPLE_TotalReadCountNormalized.txt";
+			singleSample.correctForTotalReadCount();
 		}
 		
 		if(log2)

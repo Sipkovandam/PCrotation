@@ -8,10 +8,13 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.LineNumberReader;
+import java.text.DateFormat;
 import java.text.DecimalFormat;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
+import java.util.Date;
 import java.util.Enumeration;
 import java.util.Hashtable;
 
@@ -458,7 +461,7 @@ public class Matrix
 		//System.out.println("lines = " + nLines);		
 		return nLines;
 	}
-	public void removeNoVariance()
+	public void removeNoVariance(String removedGenesFN)
 	{
 		//important that he probes/gene/transcripts are on the X-axis (rowNames)
 		ArrayList<Integer> noVarRows = new ArrayList<Integer>();
@@ -498,6 +501,9 @@ public class Matrix
 		}
 		this.values = remainder;
 		this.rowNames = remainderRowNames;
+
+		pca.PCA.log(" 5.1 Writing file from which genes without variance are removed");
+		if(removedGenesFN != null)this.write(removedGenesFN);
 	}
 	
 	
@@ -883,6 +889,9 @@ public class Matrix
 			{
 				if(x==0)
 				{
+					DateFormat dateFormat = new SimpleDateFormat("dd/MM/yyyy");
+					Date date = new Date();
+					printOrWrite(dateFormat.format(date),writer);
 					for(int y = 0; y < maxX; y++)
 					{
 						printOrWrite("\t" + rowNames[y],writer);
@@ -973,6 +982,22 @@ public class Matrix
 			}	
 				
 			//System.out.println("Current runtime = " + runTime()/1000/1000/1000/60/24 + "days");
+		}
+	}
+	public void correctForTotalReadCount() 
+	{
+		for(int c = 0; c < this.colNames.length; c++)
+		{
+			double total = 0;
+			for(int r = 0; r < this.rowNames.length;r++)
+			{
+				total+= this.values[r][c];
+			}
+			if(total==0) total=1;
+			for(int r = 0; r < this.rowNames.length;r++)
+			{
+				this.values[r][c]/=total/1000000000/1000;
+			}
 		}
 	}
 }

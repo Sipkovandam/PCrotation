@@ -18,9 +18,10 @@ public class PCcorrection
 
 	public static void main (String[] args) throws IOException
 	{
-		String sampleFile = "E:/Groningen/Data/PublicSamples/100SamplesTest/Rsample/" + "RandomSamples.txt";
+		//String sampleFile = "E:/Groningen/Data/PublicSamples/100SamplesTest/Rsample/" + "RandomSamples.txt";
+		String sampleFile = "E:/Groningen/Data/PublicSamples/100SamplesTest/Rsample/" + "TESTexpression.txt";
 		String vectorFolder = "E:/Groningen/Data/PublicSamples/100SamplesTest/Rsample/TESTexpression/";
-		String chr21FN = "E:/Groningen/Data/PublicSamples/100SamplesTest/Rsample/Chr21FakeForTest.txt";
+		String chr21FN = null;//"E:/Groningen/Data/PublicSamples/100SamplesTest/Rsample/Chr21FakeForTest.txt";
 		
 //		String sampleFile = "E:/Groningen/Data/PublicSamples/Test8/" + "4DownSyndrome3Normal3Cancer_countsNoDupsWithlog.txt";
 //		String vectorFolder = "E:/Groningen/Data/PublicSamples/Test8/est_counts_nocancernocelllineSTdevRND/";
@@ -30,10 +31,11 @@ public class PCcorrection
 		
 		boolean log2 = true;
 		boolean correctInputForSTdevs = false;
-		boolean correctResultsForSTdevs = true;
+		boolean correctResultsForSTdevs = false;
 		boolean tpm = false;
-		int optimalPCremoval = 0;//-1 is optimal per each sample. Any other "number" then 0 is optimal per "number" samples, where it benefits at least half those "number" of sampels
-		String PCs = "0";
+		boolean correctTotalReadCount = false;
+		int optimalPCremoval = 0;//-1 is optimal per each sample. Any other "number" than 0 is optimal per "number" samples, where it benefits at least half those "number" of samples
+		String PCs = "1-51";//null if you don't want to set any PCs to correct for (just corrects for the defaults (100,300,500,1000,5000)
 		
 		if(args.length==0) 
 			checkArgs(args);
@@ -76,6 +78,9 @@ public class PCcorrection
 				case "pcs":
 					PCs = value;
 					break;
+				case "correcttotalreadcount":
+					correctTotalReadCount = Boolean.parseBoolean(value);
+					break;	
 //				case "duplicate":
 //					duplicateCutoff = Double.parseDouble(value);
 //					break;
@@ -88,20 +93,20 @@ public class PCcorrection
 		if(writeFolder == null)
 			writeFolder = sampleFile.replace(".txt", "_Adj/");
 		
-		writeParameters(sampleFile, vectorFolder, writeFolder, log2, correctInputForSTdevs, zScoresCutoff, correctResultsForSTdevs, tpm);
+		writeParameters(sampleFile, vectorFolder, writeFolder, log2, correctInputForSTdevs, zScoresCutoff, correctResultsForSTdevs, tpm, PCs);
 		
-		
-		MatrixStruct[] rotationMatrixes = RotateSample.rotate(sampleFile, vectorFolder, writeFolder, correctInputForSTdevs, log2, tpm);
+		MatrixStruct[] rotationMatrixes = RotateSample.rotate(sampleFile, vectorFolder, writeFolder, correctInputForSTdevs, log2, tpm, correctTotalReadCount);
 		MatrixStruct sampleStruct = rotationMatrixes[2];
 		System.out.println("rows = " + sampleStruct.rows());
 		
-		pca.PCA.log("13. Calculating zScores");
-		String zScoreStats = vectorFolder+"pcZscores_Stats.txt";
-		MatrixStruct zScoreMatrix = rotationMatrixes[0].copy();
-		Zscore.changeToZscores(zScoreMatrix, zScoreStats);
-		
-		pca.PCA.log("14. Writing zScores");
-		zScoreMatrix.write(writeFolder+"pcZscoresSamples.txt");
+		MatrixStruct zScoreMatrix = null;
+//		pca.PCA.log("13. Calculating zScores");
+//		String zScoreStats = vectorFolder+"pcZscores_Stats.txt";
+//		MatrixStruct zScoreMatrix = rotationMatrixes[0].copy();
+//		Zscore.changeToZscores(zScoreMatrix, zScoreStats);
+//		
+//		pca.PCA.log("14. Writing zScores");
+//		zScoreMatrix.write(writeFolder+"pcZscoresSamples.txt");
 
 		String scoreFile = writeFolder + "SAMPLE.PC.scores.txt";
 		MatrixStruct scores = new MatrixStruct(scoreFile);
@@ -112,17 +117,18 @@ public class PCcorrection
 		pca.PCA.log("16. Adjusting for PCs");
 		
 		//some very sloppy code. Just want to do things quick atm...
-		int[] PCAadjustments = new int[]{0,100,300,500,1000,5000,eigenVectors.rows()};
+		int[] PCAadjustments = new int[]{0,100,25,300,500,1000,5000,eigenVectors.rows()};
 		MatrixStruct chr21 = null;
-		if(new File(chr21FN).exists())
+		if(chr21FN != null && new File(chr21FN).exists())
 			chr21 = new MatrixStruct(chr21FN);
 			
-		adjustForPCs(sampleStruct.copy(), PCAadjustments, eigenVectors, scores, writeFolder, vectorFolder, zScoreMatrix, zScoresCutoff, log2, correctResultsForSTdevs,chr21, optimalPCremoval);
+		adjustForPCs(sampleStruct.copy(), PCAadjustments, eigenVectors, scores, writeFolder, vectorFolder, 
+				zScoreMatrix, zScoresCutoff, log2, correctResultsForSTdevs,chr21, optimalPCremoval, PCs);
 		
 		System.out.println("Done, Results saved in: " + writeFolder);
 	}
 	private static void writeParameters(String sampleFile, String vectorFolder, String writeFolder, boolean log2,
-			boolean correctInputForSTdevs, double zScoresCutoff, boolean correctResultsForSTdevs, boolean tpm) throws IOException {
+			boolean correctInputForSTdevs, double zScoresCutoff, boolean correctResultsForSTdevs, boolean tpm, String PCs) throws IOException {
 		CreateGeneEigenvectorFile.makeFolder(writeFolder);
 		DateFormat dateFormat = new SimpleDateFormat("dd/MM/yyyy HH:mm:ss");
 		Date date = new Date();
@@ -136,12 +142,13 @@ public class PCcorrection
 		writer.write("zScoresCutoff\t" + zScoresCutoff + "\n");
 		writer.write("correctResultsForSTdevs\t" + correctResultsForSTdevs + "\n");
 		writer.write("tpm\t" + tpm + "\n");
+		writer.write("PCs to correct\t" + PCs + "\n");
 		writer.close();
 		
 	}
 	private static void adjustForPCs(MatrixStruct inputMatrix, int[] PCAadjustments, MatrixStruct eigenVectors, MatrixStruct scores, 
 			String writeFolder, String vectorFolder, MatrixStruct zScores, double zScoresCutoff, boolean log2, 
-			boolean correctResultsForSTdevs, MatrixStruct chr21, int optimalPCremoval) throws IOException 
+			boolean correctResultsForSTdevs, MatrixStruct chr21, int optimalPCremoval, String PCs) throws IOException 
 	{
 		MatrixStruct sampleStruct = inputMatrix.copy();
 //		if(zScoresCutoff >= 0)//if adjusting based on z-scores get the PCs that should be removed
@@ -165,6 +172,10 @@ public class PCcorrection
 
 		MatrixStruct tTestResults = null;
 		MatrixStruct difference = null;
+		
+		ArrayList<Integer> userList = parsePCs(PCs);
+		//System.out.println("userList=" + userList);
+		
 			
 		for(int pcs = 0; pcs < PCAadjustments.length; pcs++)//for all the different numbers of PCs to correct for
 		{
@@ -172,10 +183,15 @@ public class PCcorrection
 			int adjustPCs = PCAadjustments[pcs];
 			if(adjustPCs > eigenVectors.rows())
 				adjustPCs = eigenVectors.rows()+1;
-				
+			String writePCName = Integer.toString(adjustPCs);
+			
 			ArrayList<Integer> PCsToAdjust = new ArrayList<Integer>();
 			for(int p = 1; p < adjustPCs; p++) { PCsToAdjust.add(p);}			
-			
+			if(pcs == 1 && userList != null)//if the user has a specific list he wants to correct for use this instead of the 100 PC correction.
+			{
+				PCsToAdjust = userList;
+				writePCName = PCs; 
+			}
 //				if(zScoresCutoff > 0)//for the remaining PCs correct only if Z-score is small
 //				{
 //					for(int z = adjustPCs; z < zScores.rows(); z++)
@@ -185,7 +201,7 @@ public class PCcorrection
 //							PCsToAdjust.add(z+1);
 //					}
 //				}
-			if(PCsToAdjust.size() == 0)//!= PCAadjustments.length-1
+			if(PCsToAdjust.size() == 0 || chr21 == null)//!= PCAadjustments.length-1
 				correctPCs(sampleStruct, scores, eigenVectors, PCsToAdjust,null,null, null, optimalPCremoval);
 			else //if it is correcting for the full batch of PCs, also calculate how significant the expression changes are for genes on chr 21 for each PC that is subtracted
 			{
@@ -210,10 +226,9 @@ public class PCcorrection
 					else
 						System.out.println("WARNING!: less then 2 genes of chr21 are present and thus no statistical test can be conducted on the difference after the correction of each PC");
 				}
-				
 			}
 			
-			String writeFileName = writeFolder+"PC_1-"+adjustPCs+"_.txt";
+			String writeFileName = writeFolder+"PC_1-"+writePCName+"_.txt";
 			sampleStruct.write(writeFileName);
 			createSmoothedFiles(sampleStruct,correctResultsForSTdevs,vectorFolder, writeFileName);
 		}
@@ -227,6 +242,7 @@ public class PCcorrection
 			ArrayList<Integer> PCsToAdjust, MatrixStruct chr21, MatrixStruct tTestResults,MatrixStruct difference
 			, int optimalPCremoval) {
 		double prevPvalue = 1;
+		int outcol = 0;
 		for(int pc : PCsToAdjust)//correct this sample for the selected PCs
 		{
 			for(int s = 0; s < sampleStruct.cols();s++)
@@ -251,11 +267,11 @@ public class PCcorrection
 						}
 					prevPvalue = pValue;
 					
-					tTestResults.matrix.set(pc-1, s, pValue);
-					difference.matrix.set(pc-1, s, diff);
+					tTestResults.matrix.set(outcol, s, pValue);
+					difference.matrix.set(outcol, s, diff);
 				}
 			}
-			
+			outcol++;
 			if(optimalPCremoval>0 && pc>1)//add signal back on that decreases the signal difference between chr21 and the other genes in at least half the down samples
 			{
 				//Find out if this last PC should have been kept
@@ -272,11 +288,7 @@ public class PCcorrection
 						removeSignalAllgenes(sampleStruct, chr21, scores, pc, s, eigenVectors, true);//add signal back on
 					}
 				}
-
-			}
-			
-			
-			
+			}	
 		}	
 	}
 	private static double[][] removeSignalAllgenes(MatrixStruct sampleStruct, MatrixStruct chr21, MatrixStruct scores, 
@@ -346,9 +358,7 @@ public class PCcorrection
 		pca.PCA.log("20. Highest "+ topPercent*100 + "% only");
 		MatrixStruct averages = new MatrixStruct(averagesFN);
 		averages.sortCol(0);
-		pca.PCA.log(".");
 		MatrixStruct part = keepPart(averages, topPercent, lowest);
-		pca.PCA.log("..");
 		averages.write(averagesFN.replace(".txt", "SAMPLE_Norm_columnAverages_SORTED.txt"));
 		sampleStruct.keepRows(averages);
 		part.write(averagesFN.replace(".txt", "SAMPLE_Norm_columnAverages_"+topPercent+"highestExpressed.txt"));
@@ -431,6 +441,8 @@ public class PCcorrection
 	}
 	public static ArrayList<Integer> parsePCs(String PCsToAdjust) 
 	{//function takes format like: "1,4,5-10,3-10"
+		if(PCsToAdjust.contains("null"))
+			return null;
 		ArrayList<Integer> PCs = new ArrayList<Integer>();
 		if(PCsToAdjust.contains("-"))
 		{
@@ -443,7 +455,7 @@ public class PCcorrection
 				String[] ele2 = eles[e+1].split(",");
 				int end = Integer.parseInt(ele2[0]);
 				for(int n = start; n <= end; n++)
-					PCs.add(n-1);
+					PCs.add(n);
 			}
 		}
 		if(PCsToAdjust.contains(","))
@@ -452,7 +464,7 @@ public class PCcorrection
 			for(int e = 0; e < eles.length; e++)
 			{
 				if(!eles[e].contains("-"))
-					PCs.add(Integer.parseInt(eles[e])-1);
+					PCs.add(Integer.parseInt(eles[e]));
 			}
 		}
 		

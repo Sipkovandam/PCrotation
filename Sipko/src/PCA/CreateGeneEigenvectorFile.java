@@ -31,11 +31,14 @@ public class CreateGeneEigenvectorFile
 		String writeFolder = expFile.replace(".txt", "/");
 		System.out.println(System.getProperty("user.dir"));
 		
-		boolean writeAll = true;
+		boolean writeAll = false;
 		boolean correctInputForSTdevs = false;
+		boolean correctInputForSTdevsAfterCenter = false;
 		boolean log2 = true;
 		boolean tpm = false;	
 		boolean STdevCutoff = false;
+		boolean zScores = false;
+		boolean correctTotalReadCount = true;
 		
 		double randomValue = 0;
 		double duplicateCutoff = 1;
@@ -62,6 +65,12 @@ public class CreateGeneEigenvectorFile
 				case "correctstdevs":
 					correctInputForSTdevs = Boolean.parseBoolean(value);
 					break;
+				case "correctstdevsaftercenter":
+					correctInputForSTdevsAfterCenter = Boolean.parseBoolean(value);
+					break;
+				case "correcttotalreadcount":
+					correctTotalReadCount = Boolean.parseBoolean(value);
+					break;
 				case "log2":
 					log2 = Boolean.parseBoolean(value);
 					break;
@@ -83,6 +92,9 @@ public class CreateGeneEigenvectorFile
 				case "stdevcutoff":
 					STdevCutoff = Boolean.parseBoolean(value);
 					break;
+				case "zScores":
+					zScores = Boolean.parseBoolean(value);
+					break;
 				default:
 					checkArgs(args);
 					System.out.println("Incorrect argument supplied; exiting");
@@ -90,13 +102,16 @@ public class CreateGeneEigenvectorFile
 			}
 		}
 
-		writeParameters(expFile, writeFolder, chromLocationsFile, writeAll, log2, correctInputForSTdevs, randomValue, duplicateCutoff, highestExpressed,tpm, STdevCutoff);
+		writeParameters(expFile, writeFolder, chromLocationsFile, writeAll, log2, correctInputForSTdevs, 
+				randomValue, duplicateCutoff, highestExpressed,tpm, STdevCutoff, zScores);
 		
-		run(expFile, writeFolder, chromLocationsFile, writeAll, log2, correctInputForSTdevs, randomValue, duplicateCutoff, highestExpressed, tpm, STdevCutoff);
+		run(expFile, writeFolder, chromLocationsFile, writeAll, log2, correctInputForSTdevs,
+				randomValue, duplicateCutoff, highestExpressed, tpm, STdevCutoff, correctInputForSTdevsAfterCenter,
+				zScores, correctTotalReadCount);
 	}
 	private static void writeParameters(String expFile, String writeFolder, String chromLocationsFile, boolean writeAll,
 			boolean log2, boolean correctInputForSTdevs, double randomValue, double duplicateCutoff, double highestExpressed,
-			boolean tpm, boolean STdevCutoff) throws IOException {
+			boolean tpm, boolean STdevCutoff, boolean zScores) throws IOException {
 		makeFolder(writeFolder);
 		DateFormat dateFormat = new SimpleDateFormat("dd/MM/yyyy HH:mm:ss");
 		Date date = new Date();
@@ -113,6 +128,7 @@ public class CreateGeneEigenvectorFile
 		writer.write("TopXhighestExpressed\t" + highestExpressed + "\n");
 		writer.write("tpm\t" + tpm + "\n");
 		writer.write("STdevCutoff\t" + STdevCutoff + "\n");
+		writer.write("zScores\t" + zScores + "\n");
 		writer.close();
 	}
 	static void checkArgs(String[] args) 
@@ -133,47 +149,36 @@ public class CreateGeneEigenvectorFile
 		System.exit(1);
 	}
 	public static void run(String expFile, String writeFolder, String chromLocationsFile, boolean writeAll, 
-			boolean log2, boolean correctInputForSTdevs, double randomAddValue, double removeDuplicates, double highestExpressed, boolean tpm, boolean STdevCutoff) throws IOException, NotConvergedException
+			boolean log2, boolean correctInputForSTdevs, double randomAddValue, double removeDuplicates, 
+			double highestExpressed, boolean tpm, boolean STdevCutoff, boolean correctInputForSTdevsAfterCenter,
+			boolean zScores, boolean correctTotalReadCount) throws IOException, NotConvergedException
 	{		
 		pca.PCA.log(" 1. Reading expression file");
 		MatrixStruct expressionMatrixStruct = new MatrixStruct(expFile);
 		
-		pca.PCA.log(" 2. Removing duplicates (r>"+removeDuplicates+")");
 //		expressionMatrixStruct.write(writeFolder+"startMatrix.txt");
-		expressionMatrixStruct = removeDuplicates(expressionMatrixStruct, removeDuplicates);
-		String duplicatesRemovedFN = writeFolder+"DuplicatesRemoved.txt";
-		if(writeAll)expressionMatrixStruct.write(duplicatesRemovedFN);
-		
+		expressionMatrixStruct = removeDuplicates(expressionMatrixStruct, removeDuplicates, writeFolder,writeAll);
+
 		pca.PCA.log(" 3. Transposing");
 		expressionMatrixStruct.transpose();
 			
-		if(chromLocationsFile != null)
-		{
-			pca.PCA.log("Sorting IDs based on chromosome locations");
-			MatrixStruct chromLocs = new MatrixStruct(chromLocationsFile);
-			expressionMatrixStruct = SortChromosome.sort(expressionMatrixStruct, chromLocs);
-		}
+		//sorting on chromosome locations
+		expressionMatrixStruct = SortChromosome.sort(expressionMatrixStruct, chromLocationsFile);
 	
-		if(randomAddValue > 0)
-		{
-			pca.PCA.log(" 4. Adding random values <"+ randomAddValue +" to values <" + randomAddValue);
-			expressionMatrixStruct.addRandomValues(randomAddValue);
-			expressionMatrixStruct.write(writeFolder+"randAddedToBelow_" +randomAddValue + ".txt");
-		}
+		//adding random values
+		expressionMatrixStruct.addRandomValues(randomAddValue);
+		expressionMatrixStruct.write(writeFolder+"randAddedToBelow_" +randomAddValue + ".txt");
 
 		Matrix expressionMatrix = new Matrix(expressionMatrixStruct);
 		expressionMatrixStruct = null;
 			
 		pca.PCA.log(" 5. Removing genes without variance");
-		expressionMatrix.removeNoVariance();
-		
-		pca.PCA.log(" 5.1 Writing file from which genes without variance are removed");
 		String removedGenesFN = writeFolder+"noVarRemoved.txt";
-		if(writeAll)expressionMatrix.write(removedGenesFN);
+		expressionMatrix.removeNoVariance(removedGenesFN);
 		
 		if(highestExpressed >0 && highestExpressed < 1)
 		{
-			if(!tpm)
+			if(!tpm && !correctTotalReadCount)
 			{
 				pca.PCA.log(" Quantile normalization before taking averageCutoff");
 				expressionMatrix.quantileNormAdjust(expressionMatrix.quantileNormVector());
@@ -198,18 +203,24 @@ public class CreateGeneEigenvectorFile
 			expressionMatrix = new Matrix(expressionMatrixStruct);
 		}
 		
-		if(!tpm)
+		if(!tpm && !correctTotalReadCount)
 		{
 			pca.PCA.log(" 6. Calculating quantile normalization vector");
 			Matrix qNormVector = expressionMatrix.quantileNormVector();
-			if(writeAll)qNormVector.write(writeFolder+ "SAMPLE_QuantileVector.txt");
-		
+			qNormVector.write(writeFolder+ "SAMPLE_QuantileVector.txt");
 		
 			pca.PCA.log(" 7. Quantile normalization");
 			expressionMatrix.quantileNormAdjust(qNormVector);
 			String quantFNnotLogged = writeFolder+ "SAMPLE_QuantileNormalized.txt";
 			pca.PCA.log(" 8. Writing quantile normalized data in: " + quantFNnotLogged);
 			if(writeAll)expressionMatrix.write(quantFNnotLogged);
+		}
+		if(correctTotalReadCount)
+		{
+			pca.PCA.log(" 6. Correcting for total read count");
+			String correctedNotLogged =  writeFolder+ "SAMPLE_TotalReadCountNormalized.txt";
+			expressionMatrix.correctForTotalReadCount();
+			if(writeAll)expressionMatrix.write(correctedNotLogged);
 		}
 		
 		if(log2)
@@ -221,18 +232,19 @@ public class CreateGeneEigenvectorFile
 			pca.PCA.log("10. Writing logged SAMPLE_Log2 normalized data in: " + quantFN);
 			if(writeAll)expressionMatrix.write(quantFN);
 		}
-		
+				
 		pca.PCA.log("11. Transposing");
 		expressionMatrix.transpose();
 		
 		pca.PCA.log("12 Calculating STdevs");		
 		MatrixStruct expressionStruct = new MatrixStruct(expressionMatrix.rowNames, expressionMatrix.colNames, expressionMatrix.values); //I still need to rewrite add a few functions in Matrix to MatrixStruct, but cba atm
 		System.gc();System.gc();
+		
 		MatrixStruct stDevs = expressionStruct.stDevCols();
 		stDevs.write(writeFolder + "gene_STDevs.txt");
 		if(correctInputForSTdevs)
 		{
-			pca.PCA.log("13 Divide all gene values by STdev for each gene");	
+			pca.PCA.log("13 Divide all gene values by STdev for each gene ");	
 			expressionStruct.divideBy(stDevs,false);//false corrects columns, true corrects rows
 			
 			pca.PCA.log("14 Writing matrix divided by gene STdevs");
@@ -258,9 +270,20 @@ public class CreateGeneEigenvectorFile
 		String expNormLogCentFile = writeFolder+"MATRIX_Centered.txt";
 		pca.PCA.log("19. Writing centered file in: " + expNormLogCentFile);
 		expressionMatrix.write(expNormLogCentFile);
-			
+		
 		expressionStruct = new MatrixStruct(expressionMatrix.rowNames, expressionMatrix.colNames, expressionMatrix.values);
+		
 		expressionMatrix = null;
+		if(correctInputForSTdevsAfterCenter)
+		{
+			MatrixStruct stDevsRows = expressionStruct.stDevRows();
+			stDevsRows.write(writeFolder + "_SampleStDevs.txt");
+			pca.PCA.log("13 Divide all gene values by STdev for each sample");	
+			expressionStruct.divideBy(stDevsRows,true);//false corrects columns, true corrects rows
+			
+			pca.PCA.log("14 Writing matrix divided by gene STdevs");
+			expressionStruct.write(writeFolder + "_DividedBySGenesSTdev.txt");
+		}
 		
 		pca.PCA.log("20. creating covariance matrix over the samples");
 		ConcurrentCovariation calculator = new ConcurrentCovariation(20);
@@ -292,18 +315,24 @@ public class CreateGeneEigenvectorFile
 		MatrixStruct[] scoreResults = PCA.scores(geneEigenVectors,expressionStruct, writeFolder+"SAMPLE_PC.txt");
 		MatrixStruct PCsampleScores = scoreResults[0];
 		
-		pca.PCA.log("26. Calculating Z-scores for all PCscores for all samples");
-		MatrixStruct zScoreStats = Zscore.changeToZscores(PCsampleScores);
-		
-		pca.PCA.log("27. Writing Z-scores");
-		PCsampleScores.write(writeFolder+ "pcZscoresSamples.txt");
-		zScoreStats.write(writeFolder+ "pcZscores_Stats.txt");
+		if(zScores == true)
+		{
+			pca.PCA.log("26. Calculating Z-scores for all PCscores for all samples");
+			MatrixStruct zScoreStats = Zscore.changeToZscores(PCsampleScores);
+			
+			pca.PCA.log("27. Writing Z-scores");
+			PCsampleScores.write(writeFolder+ "pcZscoresSamples.txt");
+			zScoreStats.write(writeFolder+ "pcZscores_Stats.txt");
+		}
 		
 		pca.PCA.log("Files written to: " + writeFolder);
 	}
-	private static MatrixStruct removeDuplicates(MatrixStruct expression, double duplicateCutoff) {
+	private static MatrixStruct removeDuplicates(MatrixStruct expression, double duplicateCutoff, String writeFolder, boolean write) throws IOException {
 		//this function assumes duplicate rows are always next to each other (as is usually the case)
 		//This saves some computational time
+		if(duplicateCutoff >= 1)
+			return expression;
+		pca.PCA.log(" 2. Removing duplicates (r>"+duplicateCutoff+")");
 		ArrayList<Integer> rowsToRemove = new ArrayList<Integer>();
 		for(int r = 0; r < expression.rows()-1; r++)
 		{
@@ -330,7 +359,8 @@ public class CreateGeneEigenvectorFile
 			adjustedMatrix.setRow(outRow, expression.getRowHeaders()[r], expression.getRowValues(r));
 			outRow++;
 		}
-		
+		String duplicatesRemovedFN = writeFolder+"DuplicatesRemoved.txt";
+		if(write)adjustedMatrix.write(duplicatesRemovedFN);
 		return adjustedMatrix;
 	}
 	static void makeFolder(String writeFolder) 
