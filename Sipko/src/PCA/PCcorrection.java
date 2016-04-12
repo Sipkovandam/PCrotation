@@ -12,30 +12,51 @@ import java.util.Date;
 import org.apache.commons.math3.stat.inference.TTest;
 
 import pca.MatrixStruct;
+import umcg.genetica.math.stats.Correlation;
 
 public class PCcorrection 
 {
-
+	
+	static boolean setLowestToAverage = false;
+	static boolean adjustSampleAverages = true;
+	
 	public static void main (String[] args) throws IOException
 	{
 		//String sampleFile = "E:/Groningen/Data/PublicSamples/100SamplesTest/Rsample/" + "RandomSamples.txt";
 		String sampleFile = "E:/Groningen/Data/PublicSamples/100SamplesTest/Rsample/" + "TESTexpression.txt";
 		String vectorFolder = "E:/Groningen/Data/PublicSamples/100SamplesTest/Rsample/TESTexpression/";
+		String writeFolder = null;
 		String chr21FN = null;//"E:/Groningen/Data/PublicSamples/100SamplesTest/Rsample/Chr21FakeForTest.txt";
 		
-//		String sampleFile = "E:/Groningen/Data/PublicSamples/Test8/" + "4DownSyndrome3Normal3Cancer_countsNoDupsWithlog.txt";
-//		String vectorFolder = "E:/Groningen/Data/PublicSamples/Test8/est_counts_nocancernocelllineSTdevRND/";
+//		String sampleFile = "E:/Groningen/Data/PublicSamples/Test12/" + "18DownSyndrome26Normal2Cancer_TPM.txt";
+//		String vectorFolder = "E:/Groningen/Data/PublicSamples/Test13/TPM_9900SamplesTop0.2/";
+//		String writeFolder = "E:/Groningen/Data/PublicSamples/Test13/TPM_9900SamplesTop0.2/18DownSyndrome26Normal2Cancer_TPM_N/";
 		
-		double zScoresCutoff = Double.parseDouble("0");//I removed this (commented out), as it seems pretty useless
-		String writeFolder = null;
+//		String sampleFile = "E:/Groningen/Data/Monogenetic_disease_samples_RadBoud/" + "CountsGENES.txt";
+//		String vectorFolder = "E:/Groningen/Data/Monogenetic_disease_samples_RadBoud/directPCA_Rlog_1.0_Correl/";
+//		String writeFolder = "E:/Groningen/Data/Monogenetic_disease_samples_RadBoud/directPCA_Rlog_1.0_Correl/RadboudSamples/";
+		
+//		String sampleFile = "E:/Groningen/Data/Iris/CountsSD200/" + "CountsGENES.txt";
+//		String vectorFolder = "E:/Groningen/Data/PublicSamples/04-2016/directPCA_Rlog_0.2/";
+//		String writeFolder = "E:/Groningen/Data/Iris/CountsSD200/directPCA_Rlog_0.2_covar/IrisSD200_2/";
+		
+		String chromLocationsFile = "E:/Groningen/Data/GenePositionInfo_Chr1-22.txt";
+		//String chromLocationsFile = "E:/Groningen/Data/GenePositionInfo_23X_24Y_25MT_26rest.txt";
 		
 		boolean log2 = true;
 		boolean correctInputForSTdevs = false;
-		boolean correctResultsForSTdevs = false;
-		boolean tpm = false;
-		boolean correctTotalReadCount = false;
-		int optimalPCremoval = 0;//-1 is optimal per each sample. Any other "number" than 0 is optimal per "number" samples, where it benefits at least half those "number" of samples
-		String PCs = "1-51";//null if you don't want to set any PCs to correct for (just corrects for the defaults (100,300,500,1000,5000)
+		boolean correctResultsForSTdevs = true;
+		boolean skipQuantileNorm = true;
+		
+		int optimalPCremoval = -1;
+		
+		double zScoresCutoff = Double.parseDouble("0");//I removed this (commented out), as it seems pretty useless
+		double correctTotalReadCount = -1;//log((gene+0.5)/total*value) //value = number of counts the sample ends up having in total (does noting if 0 or lower)
+		double spearman = -1;//-1 is optimal per each sample. Any other "number" than 0 is optimal per "number" samples, where it benefits at least half those "number" of samples
+		double addBeforeLog = 0;
+		double rLog = 1000000;
+		
+		String PCs = "1-211";//null if you don't want to set any PCs to correct for (just corrects for the defaults (100,300,500,1000,5000)
 		
 		if(args.length==0) 
 			checkArgs(args);
@@ -51,6 +72,8 @@ public class PCcorrection
 				case "vectorfolder":
 					vectorFolder = value;
 					break;
+				case "chrom":
+					chromLocationsFile = value;
 //				case "zscorescutoff":
 //					zScoresCutoff = Double.parseDouble(value);
 //					break;
@@ -63,8 +86,8 @@ public class PCcorrection
 				case "correctresultsforstdevs":
 					correctResultsForSTdevs = Boolean.parseBoolean(value);
 					break;
-				case "tpm":
-					tpm = Boolean.parseBoolean(value);
+				case "noqn":
+					skipQuantileNorm = Boolean.parseBoolean(value);
 					break;
 				case "writefolder":
 					writeFolder = value;
@@ -79,8 +102,20 @@ public class PCcorrection
 					PCs = value;
 					break;
 				case "correcttotalreadcount":
-					correctTotalReadCount = Boolean.parseBoolean(value);
-					break;	
+					correctTotalReadCount = Double.parseDouble(value);
+					break;
+				case "spearman":
+					spearman = Double.parseDouble(value);
+					break;
+				case "rlog":
+					rLog = Double.parseDouble(value);
+					break;
+				case "lowesttoaverage":
+					setLowestToAverage = Boolean.parseBoolean(value);
+					break;
+				case "adjustsampleaverages":
+					adjustSampleAverages = Boolean.parseBoolean(value);
+					break;
 //				case "duplicate":
 //					duplicateCutoff = Double.parseDouble(value);
 //					break;
@@ -90,12 +125,16 @@ public class PCcorrection
 					System.exit(1);
 			}
 		}
+		
 		if(writeFolder == null)
 			writeFolder = sampleFile.replace(".txt", "_Adj/");
 		
-		writeParameters(sampleFile, vectorFolder, writeFolder, log2, correctInputForSTdevs, zScoresCutoff, correctResultsForSTdevs, tpm, PCs);
+		writeParameters(sampleFile, vectorFolder, writeFolder, log2, correctInputForSTdevs, zScoresCutoff, 
+				correctResultsForSTdevs, skipQuantileNorm, PCs, correctTotalReadCount, spearman, rLog);
 		
-		MatrixStruct[] rotationMatrixes = RotateSample.rotate(sampleFile, vectorFolder, writeFolder, correctInputForSTdevs, log2, tpm, correctTotalReadCount);
+		MatrixStruct[] rotationMatrixes = RotateSample.rotate(sampleFile, vectorFolder, writeFolder, correctInputForSTdevs, 
+				log2, skipQuantileNorm, correctTotalReadCount, spearman, adjustSampleAverages, setLowestToAverage,
+				addBeforeLog, rLog, sampleFile, chromLocationsFile);
 		MatrixStruct sampleStruct = rotationMatrixes[2];
 		System.out.println("rows = " + sampleStruct.rows());
 		
@@ -110,25 +149,25 @@ public class PCcorrection
 
 		String scoreFile = writeFolder + "SAMPLE.PC.scores.txt";
 		MatrixStruct scores = new MatrixStruct(scoreFile);
-		
-		pca.PCA.log("15. Reading eigenvector matrix");
+	
 		MatrixStruct eigenVectors = rotationMatrixes[3];
 		
 		pca.PCA.log("16. Adjusting for PCs");
 		
 		//some very sloppy code. Just want to do things quick atm...
-		int[] PCAadjustments = new int[]{0,100,25,300,500,1000,5000,eigenVectors.rows()};
+		int[] PCAadjustments = new int[]{0,100,1,25,300,500,1000,5000,eigenVectors.rows()};
 		MatrixStruct chr21 = null;
 		if(chr21FN != null && new File(chr21FN).exists())
 			chr21 = new MatrixStruct(chr21FN);
 			
-		adjustForPCs(sampleStruct.copy(), PCAadjustments, eigenVectors, scores, writeFolder, vectorFolder, 
+		adjustForPCs(sampleStruct, PCAadjustments, eigenVectors, scores, writeFolder, vectorFolder, 
 				zScoreMatrix, zScoresCutoff, log2, correctResultsForSTdevs,chr21, optimalPCremoval, PCs);
 		
 		System.out.println("Done, Results saved in: " + writeFolder);
 	}
 	private static void writeParameters(String sampleFile, String vectorFolder, String writeFolder, boolean log2,
-			boolean correctInputForSTdevs, double zScoresCutoff, boolean correctResultsForSTdevs, boolean tpm, String PCs) throws IOException {
+			boolean correctInputForSTdevs, double zScoresCutoff, boolean correctResultsForSTdevs, boolean skipQN, String PCs,
+			double correctTotalReadCount, double spearman, double rLog) throws IOException {
 		CreateGeneEigenvectorFile.makeFolder(writeFolder);
 		DateFormat dateFormat = new SimpleDateFormat("dd/MM/yyyy HH:mm:ss");
 		Date date = new Date();
@@ -141,8 +180,13 @@ public class PCcorrection
 		writer.write("correctInputForSTdevs\t" + correctInputForSTdevs + "\n");
 		writer.write("zScoresCutoff\t" + zScoresCutoff + "\n");
 		writer.write("correctResultsForSTdevs\t" + correctResultsForSTdevs + "\n");
-		writer.write("tpm\t" + tpm + "\n");
+		writer.write("SkipQuantileNormalization\t" + skipQN + "\n");
 		writer.write("PCs to correct\t" + PCs + "\n");
+		writer.write("correctTotalReadCount\t" + correctTotalReadCount + "\n");
+		writer.write("spearman\t" + spearman + "\n");
+		writer.write("lowesttoaverage\t" + setLowestToAverage + "\n");
+		writer.write("adjustSampleAverages\t" + adjustSampleAverages + "\n");
+		writer.write("rLog\t" + rLog + "\n");
 		writer.close();
 		
 	}
@@ -150,7 +194,9 @@ public class PCcorrection
 			String writeFolder, String vectorFolder, MatrixStruct zScores, double zScoresCutoff, boolean log2, 
 			boolean correctResultsForSTdevs, MatrixStruct chr21, int optimalPCremoval, String PCs) throws IOException 
 	{
-		MatrixStruct sampleStruct = inputMatrix.copy();
+//		pca.PCA.log("Copying matrix");
+//		MatrixStruct sampleStruct = inputMatrix.copy();
+//		pca.PCA.log("Matrix copy done");
 //		if(zScoresCutoff >= 0)//if adjusting based on z-scores get the PCs that should be removed
 //		{
 //			for(int s = 0; s < sampleStruct.cols();s++)
@@ -175,11 +221,13 @@ public class PCcorrection
 		
 		ArrayList<Integer> userList = parsePCs(PCs);
 		//System.out.println("userList=" + userList);
+		pca.PCA.log("Calculating variance explained");
+		varianceExplained(PCAadjustments[PCAadjustments.length-1], writeFolder, eigenVectors, inputMatrix);
+		pca.PCA.log("Calculating variance explained done");
 		
-			
 		for(int pcs = 0; pcs < PCAadjustments.length; pcs++)//for all the different numbers of PCs to correct for
 		{
-			sampleStruct = inputMatrix.copy();
+			MatrixStruct sampleStruct = inputMatrix.copy();
 			int adjustPCs = PCAadjustments[pcs];
 			if(adjustPCs > eigenVectors.rows())
 				adjustPCs = eigenVectors.rows()+1;
@@ -238,6 +286,21 @@ public class PCcorrection
 			difference.write(writeFolder+"differencePerPCchr21.txt");
 		}
 	}
+	private static void varianceExplained(int i, String writeFolder, MatrixStruct eigenVectors, MatrixStruct sampleStruct) throws IOException {
+		MatrixStruct explained = new MatrixStruct(eigenVectors.rows(), sampleStruct.cols());
+		explained.setRowHeaders(eigenVectors.getRowHeaders());
+		explained.setColHeaders(sampleStruct.getColHeaders());
+		for(int c = 0; c < explained.cols(); c++)//samples are on the columns
+			for(int r = 0; r < explained.rows(); r++)//PCs are on the rows
+			{
+				double[] evValues = eigenVectors.getRowValues(r);
+				double[] sampleValues = sampleStruct.getColValues(c);
+				double correlation = Correlation.correlate(evValues,sampleValues);
+				double varianceExplained = Math.pow(correlation, 2);
+				explained.matrix.set(r,c,varianceExplained);
+			}
+		explained.write(writeFolder+"VarianceExplained.txt");
+	}
 	private static void correctPCs(MatrixStruct sampleStruct, MatrixStruct scores, MatrixStruct eigenVectors,
 			ArrayList<Integer> PCsToAdjust, MatrixStruct chr21, MatrixStruct tTestResults,MatrixStruct difference
 			, int optimalPCremoval) {
@@ -245,8 +308,11 @@ public class PCcorrection
 		int outcol = 0;
 		for(int pc : PCsToAdjust)//correct this sample for the selected PCs
 		{
+			if(pc > eigenVectors.rows())
+				break;
 			for(int s = 0; s < sampleStruct.cols();s++)
 			{	
+				//remove the signal of this single PC from all the genes
 				double[][] out = removeSignalAllgenes(sampleStruct, chr21, scores, pc, s, eigenVectors, false);
 				double[] onChr21 = out[0];
 				double[] others = out[1];
@@ -259,7 +325,7 @@ public class PCcorrection
 					double avgOthers = org.apache.commons.math3.stat.StatUtils.mean(others);
 					double diff= avgOthers-avgChr21;
 					
-					if(optimalPCremoval == -1)
+					if(optimalPCremoval == 1)
 						if(prevPvalue < pValue)//if the previous p-value is smaller, just add the signal back on
 						{
 							removeSignalAllgenes(sampleStruct, chr21, scores, pc, s, eigenVectors, true);//add signal back on
@@ -306,13 +372,15 @@ public class PCcorrection
 		
 		for(int gene = 0; gene < sampleStruct.rows(); gene++)
 		{
-			
 			double signal = scores.matrix.get(pc-1, s)*eigenVectors.matrix.get(pc-1, gene);
-			//System.out.println("PC =" +pc+" signal = \t" + signal);
+//			if(gene == 0 && pc <= 2)
+//				System.out.println("gene = " +sampleStruct.getRowHeaders()[gene] + " PC =" +pc+" signal = \t" + signal + 
+//						" score ="+ scores.matrix.get(pc-1, s) + " vectorValue= " + eigenVectors.matrix.get(pc-1, gene)+ "val before = " +sampleStruct.matrix.get(gene, s));
 			if(add)//add the signal instead of removing it
 				signal *= -1;
 			sampleStruct.matrix.add(gene, s, -signal);
-			
+//			if(gene == 0 && pc <= 2)
+//				System.out.println("gene = " +sampleStruct.getRowHeaders()[gene] + " PC =" +pc+"val after = " +sampleStruct.matrix.get(gene, s));
 			if(chr21 != null)
 			{
 				if(chr21.rowHash.containsKey(sampleStruct.getRowHeaders()[gene]))
@@ -354,16 +422,18 @@ public class PCcorrection
 //		smoothSignal(sampleStruct.copy(),smoothNgenes,writeFileName.replace(".txt", "Top"+topPercent*100+"%_.txt"));
 		
 	}
-	static void keepTopPercentage(MatrixStruct sampleStruct, String averagesFN, double topPercent, String writeFileName, boolean lowest) throws IOException {
+	static void keepTopPercentage(MatrixStruct sampleStruct, String averagesFN, double topPercent, String writeFileName, boolean lowest, boolean writeAll) throws IOException {
 		pca.PCA.log("20. Highest "+ topPercent*100 + "% only");
 		MatrixStruct averages = new MatrixStruct(averagesFN);
 		averages.sortCol(0);
+		averages.write(averagesFN.replace(".txt", "SAMPLE_Norm_columnAverages_SORTED_ALL.txt"));
 		MatrixStruct part = keepPart(averages, topPercent, lowest);
 		averages.write(averagesFN.replace(".txt", "SAMPLE_Norm_columnAverages_SORTED.txt"));
 		sampleStruct.keepRows(averages);
 		part.write(averagesFN.replace(".txt", "SAMPLE_Norm_columnAverages_"+topPercent+"highestExpressed.txt"));
 		sampleStruct.keepRows(part);
-		sampleStruct.write(writeFileName.replace(".txt",".Top"+topPercent*100+"%only.txt"));
+		if(writeAll)
+			sampleStruct.write(writeFileName.replace(".txt",".Top"+topPercent*100+"%only.txt"));
 	}
 	private static void devideBySTdev(MatrixStruct sampleStruct, boolean correctResultsForSTdevs, String vectorFolder,
 			String writeFileName) throws IOException {
@@ -372,6 +442,10 @@ public class PCcorrection
 		{
 			pca.PCA.log("16. Divide by standard deviation");
 			MatrixStruct STdevs = new MatrixStruct(vectorFolder+"gene_STDevs.txt");
+			//if the standard deviation is smaller then 1, set it to 1 to avoid inflated values for genes that have a very small stdev
+			for(int s = 0; s < STdevs.rows(); s++)
+				if(STdevs.matrix.get(s, 0) < 1)
+					STdevs.matrix.set(s, 0,1);
 			sampleStruct.divideBy(STdevs, true);
 			sampleStruct.write(writeFileName.replace(".txt", "DevidedBySTdevs.txt"));
 		}

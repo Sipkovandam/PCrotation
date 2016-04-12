@@ -11,24 +11,22 @@ import pca.MatrixStruct;
 
 public class SortChromosome 
 {
-
+	
 	public static void main(String[] args) throws IOException
 	{
 		String sampleFile = "E:/Groningen/Data/PublicSamples/100SamplesTest/Rsample/RandomSamples_Adj/" + "Adjusted_PC0_transposed.txt";
-		String geneLocationFile = "E:/Groningen/Data/GenePositionInfo_23X_24Y_25MT_26rest.txt";
+		String chromLocationsFile = "E:/Groningen/Data/GenePositionInfo_23X_24Y_25MT_26rest.txt";
+		boolean writeAll = true;
+		String writeFolder = null;
 		
 		checkArgs(args);
 		if(!System.getProperty("user.dir").contains("C:\\Users\\Sipko\\git\\PCrotation\\Sipko") && args.length !=0)
 		{
 			sampleFile = args[0];
-			geneLocationFile = args[1];
+			chromLocationsFile = args[1];
 		}
+		sortChromosome(sampleFile, chromLocationsFile, writeAll, writeFolder);
 		
-		MatrixStruct sample = new MatrixStruct(sampleFile);
-		sample = sort(sample, geneLocationFile);
-		String writeName = sampleFile.replace(".txt", "_locationSorted.txt");
-		sample.write(writeName);
-		System.out.println("File written to: " + writeName);
 	}
 	public static void checkArgs(String[] args)
 	{
@@ -46,16 +44,29 @@ public class SortChromosome
 			System.exit(1);
 		}
 	}
-	
+	public static MatrixStruct sortChromosome(String sampleFile, String chromLocationsFile, boolean writeAll, String writeFolder) throws IOException
+	{
+		MatrixStruct sampleStruct = new MatrixStruct(sampleFile);
+		sampleStruct.putGenesOnRows();
+		sampleStruct = SortChromosome.sort(sampleStruct , chromLocationsFile);
+		sampleFile = writeFolder+"chromSorted.txt";
+		if(writeAll)
+		{
+			sampleStruct.write(sampleFile);
+			System.out.println("File written to: " + writeFolder+"chromSorted.txt");
+		}
+		return sampleStruct;
+	}
 	public static MatrixStruct sort(MatrixStruct samples, String chromLocationsFile)
 	{
-		//only sort those that are in the sample
+		
 		if(chromLocationsFile == null)
 			return samples;
 	
 		pca.PCA.log("Sorting IDs based on chromosome locations");
 		MatrixStruct chromLocs = new MatrixStruct(chromLocationsFile);
-		chromLocs.keepRows(samples);
+		//only sorts those that are in the sample
+		samples.keepRows(chromLocs);
 		samples.rows();
 		System.out.println("IDs present in both files = " + chromLocs.rows());
 		//first sort the chromosome location file

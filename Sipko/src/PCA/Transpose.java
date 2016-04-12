@@ -5,7 +5,7 @@ public class Transpose
 
 	public static void main (String[] args)
 	{
-		String fileName = "E:/Groningen/Data/PublicSamples/Test11/100000Samples_IndirectPCA_correlation_afterCenter/SAMPLE_covariance.txt";//
+		String fileName = "E:/Groningen/Data/PublicSamples/Test13/CORRELATION/Correlation Averages/TPM_9900Samples1.0_Correl_NoLOG/gene_correlation.txt";//
 		
 		if(!System.getProperty("user.dir").contains("C:\\Users\\Sipko\\git\\PCrotation\\Sipko"))
 		{

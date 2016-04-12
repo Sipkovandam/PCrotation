@@ -1,9 +1,11 @@
 package PCA;
 
 import java.io.IOException;
+import java.nio.file.Paths;
 import java.util.Arrays;
 
 import no.uib.cipr.matrix.NotConvergedException;
+import pca.PCA;
 
 public class PCrotation 
 {
@@ -35,6 +37,9 @@ public class PCrotation
 			case "getcolumns":
 				GetCols.main(argsToPass);
 				break;
+			case "getcols":
+				GetCols.main(argsToPass);
+				break;
 			case "correctforpcs":
 				PCcorrection.main(argsToPass);
 				break;
@@ -50,6 +55,9 @@ public class PCrotation
 			case "ranksamples":
 				IdentifySimilarSamples.main(argsToPass);
 				break;
+			case "pcscores":
+				PCA.scores(Paths.get(argsToPass[0]), Paths.get(argsToPass[1]));
+				break;
 			default:
 				printUsage();
 			    System.exit(1);
@@ -60,6 +68,7 @@ public class PCrotation
 	{
 		System.out.println("This script can be called with the following arguments:\n"
 				+ "1. geneEigenVectors\n"
+				+ "1. geneEigenVectorsDirect"
 				+ "2. correctForPCs\n"
 				+ "3. getRows\n"
 				+ "4. getColumns\n"

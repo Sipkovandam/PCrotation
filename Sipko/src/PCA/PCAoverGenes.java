@@ -100,7 +100,7 @@ public class PCAoverGenes
 		ConcurrentCorrelation calculator = new ConcurrentCorrelation(20);//correlation instead of covariation
 		//lets do it over the genes! ;)
 		expressionStruct.transpose();
-		double[][] inMat = expressionStruct.getSquareMatrix();
+		double[][] inMat = expressionStruct.getMatrix();
 		double[][] covMatrix = calculator.pairwiseCorrelation(inMat);;//correlation instead of covariation
 		covMat = new MatrixStruct(expressionStruct.getRowHeaders(), expressionStruct.getRowHeaders(), covMatrix);
 		covMat.write(writeFolder+"GENE_covariance.txt");

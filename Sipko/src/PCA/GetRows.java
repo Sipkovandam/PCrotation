@@ -14,9 +14,10 @@ public class GetRows
 
 	public static void main(String args[]) throws IOException
 	{
-		String fileName = "E:/Groningen/Data/PublicSamples/Test9/DownSyndromeSamples_AndControls.txt";
-		String fileName2 = "E:/Groningen/Data/PublicSamples/Test9/PublicSamplesWithoutDownSyndrome.txt";
-		String writeName = "E:/Groningen/Data/PublicSamples/Test9/validate.txt";
+		String fileName = "E:/Groningen/Data/PublicSamples/Test13/TPM_9900Samples/ranks.txt";
+		//String fileName2 = "E:/Groningen/Data/PublicSamples/Test9/PublicSamplesWithoutDownSyndrome.txt";
+		String fileName2 = "ENSG00000268903,ENSG00000269981,ENSG00000225630";
+		String writeName = "E:/Groningen/Data/PublicSamples/Test13/TPM_9900Samples/ranks_small.txt";
 		String replace = null;
 		
 		checkArgs(args);
@@ -68,6 +69,7 @@ public class GetRows
 		String line = reader.readLine();
 		writer.write(line+"\n");//write the first line by default (headers)
 		Hashtable<String, Integer> toGet = file2.namesToHash(file2.rowNames);
+		String[] results = new String[toGet.size()];
 		while((line = reader.readLine()) != null)
 		{	
 			if(replace != null)
@@ -76,9 +78,17 @@ public class GetRows
 			
 			if(toGet.containsKey(rowName))
 			{
-				writer.write(line+"\n");
+				results[toGet.get(rowName)] = line;
+				//writer.write(line+"\n");
 			}
 		}
+		for(int r = 0; r < results.length; r++)
+		{
+			if(results[r] == null)
+				continue;
+			writer.write(results[r]+"\n");
+		}
+		
 		writer.close();
 		reader.close();
 		System.out.println("File written to:" + writeName);

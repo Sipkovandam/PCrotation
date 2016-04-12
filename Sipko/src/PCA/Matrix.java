@@ -28,7 +28,6 @@ public class Matrix
 	public String[] colNames;
 	public String[] rowNames;
 	public double[][] values;
-	public Matrix avgCols = null;
 	public boolean verbose = false;
 	
 	
@@ -67,6 +66,12 @@ public class Matrix
 	{
 		readFile(fileName,false,false);
 	}
+	public Matrix(String[] rowNames, String[] colNames, double[][] matrix) 
+	{
+		this.rowNames = rowNames;
+		this.colNames = colNames;
+		this.values = matrix;
+	}
 	public Matrix(MatrixStruct expressionMatrixStruct) 
 	{
 		this.rowNames = expressionMatrixStruct.getRowHeaders();
@@ -100,14 +105,7 @@ public class Matrix
 		{
 			for(int y = 0; y < this.colNames.length; y++)
 			{
-				//System.out.println(this.values[x][y]+ " " +  Math.log(this.values[x][y]) + " " + logVal);
-				//if(values[x][y] ==0)
-				//	continue;
 				this.values[x][y] = Math.log(this.values[x][y]+1)/logVal;
-				/*if(x < 5 && y < 5)
-				{
-					System.out.println(this.values[x][y] + " " + (Math.log(this.values[x][y])/logVal) + " " + this.values[x][y]);
-				}*/
 			}
 		}
 	}
@@ -396,6 +394,10 @@ public class Matrix
 			{
 				if(x==0)
 				{
+					DateFormat dateFormat = new SimpleDateFormat("dd/MM/yyyy");
+					Date date = new Date();
+					printOrWrite(dateFormat.format(date),writer);
+					
 					for(int y = 0; y < maxY; y++)
 					{
 						printOrWrite("\t" + colNames[y],writer);
@@ -542,20 +544,45 @@ public class Matrix
 	}
 	public double getAverageRow(int r)
 	{
-		double avg = 0;
+		double avg = sumRow(r)/colNames.length;
+		return avg;
+	}
+	private double sumRow(int r) {
+		double sum = 0;
 		for(int c = 0; c < colNames.length; c++)
 		{
-			avg+=values[r][c];
+			sum+=values[r][c];
 		}
-		avg /= colNames.length;
-		return avg;
+		return sum;
+	}
+	public Matrix getAverageCols()
+	{
+		return getAverageCols(false);
+	}
+	public Matrix getAverageCols(boolean absolute)
+	{
+		Matrix averages = new Matrix(this.colNames.length, 1);
+		averages.rowNames = this.colNames;
+		averages.colNames = new String[]{"ColAverages"};
+		for(int c = 0; c < this.colNames.length;c++)
+		{
+			averages.values[c][0] = getAverageCol(c,absolute);
+		}	
+		return averages;
 	}
 	public double getAverageCol(int col)
 	{
+		return getAverageCol(col, false);
+	}
+	public double getAverageCol(int col, boolean absolute)
+	{
 		double avg = 0;
-		for(int x = 0; x < rowNames.length; x++)
+		for(int r = 0; r < rowNames.length; r++)
 		{
-			avg+=values[x][col];
+			if(absolute)
+				avg+=Math.abs(values[r][col]);
+			else
+				avg+=values[r][col];
 		}
 		avg /= rowNames.length;
 		
@@ -984,8 +1011,10 @@ public class Matrix
 			//System.out.println("Current runtime = " + runTime()/1000/1000/1000/60/24 + "days");
 		}
 	}
-	public void correctForTotalReadCount() 
+	public void correctForTotalReadCount(double endCounts) 
 	{
+		//according to http://genomebiology.biomedcentral.com/articles/10.1186/gb-2014-15-2-r29 (voom)
+		//log 2 transformation is done after/outside this function though
 		for(int c = 0; c < this.colNames.length; c++)
 		{
 			double total = 0;
@@ -993,10 +1022,77 @@ public class Matrix
 			{
 				total+= this.values[r][c];
 			}
-			if(total==0) total=1;
+			total++;
 			for(int r = 0; r < this.rowNames.length;r++)
 			{
-				this.values[r][c]/=total/1000000000/1000;
+				this.values[r][c]= (this.values[r][c]+0.5)/total*endCounts;//(geneExpression+0.5)/totalExpresion*10^6
+			}
+		}
+	}
+
+	public void rLog(double rLog, String writeFolder, String fileName) 
+	{
+		this.logTransform(10);
+		Matrix geoMean = new Matrix(this.rowNames.length,1);
+		for(int r =0; r < this.rowNames.length; r++)
+		{
+			geoMean.values[r][0] = this.sumRow(r)/this.colNames.length;
+			
+			geoMean.values[r][0] = Math.pow(10,geoMean.values[r][0]);
+		}
+		System.out.println("GEO "+geoMean.rowNames.length);
+		if(writeFolder != null)
+			geoMean.write(writeFolder+ "geoMean.txt");
+		this.pow(10,1);//i could save the initial matrix, but this uses less memory
+					 //may be better to read in the matrix again to avoid rounding errors
+		this.divideByCol(geoMean,0);
+		
+		//need to read the matrix again here...
+		this.readFile(fileName, true, true);
+		Matrix denominators = new Matrix(this.colNames.length,1);
+
+		for(int c = 0; c < this.colNames.length; c++)
+		{
+			double[] column = new double[this.rowNames.length];
+			for(int r = 0; r < column.length; r++)
+			{
+				column[r] = (this.values[r][c]+1) / geoMean.values[r][0];// Adding +1 here just as in the log calculation earlier (if not the median can be 0 causing a division by 0 lateron)
+			}
+			Arrays.sort(column);
+			
+			denominators.values[c][0] =column[column.length/2];
+			
+			for(int r = 0; r < column.length; r++)
+			{
+				this.values[r][c] /= denominators.values[c][0];
+			}
+			
+		}
+		if(writeFolder != null)
+			denominators.write(writeFolder + "Denominators.txt");
+	}
+
+	private void divideByCol(Matrix denominators, int col) 
+	{
+		for(int c = 0; c < this.colNames.length; c++)
+		{
+			for(int r = 0; r < this.rowNames.length; r++)
+			{
+				this.values[r][c] /= denominators.values[c][col];
+			}
+		}
+	}
+	private void pow(int i)
+	{
+		pow(i, 0); 
+	}
+	private void pow(int i, int minus) 
+	{
+		for(int x = 0; x < this.rowNames.length; x++)
+		{
+			for(int y = 0; y < this.colNames.length; y++)
+			{
+				this.values[x][y] = Math.pow(10,this.values[x][y])-minus;
 			}
 		}
 	}
