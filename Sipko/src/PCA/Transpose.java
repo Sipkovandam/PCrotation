@@ -5,8 +5,10 @@ public class Transpose
 
 	public static void main (String[] args)
 	{
-		String fileName = "E:/Groningen/Data/PublicSamples/Test13/CORRELATION/Correlation Averages/TPM_9900Samples1.0_Correl_NoLOG/gene_correlation.txt";//
-		
+		//String fileName = "E:/Groningen/Data/PublicSamples/05-2016/22214Samples_Voom_Correl/SAMPLE_NormalizedLog2_10Rows.txt";//
+		String fileName = "E:/Groningen/Data/PublicSamples/05-2016/Flexo/22214Samples_VOOM_Correlation_Top1.0_AVGToZero/MATRIX_Centered_10Rows.txt";//
+		if(args.length < 1)
+			checkArgs(args);
 		if(!System.getProperty("user.dir").contains("C:\\Users\\Sipko\\git\\PCrotation\\Sipko"))
 		{
 			for(int a = 0; a < args.length; a++)
@@ -46,8 +48,9 @@ public class Transpose
 		if(args.length < 1)
 		{
 			System.out.println("Arguments supplied =" + args.length);
-			System.out.println("This script transposes a file and needs the following argument:"
-					+ "1. fileName=<fileName> -  File to retrieve rows from\n");
+			System.out.println("This script transposes a file and needs the following argument:\n"
+					+ "1. fileName=<fileName> -  File to retrieve rows from\n"
+					+ "Example: java -jar -Xmx32G filename=filename.txt\n");
 			System.exit(1);
 		}
 	}

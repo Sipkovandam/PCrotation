@@ -1096,4 +1096,14 @@ public class Matrix
 			}
 		}
 	}
+
+	public void putGenesOnRows() 
+	{
+		if((!this.rowNames[0].contains("ENSG0") || !this.rowNames[0].contains("ENST0")) && (this.colNames[0].contains("ENSG0") || (this.colNames[0].contains("ENST0"))))
+		{
+			System.out.println("Putting genes on rows(transposing)");
+			this.transpose();
+		}
+		
+	}
 }

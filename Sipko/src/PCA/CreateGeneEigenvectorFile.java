@@ -10,6 +10,7 @@ import umcg.genetica.math.stats.concurrent.ConcurrentCovariation;
 import java.io.IOException;
 import java.nio.file.Paths;
 import java.text.DateFormat;
+import java.text.NumberFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -43,14 +44,14 @@ public class CreateGeneEigenvectorFile
 		boolean writeAll = true;
 		boolean correctInputForSTdevs = false;
 		boolean correctInputForSTdevsAfterCenter = false;
-		boolean log2 = false;
+		boolean log2 = true;
 		boolean skipQuantileNorm = true;	
 		boolean STdevCutoff = false;
 		boolean zScores = false;
-		boolean directPCA = false;
+		boolean directPCA = true;
 		boolean correlation = true;
-		
-		double correctTotalReadCount = -1;//log((gene+0.5)/total*value)
+
+		double correctTotalReadCount = 1000000;//log((gene+0.5)/total*value)
 		double rLog = -1;
 		double topVariance = 1;
 		double randomValue = 0;
@@ -148,7 +149,7 @@ public class CreateGeneEigenvectorFile
 
 		writeParameters(expFile, writeFolder, chromLocationsFile, writeAll, log2, correctInputForSTdevs, 
 				randomValue, duplicateCutoff, highestExpressed,skipQuantileNorm, STdevCutoff, zScores, directPCA, spearman,
-				ignoreLowestValues, setLowestToAverage, correctTotalReadCount);
+				ignoreLowestValues, setLowestToAverage, correctTotalReadCount, correlation);
 		
 		run(expFile, writeFolder, chromLocationsFile, writeAll, log2, correctInputForSTdevs,
 				randomValue, duplicateCutoff, highestExpressed, skipQuantileNorm, STdevCutoff, correctInputForSTdevsAfterCenter,
@@ -157,7 +158,7 @@ public class CreateGeneEigenvectorFile
 	private static void writeParameters(String expFile, String writeFolder, String chromLocationsFile, boolean writeAll,
 			boolean log2, boolean correctInputForSTdevs, double randomValue, double duplicateCutoff, double highestExpressed,
 			boolean tpm, boolean STdevCutoff, boolean zScores, boolean directPCA, double spearman, int ignoreLowestValues,
-			boolean setLowestToAverage, double correctTotalReadCount) throws IOException {
+			boolean setLowestToAverage, double correctTotalReadCount, boolean correlation) throws IOException {
 		makeFolder(writeFolder);
 		DateFormat dateFormat = new SimpleDateFormat("dd/MM/yyyy HH:mm:ss");
 		Date date = new Date();
@@ -183,6 +184,7 @@ public class CreateGeneEigenvectorFile
 		writer.write("removeGene\t" + removeGene + "\n");
 		writer.write("minExpression\t" + minExpression + "\n");
 		writer.write("minSamplesExpressed\t" + minSamplesExpressed + "\n");
+		writer.write("correlation\t" + correlation + "\n");
 		writer.close();
 	}
 	static void checkArgs(String[] args) 
@@ -228,7 +230,7 @@ public class CreateGeneEigenvectorFile
 		
 		if(minExpression > 0)
 			expressionStruct.removeLowExpression((writeFolder+"RemovedBelow" +minExpression+ "inAtLeast" + minSamplesExpressed + "samples.txt"), minSamplesExpressed, minExpression);
-		
+		System.out.println("Rows = " + expressionStruct.rows() + " cols = " + expressionStruct.cols());
 		if(removeGene != null)
 			expressionStruct.removeRow(removeGene);
 		
@@ -236,8 +238,8 @@ public class CreateGeneEigenvectorFile
 			QuantileNormalize.quantileNormalize(expressionStruct, writeFolder, writeAll);
 		
 		if(correctTotalReadCount > 0)
-			CorrectReadcounts.correct(writeFolder, correctTotalReadCount, expressionStruct, writeAll, 0.5);
-		if(rLog > 0)//I still need to test this function
+			CorrectReadcounts.correct(writeFolder, correctTotalReadCount, expressionStruct, writeAll, 0);
+		if(rLog > 0)//Does not log the values, just does the correction
 			RLog.rLog(writeFolder, expressionStruct, rLog, writeAll);
 		
 		double addVal = 0;
@@ -245,8 +247,6 @@ public class CreateGeneEigenvectorFile
 			addVal = 1;
 		if(log2)
 			LogTransform.log2(writeFolder, expressionStruct, writeAll,addVal);
-		
-		
 		
 		if(highestExpressed >0 && highestExpressed < 1)
 			HighestExpressed.highestExpressed(expressionStruct, skipQuantileNorm, correctTotalReadCount, writeFolder, highestExpressed, STdevCutoff, writeAll);
@@ -350,7 +350,6 @@ public class CreateGeneEigenvectorFile
 			expressionStruct.removeNoVariance(writeFolder+"noVarRemoved.txt");
 			type = "correlation";
 		}
-		pca.PCA.log("20. creating covariance matrix over the samples");
 		ConcurrentCovariation calculator = new ConcurrentCovariation(20);
 		double[][] inMat = expressionStruct.getMatrix();
 		double[][] covMatrix = calculator.pairwiseCovariation(inMat,false, null, expressionStruct.getRowHeaders(),correlation, cutoffs);
@@ -393,7 +392,7 @@ public class CreateGeneEigenvectorFile
 			System.out.println("Genes should be on rows and are not, transposing (assumes geneIDs start with ENSG0 or ENST0");
 			expressionStruct.transpose();
 		}
-		double[][] inMat = expressionStruct.getMatrix();
+		
 		ConcurrentCovariation calculatorGenes = new ConcurrentCovariation(20);
 		String type = "covariance";
 		if(correlation)
@@ -401,6 +400,8 @@ public class CreateGeneEigenvectorFile
 			expressionStruct.removeNoVariance(writeFolder+"noVarRemoved.txt");
 			type = "correlation";
 		}
+		double[][] inMat = expressionStruct.getMatrix();
+		pca.PCA.log("20. creating covariance matrix over the samples");
 		String covMatFN = writeFolder+"gene_"+type+".txt";
 		double[][] covMatrix = calculatorGenes.pairwiseCovariation(inMat,false, null, expressionStruct.getRowHeaders(),correlation, cutoffs);//last argument, if false = covariance; true = correlation.
 		
@@ -408,19 +409,37 @@ public class CreateGeneEigenvectorFile
 		pca.PCA.log("21. Writing covariance matrix over the samples");
 		//get and write averages per Gene
 		covMat.getAverageCols(true)
-			  .write(covMatFN.replace(".txt", "_Absoulte_averages.txt"));
+			  .write(covMatFN.replace(".txt", "_Absolute_averages.txt"));
 		
 		covMat.write(covMatFN);
-		inMat = null; covMatrix = null; System.gc();System.gc();
+		inMat = null; covMatrix = null; covMat = null; System.gc();System.gc(); System.gc();System.gc();
 		
-		inMat = null; System.gc();System.gc();
+		Runtime runtime = Runtime.getRuntime();
+
+		NumberFormat format = NumberFormat.getInstance();
+		long maxMemory = runtime.maxMemory();
+		long allocatedMemory = runtime.totalMemory();
+		long freeMemory = runtime.freeMemory();
+
+		System.out.println("free memory: " + format.format(freeMemory / 1024/1024/1024) + "<br/>");
+		System.out.println("allocated memory: " + format.format(allocatedMemory / 1024/1024/1024) + "<br/>");
+		System.out.println("max memory: " + format.format(maxMemory / 1024/1024/1024) + "<br/>");
+		System.out.println("total free memory: " + format.format((freeMemory + (maxMemory - allocatedMemory)/1024/1024/1024)));
+		
+		//make more memory available...
+		String tempName = writeFolder+"pre_Correlation_Or_Covariance.txt";
+		expressionStruct.write(tempName);
+		expressionStruct = null; System.gc();System.gc();
 		
 		PCA.log("Matrix decomposition");
 		BufferedWriter writer = new BufferedWriter(new FileWriter(new File("export.sh")));
 		//export DYLD_LIBRARY_PATH="/opt/intel/mkl/lib/":"/opt/intel/compilers_and_libraries_2016.1.111/mac/compiler/lib":$DYLD_LIBRARY_PATH
 		writer.write("export DYLD_LIBRARY_PATH=\"/opt/intel/mkl/lib/\":\"/opt/intel/compilers_and_libraries_2016.1.111/mac/compiler/lib\":$DYLD_LIBRARY_PATH\n");
 		writer.write("/Volumes/Promise_RAID/juha/PCA++/pca evd " + covMatFN +"\n");
+//		writer.write("/Volumes/Promise_RAID/juha/PCA++/pca pc-scores " + type + " " + tempName + " eigenvectors.txt" + "\n");
 		writer.write("mv eigenvectors.txt " + writeFolder + "GENE.eigenvectors.txt"+"\n");
+//		writer.write("mv pc-scores.txt " + writeFolder + "pc-scores.txt"+"\n");
+//		writer.write("mv cronbach.txt " + writeFolder + "cronbach.txt"+"\n");
 		writer.write("mv eigenvalues.txt " + writeFolder + "GENE.eigenvalues.txt"+"\n");
 		writer.close();		
 		String command = "sh export.sh";
@@ -428,6 +447,7 @@ public class CreateGeneEigenvectorFile
 		p = Runtime.getRuntime().exec(command);
 		p.waitFor();
 		MatrixStruct geneEigenVectors = new MatrixStruct(writeFolder + "GENE.eigenvectors.txt",-1,11000);//only use the first 11000 eigenvectors
+		expressionStruct = new MatrixStruct(tempName);
 		expressionStruct.transpose();
 		return geneEigenVectors;
 	}

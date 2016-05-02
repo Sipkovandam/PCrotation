@@ -14,10 +14,10 @@ public class GetRows
 
 	public static void main(String args[]) throws IOException
 	{
-		String fileName = "E:/Groningen/Data/PublicSamples/Test13/TPM_9900Samples/ranks.txt";
-		//String fileName2 = "E:/Groningen/Data/PublicSamples/Test9/PublicSamplesWithoutDownSyndrome.txt";
-		String fileName2 = "ENSG00000268903,ENSG00000269981,ENSG00000225630";
-		String writeName = "E:/Groningen/Data/PublicSamples/Test13/TPM_9900Samples/ranks_small.txt";
+		String fileName = "E:/Groningen/Data/PublicSamples/05-2016/Flexo/22214Samples_RLOG_Correlation_Top1.0_AvgToZero/SAMPLE_Norm_columnAverages.txt";
+		String fileName2 = "E:/Groningen/Data/PublicSamples/05-2016/Flexo/22214Samples_RLOG_Correlation_Top1.0_AvgToZero/gene_correlation_Absolute_averages.txt";
+		//String fileName2 = "ENSG00000268903,ENSG00000269981,ENSG00000225630";
+		String writeName = "E:/Groningen/Data/PublicSamples/05-2016/Flexo/22214Samples_RLOG_Correlation_Top1.0_AvgToZero/SAMPLE_Norm_columnAverages_ALIGNED.txt";
 		String replace = null;
 		
 		checkArgs(args);
@@ -75,7 +75,6 @@ public class GetRows
 			if(replace != null)
 				line = line.replace(replace, "");
 			String rowName = line.split("\t")[0];
-			
 			if(toGet.containsKey(rowName))
 			{
 				results[toGet.get(rowName)] = line;
@@ -86,6 +85,7 @@ public class GetRows
 		{
 			if(results[r] == null)
 				continue;
+			//System.out.println("r= "+(results[r]));
 			writer.write(results[r]+"\n");
 		}
 		

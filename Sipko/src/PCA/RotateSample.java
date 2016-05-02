@@ -50,18 +50,24 @@ public class RotateSample {
 				correctTotalReadCount,spearman, columnAverages, adjustSampleAverages, setLowestToAverage,
 				addBeforeLog, rLog, singleSampleFN);
 		String saveNameSingleSampleScore = writeFolder + "SAMPLE.PC.txt";
-		pca.PCA.log(" 11. Loading gene eigen vector file1: ");
-		MatrixStruct geneEigenVectors = new MatrixStruct(vectorFolder+"GENE.eigenvectors.txt");
+		pca.PCA.log(" 11. Loading gene eigen vector file: ");
+		MatrixStruct geneEigenVectors = new MatrixStruct(vectorFolder+"GENE.eigenvectors.txt", -1, 1000);//maximum 1000 PCs
 		if(geneEigenVectors.getColHeaders()[0].contains("ENSG") || geneEigenVectors.getColHeaders()[0].contains("ENST"))
 		{
 			pca.PCA.log("Transposing");
 			geneEigenVectors.transpose();
 		}
+		
 		columnAverages.keepRows(geneEigenVectors);//also changes the rows of geneEigenvectors to have the same positions as columnAverages
+		System.out.println("sample " + singleSample.rows() + " eigenvectors = " + geneEigenVectors.rows());
+		singleSample.putGenesOnRows();
+		singleSample.keepRows1Matrix(geneEigenVectors);//necessary for some normalizations
+		System.out.println("sample1 " + singleSample.rows() + " eigenvectors = " + geneEigenVectors.rows());
+
 		pca.PCA.log("Transposing");
 		geneEigenVectors.transpose();
 		geneEigenVectors.write(vectorFolder+"GENE.eigenvectors2.txt");
-		
+
 		pca.PCA.log(" 12. Rotating file to PC space: ");
 		MatrixStruct[] scoreResults = PCA.scores(geneEigenVectors,singleSample, saveNameSingleSampleScore,false, false);
 		
@@ -111,7 +117,7 @@ public class RotateSample {
 		if(log2)
 		{
 			if(correctTotalReadCount <= 0 && rLog <= 0) // need to add 1 before log to avoid log(0)
-				addBeforeLog = 1;
+				addBeforeLog = 0.5;
 			pca.PCA.log(" 6. Log transforming");
 			singleSample.log2Transform(addBeforeLog);//Doing this after the quantile normalization now
 			singleSample.write(writeFolder + "normalized_log2.txt");

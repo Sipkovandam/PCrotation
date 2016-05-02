@@ -51,10 +51,10 @@ public class PCcorrection
 		int optimalPCremoval = -1;
 		
 		double zScoresCutoff = Double.parseDouble("0");//I removed this (commented out), as it seems pretty useless
-		double correctTotalReadCount = -1;//log((gene+0.5)/total*value) //value = number of counts the sample ends up having in total (does noting if 0 or lower)
+		double correctTotalReadCount = 1000000;//log((gene+0.5)/total*value) //value = number of counts the sample ends up having in total (does noting if 0 or lower)
 		double spearman = -1;//-1 is optimal per each sample. Any other "number" than 0 is optimal per "number" samples, where it benefits at least half those "number" of samples
 		double addBeforeLog = 0;
-		double rLog = 1000000;
+		double rLog = -1;
 		
 		String PCs = "1-211";//null if you don't want to set any PCs to correct for (just corrects for the defaults (100,300,500,1000,5000)
 		
@@ -155,7 +155,7 @@ public class PCcorrection
 		pca.PCA.log("16. Adjusting for PCs");
 		
 		//some very sloppy code. Just want to do things quick atm...
-		int[] PCAadjustments = new int[]{0,100,1,25,300,500,1000,5000,eigenVectors.rows()};
+		int[] PCAadjustments = new int[]{0,100,1,25,300,500,1000};//,5000,eigenVectors.rows()};
 		MatrixStruct chr21 = null;
 		if(chr21FN != null && new File(chr21FN).exists())
 			chr21 = new MatrixStruct(chr21FN);
@@ -564,10 +564,10 @@ public class PCcorrection
 				+ "chr21FN=<fileName>  - File with geneNames. Script will calculate the p-value between the difference between genes"
 				+ "\tin this file and all remaining genes (default = null)\n"
 				+ "writeFolder=<folderName> - folder to write the results in (default=filename.replace(.txt,/)\n"
-				+ "PCs=<PCs> - PCs to correct for. The following formats can be used: "
-					+ "   1-100"
-					+ "   1,2,6,8"
-					+ "   or a combination: 1,5-10,66,100-200");
+				+ "PCs=<PCs> - PCs to correct for. The following formats can be used: \n"
+					+ "   1-100 \n"
+					+ "   1,2,6,8 \n"
+					+ "   or a combination: 1,5-10,66,100-200 (default = 300) \n");
 		System.exit(1);
 	}
 }
