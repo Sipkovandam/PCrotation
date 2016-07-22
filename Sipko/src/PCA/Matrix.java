@@ -530,7 +530,7 @@ public class Matrix
 		this.values = remainder;
 		this.rowNames = remainderRowNames;
 
-		pca.PCA.log(" 5.1 Writing file from which genes without variance are removed");
+		JuhaPCA.PCA.log(" 5.1 Writing file from which genes without variance are removed");
 		if(removedGenesFN != null)this.write(removedGenesFN);
 	}
 	

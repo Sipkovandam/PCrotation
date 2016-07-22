@@ -16,8 +16,6 @@ import java.util.Enumeration;
 import java.util.Hashtable;
 
 import no.uib.cipr.matrix.DenseMatrix;
-import pca.FileUtil;
-import pca.PCA;
 
 import java.lang.Math;
 import java.util.List;
@@ -26,6 +24,9 @@ import java.util.Vector;
 import java.util.zip.GZIPOutputStream;
 
 import org.apache.commons.math3.stat.inference.WilcoxonSignedRankTest;
+
+import JuhaPCA.FileUtil;
+import JuhaPCA.PCA;
 
 import org.apache.commons.math3.stat.inference.TTest;
 import org.apache.commons.math3.stat.StatUtils;
@@ -459,7 +460,7 @@ public class MatrixStruct
 		if(cutoff <= 0)
 		 return;
 			
-		pca.PCA.log(" 4. Adding random values <"+ cutoff +" to values <" + cutoff);	
+		JuhaPCA.PCA.log(" 4. Adding random values <"+ cutoff +" to values <" + cutoff);	
 		
 		Random generator = new Random(1);//use seed to assure everytime I run the script I get the same numbers
 		for(int r = 0; r < this.rows(); r++)
@@ -866,7 +867,7 @@ public class MatrixStruct
 
 		if(removedGenesFN != null)
 		{
-			pca.PCA.log(" 5.1 Writing file from which genes without variance are removed");
+			JuhaPCA.PCA.log(" 5.1 Writing file from which genes without variance are removed");
 			this.write(removedGenesFN);
 		}
 	}
@@ -1080,7 +1081,7 @@ public class MatrixStruct
 		
 		if(removedGenesFN != null)
 		{
-			pca.PCA.log(" 5.1 Writing file from which genes without variance are removed");
+			JuhaPCA.PCA.log(" 5.1 Writing file from which genes without variance are removed");
 			this.write(removedGenesFN);
 		}
 		System.out.println("Rows after" + this.rows()+ " values=" + this.matrix.numRows());

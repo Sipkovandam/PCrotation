@@ -5,7 +5,7 @@ import java.io.IOException;
 import org.apache.commons.math3.stat.inference.TTest;
 
 import Analyses.WilcoxonMannWhitney;
-import pca.PCA;
+import JuhaPCA.PCA;
 
 public class IdentifySimilarSamples 
 {

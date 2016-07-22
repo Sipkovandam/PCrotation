@@ -40,9 +40,9 @@ import org.w3c.dom.Text;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
+import JuhaPCA.PCA;
 import eqtlmappingpipeline.normalization.Normalizer;
 import no.uib.cipr.matrix.NotConvergedException;
-import pca.PCA;
 
 public class CreateGeneEigenvectorFile 
 {
@@ -232,7 +232,7 @@ public class CreateGeneEigenvectorFile
 	}
 	public static void normalize() throws IOException, NotConvergedException, InterruptedException
 	{		
-		pca.PCA.log(" 1. Reading expression file");
+		JuhaPCA.PCA.log(" 1. Reading expression file");
 		MatrixStruct expressionStruct = new MatrixStruct(var.expFile);
 		
 		if(var.writeAll)
@@ -240,7 +240,7 @@ public class CreateGeneEigenvectorFile
 		
 		RemoveDuplicates.removeDuplicates(expressionStruct, var.duplicateCutoff, var.writeFolder, var.writeAll);
 
-		pca.PCA.log(" 3. Transposing");
+		JuhaPCA.PCA.log(" 3. Transposing");
 		expressionStruct.putGenesOnRows();
 		
 		//sorting on chromosome locations
@@ -280,13 +280,13 @@ public class CreateGeneEigenvectorFile
 		if(var.highestExpressed >0 && var.highestExpressed < 1)
 			HighestExpressed.highestExpressed(expressionStruct, var.skipQuantileNorm, var.correctTotalReadCount, var.writeFolder, var.highestExpressed, var.STdevCutoff, var.writeAll);
 		
-		pca.PCA.log("11. Transposing");
+		JuhaPCA.PCA.log("11. Transposing");
 		expressionStruct.transpose();
 		
 		if(var.topVariance > 0 && var.topVariance !=1)
 			KeepTopVariance.keepTopVariance(expressionStruct, true, var.ignoreLowestValues, var.writeFolder, var.topVariance);
 		
-		pca.PCA.log("12 Calculating STdevs");
+		JuhaPCA.PCA.log("12 Calculating STdevs");
 		System.gc();System.gc();
 		MatrixStruct stDevs = expressionStruct.stDevCols();
 		stDevs.write(var.writeFolder + "gene_STDevs.txt");
@@ -294,10 +294,10 @@ public class CreateGeneEigenvectorFile
 		
 		if(var.correctInputForSTdevs)
 		{
-			pca.PCA.log("13 Divide all gene values by STdev for each gene ");	
+			JuhaPCA.PCA.log("13 Divide all gene values by STdev for each gene ");	
 			expressionStruct.divideBy(stDevs,false);//false corrects columns, true corrects rows
 			
-			pca.PCA.log("14 Writing matrix divided by gene STdevs");
+			JuhaPCA.PCA.log("14 Writing matrix divided by gene STdevs");
 			expressionStruct.write(var.writeFolder + "_DividedBySGenesSTdev.txt.gz");
 		}	
 		
@@ -311,26 +311,26 @@ public class CreateGeneEigenvectorFile
 		if(var.setLowestToAverage)//this will cause the lowest values not to contribute to correlation or covariance
 			LowestToAverage.lowestToAverage(expressionStruct);
 		
-		pca.PCA.log("15. Calculating column averages");
+		JuhaPCA.PCA.log("15. Calculating column averages");
 		MatrixStruct colAverages = expressionStruct.getAveragesPerCol();
 		String columnavgsfile = var.writeFolder+ "SAMPLE_Norm_columnAverages.txt";
 		colAverages.write(columnavgsfile);
 		addToXML("columnavgsfile", columnavgsfile);
 		writeXML();
-		pca.PCA.log("16. Centering: Adjusting for column averages");
+		JuhaPCA.PCA.log("16. Centering: Adjusting for column averages");
 		expressionStruct.adjustForAverageAllCols(colAverages);
 		expressionStruct.write(var.writeFolder +"SAMPLE_adjustedForGeneAverages.txt.gz");
-		pca.PCA.log("17. Calculating row averages");
+		JuhaPCA.PCA.log("17. Calculating row averages");
 		MatrixStruct rowAverages = expressionStruct.getAveragesPerRow();
 		rowAverages.write(var.writeFolder+ "SAMPLE_Norm_rowAverages.txt");
 		if(var.adjustSampleAverages)
 		{
-			pca.PCA.log("18. Adjusting for row averages");
+			JuhaPCA.PCA.log("18. Adjusting for row averages");
 			expressionStruct.adjustForAverageAllrows(rowAverages);
 		}
 	
 		String expNormLogCentFile = var.writeFolder+"MATRIX_Centered.txt.gz";
-		pca.PCA.log("19. Writing centered file in: " + expNormLogCentFile);
+		JuhaPCA.PCA.log("19. Writing centered file in: " + expNormLogCentFile);
 		expressionStruct.write(expNormLogCentFile);
 		
 		double[] cutoffs = KeepTopVariance.getCutoffs(var.ignoreLowestValues, expressionStruct);
@@ -340,10 +340,10 @@ public class CreateGeneEigenvectorFile
 		{
 			MatrixStruct stDevsRows = expressionStruct.stDevRows();
 			stDevsRows.write(var.writeFolder + "_SampleStDevs.txt");
-			pca.PCA.log("13 Divide all gene values by STdev for each sample");	
+			JuhaPCA.PCA.log("13 Divide all gene values by STdev for each sample");	
 			expressionStruct.divideBy(stDevsRows,true);//false corrects columns, true corrects rows
 			
-			pca.PCA.log("14 Writing matrix divided by gene STdevs");
+			JuhaPCA.PCA.log("14 Writing matrix divided by gene STdevs");
 			expressionStruct.write(var.writeFolder + "_DividedBySGenesSTdev.txt.gz");
 		}
 		

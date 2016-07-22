@@ -56,7 +56,7 @@ public class KeepTopVariance
 	{
 		//create a covariance matrix over the genes
 		//calculate the average absolute covariance per gene
-		pca.PCA.log("21.1 creating covariance/correlation matrix OVER THE GENES");
+		JuhaPCA.PCA.log("21.1 creating covariance/correlation matrix OVER THE GENES");
 
 		//genes are on x-Axis after this:
 		expressionStruct.transpose();

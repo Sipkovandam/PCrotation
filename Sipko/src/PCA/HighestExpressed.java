@@ -58,13 +58,13 @@ public class HighestExpressed
 	{
 		if(!tpm && correctTotalReadCount <1)
 		{
-			pca.PCA.log(" Quantile normalization before taking averageCutoff");
+			JuhaPCA.PCA.log(" Quantile normalization before taking averageCutoff");
 			expressionStruct.expressionToRank(expressionStruct.quantileNormVector(), 0);
 		}	
 		String averagesFN = writeFolder+"AveragesAllGenes.txt";
 		expressionStruct.getAveragesPerRow(expressionStruct)
 						.write(averagesFN);
-		pca.PCA.log("  . Removing the " + ((1.0-highestExpressed)*100) + " percent lowest expressed genes" );
+		JuhaPCA.PCA.log("  . Removing the " + ((1.0-highestExpressed)*100) + " percent lowest expressed genes" );
 		
 		if(STdevCutoff)
 		{

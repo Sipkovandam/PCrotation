@@ -48,14 +48,14 @@ public class zTransform {
 		else
 			stDevs=sample.stDevCols();
 		
-		pca.PCA.log("Writing STdevs " + writeFN.replace(".txt", ".Stdevs.txt"));
+		JuhaPCA.PCA.log("Writing STdevs " + writeFN.replace(".txt", ".Stdevs.txt"));
 		stDevs.write(writeFN.replace(".txt", ".Stdevs.txt"));
-		pca.PCA.log("Divide all gene values by STdev for each sample");	
+		JuhaPCA.PCA.log("Divide all gene values by STdev for each sample");	
 		sample.divideBy(stDevs,rows);//false corrects columns, true corrects rows
 		
-		pca.PCA.log("Writing zTransformed matrix" + writeFN);
+		JuhaPCA.PCA.log("Writing zTransformed matrix" + writeFN);
 		sample.write(writeFN);
-		pca.PCA.log("Done");
+		JuhaPCA.PCA.log("Done");
 	}
 	static void checkArgs(String[] args) 
 	{

@@ -9,8 +9,8 @@ import java.util.Arrays;
 import java.util.Enumeration;
 import java.util.Hashtable;
 
+import JuhaPCA.PCA;
 import PCA.Matrix;
-import pca.PCA;
 
 public class SumTranscriptsToGenes 
 {

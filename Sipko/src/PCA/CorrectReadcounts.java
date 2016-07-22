@@ -44,7 +44,7 @@ public class CorrectReadcounts {
 	}
 
 	public static void correct(String writeFolder, double correctTotalReadCount, MatrixStruct expressionStruct, boolean writeAll, double add) throws IOException {
-		pca.PCA.log(" 6. Correcting for total read count");
+		JuhaPCA.PCA.log(" 6. Correcting for total read count");
 		String correctedNotLogged =  writeFolder+ "SAMPLE_TotalReadCountNormalized.txt";
 		expressionStruct.correctForTotalReadCount(correctTotalReadCount, add);
 		if(writeAll)expressionStruct.write(correctedNotLogged);

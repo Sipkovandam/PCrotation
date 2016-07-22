@@ -3,8 +3,8 @@ package PCA;
 import java.io.IOException;
 import java.nio.file.Paths;
 
+import JuhaPCA.PCA;
 import no.uib.cipr.matrix.NotConvergedException;
-import pca.PCA;
 
 public class TestJavaPCA 
 {
@@ -19,7 +19,7 @@ public class TestJavaPCA
 	}
 	public static void pca() throws IOException, NotConvergedException
 	{
-		MatrixStruct[] evds = pca.PCA.evd(covMat, Paths.get(writeFolder+"gene"));
+		MatrixStruct[] evds = JuhaPCA.PCA.evd(covMat, Paths.get(writeFolder+"gene"));
 		MatrixStruct eigenVectors = evds[0];
 		MatrixStruct PCeigenvalues = evds[1];
 		eigenVectors.write(writeFolder+"Eigenvectors.txt");

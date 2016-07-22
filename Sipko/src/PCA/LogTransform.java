@@ -36,11 +36,11 @@ public class LogTransform
 	}
 
 	public static void log2(String writeFolder, MatrixStruct expressionStruct, boolean writeAll, double add) throws IOException {
-		pca.PCA.log(" 9. Log2 transforming");
+		JuhaPCA.PCA.log(" 9. Log2 transforming");
 		expressionStruct.log2Transform(add);
 		String quantFN = writeFolder+ "SAMPLE_NormalizedLog2.txt";
 		
-		pca.PCA.log("10. Writing logged SAMPLE_Log2 normalized data in: " + quantFN);
+		JuhaPCA.PCA.log("10. Writing logged SAMPLE_Log2 normalized data in: " + quantFN);
 		if(writeAll)expressionStruct.write(quantFN);
 	}
 	static void checkArgs(String[] args) 

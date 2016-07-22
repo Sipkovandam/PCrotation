@@ -36,14 +36,14 @@ public class QuantileNormalize
 	}
 
 	public static void quantileNormalize(MatrixStruct expressionStruct, String writeFolder, boolean writeAll) throws IOException {
-		pca.PCA.log(" 6. Calculating quantile normalization vector");
+		JuhaPCA.PCA.log(" 6. Calculating quantile normalization vector");
 		MatrixStruct qNormVector = expressionStruct.quantileNormVector();
 		qNormVector.write(writeFolder+ "SAMPLE_QuantileVector.txt");
 	
-		pca.PCA.log(" 7. Quantile normalization");
+		JuhaPCA.PCA.log(" 7. Quantile normalization");
 		expressionStruct.expressionToRank(qNormVector,0);
 		String quantFNnotLogged = writeFolder+ "SAMPLE_QuantileNormalized.txt";
-		pca.PCA.log(" 8. Writing quantile normalized data in: " + quantFNnotLogged);
+		JuhaPCA.PCA.log(" 8. Writing quantile normalized data in: " + quantFNnotLogged);
 		if(writeAll)expressionStruct.write(quantFNnotLogged);
 	}
 	static void checkArgs(String[] args) 

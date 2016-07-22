@@ -10,8 +10,8 @@ import java.io.IOException;
 import java.text.DecimalFormat;
 import java.util.Hashtable;
 
+import JuhaPCA.PCA;
 import PCA.Matrix;
-import pca.PCA;
 
 public class CombineKallistoFiles 
 {

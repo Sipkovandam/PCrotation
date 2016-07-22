@@ -61,7 +61,7 @@ public class SortChromosome
 		if(chromLocationsFile == null)
 			return samples;
 	
-		pca.PCA.log("Sorting IDs based on chromosome locations");
+		JuhaPCA.PCA.log("Sorting IDs based on chromosome locations");
 		MatrixStruct chromLocs = new MatrixStruct(chromLocationsFile);
 		//only sorts those that are in the sample
 		samples.keepRows(chromLocs);

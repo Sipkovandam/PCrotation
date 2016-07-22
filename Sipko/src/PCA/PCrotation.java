@@ -7,8 +7,8 @@ import java.util.Arrays;
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.transform.TransformerException;
 
+import JuhaPCA.PCA;
 import no.uib.cipr.matrix.NotConvergedException;
-import pca.PCA;
 
 public class PCrotation 
 {

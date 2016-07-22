@@ -51,7 +51,7 @@ public class PCcorrection
 	
 		MatrixStruct eigenVectors = rotationMatrixes[3];
 		
-		pca.PCA.log("16. Adjusting for PCs");
+		JuhaPCA.PCA.log("16. Adjusting for PCs");
 		
 		int[] PCAadjustments = new int[]{0,100,2,25,300,500,1000};//,5000,eigenVectors.rows()};
 		MatrixStruct chr21 = null;
@@ -73,9 +73,9 @@ public class PCcorrection
 		
 		ArrayList<Integer> userList = parsePCs(PCs);
 		//System.out.println("userList=" + userList);
-		pca.PCA.log("Calculating variance explained");
+		JuhaPCA.PCA.log("Calculating variance explained");
 		varianceExplained(PCAadjustments[PCAadjustments.length-1], writeFolder, eigenVectors, inputMatrix);
-		pca.PCA.log("Calculating variance explained done");
+		JuhaPCA.PCA.log("Calculating variance explained done");
 		
 		for(int pcs = 0; pcs < PCAadjustments.length; pcs++)//for all the different numbers of PCs to correct for
 		{
@@ -289,7 +289,7 @@ public class PCcorrection
 //		smoothSignal(sampleStruct.copy(),smoothNgenes, writeFileName);
 		
 		smoothNgenes = 100;
-		pca.PCA.log("19. Smooth "+smoothNgenes+" genes");
+		JuhaPCA.PCA.log("19. Smooth "+smoothNgenes+" genes");
 		smoothSignal(sampleStruct.copy(),smoothNgenes,writeFileName);
 		
 //		double topPercent = 0.5;
@@ -305,7 +305,7 @@ public class PCcorrection
 		
 	}
 	static void keepTopPercentage(MatrixStruct sampleStruct, String averagesFN, double topPercent, String writeFileName, boolean lowest, boolean writeAll) throws IOException {
-		pca.PCA.log("20. Highest "+ topPercent*100 + "% only");
+		JuhaPCA.PCA.log("20. Highest "+ topPercent*100 + "% only");
 		MatrixStruct averages = new MatrixStruct(averagesFN);
 		averages.sortCol(0);
 		averages.write(averagesFN.replace(".txt", "SAMPLE_Norm_columnAverages_SORTED_ALL.txt"));
@@ -322,7 +322,7 @@ public class PCcorrection
 
 		if(correctResultsForSTdevs)
 		{
-			pca.PCA.log("16. Divide by standard deviation");
+			JuhaPCA.PCA.log("16. Divide by standard deviation");
 			MatrixStruct STdevs = new MatrixStruct(vectorFolder+"gene_STDevs.txt");
 			STdevs.keepRows(sampleStruct);
 			//if the standard deviation is smaller then 1, set it to 1 to avoid inflated values for genes that have a very small stdev

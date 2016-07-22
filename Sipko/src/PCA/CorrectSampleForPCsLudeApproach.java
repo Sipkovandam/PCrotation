@@ -33,26 +33,26 @@ public class CorrectSampleForPCsLudeApproach
 		
 		/**6. Calculate PCscores for single sample**/
 		makeFolder(writeFolder);
-		pca.PCA.log(" 1. Loading sample matrix");
+		JuhaPCA.PCA.log(" 1. Loading sample matrix");
 		Matrix singleSample = new Matrix(sampleFile);//expressionMatrix.getRow(0);
 		
-		pca.PCA.log(" 2. Transposing");
+		JuhaPCA.PCA.log(" 2. Transposing");
 		singleSample.transpose();
 		Matrix quantVector = new Matrix(vectorFolder+"SAMPLE_QuantileVector.txt");
-		pca.PCA.log(" 3. Removing rows that do not exist in the quantile normalization vector");
+		JuhaPCA.PCA.log(" 3. Removing rows that do not exist in the quantile normalization vector");
 		singleSample.keepRows(quantVector);
 		String rowsRemovedFileName = writeFolder+"_rowsNotInQuantVectorRemoved.txt";
 		singleSample.write(rowsRemovedFileName);
-		pca.PCA.log(" 4. Quantile normalization adjustion");
+		JuhaPCA.PCA.log(" 4. Quantile normalization adjustion");
 		singleSample.quantileNormAdjust(quantVector);
 		String quantileAdjustedFN = writeFolder+ "Quantile_adjusted.txt";
-		pca.PCA.log(" 5. Writing quantile normalization adjusted file to:" + quantileAdjustedFN);
-		pca.PCA.log("Log transforming");
+		JuhaPCA.PCA.log(" 5. Writing quantile normalization adjusted file to:" + quantileAdjustedFN);
+		JuhaPCA.PCA.log("Log transforming");
 		singleSample.write(quantileAdjustedFN.replace(".txt", "NotLogged.txt"));
 		singleSample.log2Transform();//Doing this after the quantile normalization now
 		singleSample.write(quantileAdjustedFN);
 		singleSample.transpose();
-		pca.PCA.log(" 6. Adjusting for column averages (centering to target PC space)");
+		JuhaPCA.PCA.log(" 6. Adjusting for column averages (centering to target PC space)");
 		singleSample.adjustForAverageAllCols(new Matrix(vectorFolder+"SAMPLE_QuantNorm_columnAverages.txt"));
 		String writeColsCentered = writeFolder+"ColsCentered.txt";
 		singleSample.write(writeColsCentered);
@@ -62,12 +62,12 @@ public class CorrectSampleForPCsLudeApproach
 		averages.write(rowAveragesFileName);
 		//singleSample.adjustForAverageAllrows(averages);<-- I tested both with and without, it makes no difference (biggest value change was 10-7).
 		String centeredFN = writeFolder+ "Quantile_adjusted.centered.txt";
-		pca.PCA.log(" 8. Writing PC centered file to: " + centeredFN);
+		JuhaPCA.PCA.log(" 8. Writing PC centered file to: " + centeredFN);
 		singleSample.write(centeredFN);		
-		pca.PCA.log(" 9. Reading eigenvectors over the genes: ");
+		JuhaPCA.PCA.log(" 9. Reading eigenvectors over the genes: ");
 		MatrixStruct geneEigenVectors = new MatrixStruct(vectorFolder+"GENE.eigenvectors.txt");
 		//MatrixStruct geneEigenVectors = new MatrixStruct(vectorFolder+"GENE.eigenvectorsFirst300.txt");
-		pca.PCA.log(" 9. Regressing out signals: ");
+		JuhaPCA.PCA.log(" 9. Regressing out signals: ");
 		for(int sample = 0; sample< singleSample.rowNames.length;sample++)
 		{
 			for(int pc : PCsToCorrect)
@@ -84,7 +84,7 @@ public class CorrectSampleForPCsLudeApproach
 			}
 		}
 		String regressedOutFileName = writeFolder+"AdjustedFor" + PCsToAdjust + ".txt";
-		pca.PCA.log("10. Writing corrected file to file to: " + regressedOutFileName);
+		JuhaPCA.PCA.log("10. Writing corrected file to file to: " + regressedOutFileName);
 		singleSample.write(regressedOutFileName);
 		singleSample.transpose();
 		singleSample.write(regressedOutFileName.replace(".txt", "_transposed.txt"));

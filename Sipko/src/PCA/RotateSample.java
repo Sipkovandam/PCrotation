@@ -4,8 +4,8 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Paths;
 
+import JuhaPCA.PCA;
 import eqtlmappingpipeline.normalization.Normalizer;
-import pca.PCA;
 import umcg.genetica.math.matrix.DoubleMatrixDataset;
 
 public class RotateSample {
@@ -41,7 +41,7 @@ public class RotateSample {
 			boolean setLowestToAverage, double addLogVal, double rLog, String singleSampleFN, String chromLocationsFile, String correctGC) throws IOException
 	{
 		/**6. Calculate PCscores for single sample**/
-		pca.PCA.log(" 1. Loading sample matrix");
+		JuhaPCA.PCA.log(" 1. Loading sample matrix");
 		MatrixStruct singleSample = new MatrixStruct(sampleFile);//expressionMatrix.getRow(0);
 		singleSample.putGenesOnRows();
 		
@@ -57,7 +57,7 @@ public class RotateSample {
 		
 		//Get the eigenvector file based on the public data and put it in the right orientation.
 		String saveNameSingleSampleScore = writeFolder + "SAMPLE.PC.txt";
-		pca.PCA.log(" 11. Loading gene eigen vector file: ");
+		JuhaPCA.PCA.log(" 11. Loading gene eigen vector file: ");
 		File eigenFile = new File(vectorFolder+"GENE.eigenvectors.txt.gz");
 		if(!eigenFile.exists())
 			eigenFile = new File(vectorFolder+"GENE.eigenvectors.txt");
@@ -65,7 +65,7 @@ public class RotateSample {
 		MatrixStruct geneEigenVectors = new MatrixStruct(eigenFile.getAbsolutePath(), -1, 5001);//maximum 1000 PCs
 		if(geneEigenVectors.getColHeaders()[0].contains("ENSG") || geneEigenVectors.getColHeaders()[0].contains("ENST"))
 		{
-			pca.PCA.log("Transposing");
+			JuhaPCA.PCA.log("Transposing");
 			geneEigenVectors.transpose();
 		}
 		
@@ -76,14 +76,14 @@ public class RotateSample {
 		singleSample.keepRows1Matrix(geneEigenVectors);//necessary for some normalizations
 		System.out.println("sample1 " + singleSample.rows() + " eigenvectors = " + geneEigenVectors.rows());
 
-		pca.PCA.log("Transposing");
+		JuhaPCA.PCA.log("Transposing");
 		geneEigenVectors.transpose();
 		geneEigenVectors.write(vectorFolder+"GENE.eigenvectors2.txt");
 
-		pca.PCA.log(" 12. Calculate the PC scores: ");
+		JuhaPCA.PCA.log(" 12. Calculate the PC scores: ");
 		MatrixStruct[] scoreResults = PCA.scores(geneEigenVectors,singleSample, saveNameSingleSampleScore,false, false);
 		
-		pca.PCA.log("Files Written to: " + writeFolder);
+		JuhaPCA.PCA.log("Files Written to: " + writeFolder);
 		return scoreResults;
 	}
 //	public static MatrixStruct center(MatrixStruct singleSample, String vectorFolder, String writeFolder, MatrixStruct columnAverages) throws IOException
@@ -96,29 +96,29 @@ public class RotateSample {
 			double addLogVal, double rLog, String singleSampleFN, String correctGC) throws IOException 
 	{
 		makeFolder(writeFolder);
-		pca.PCA.log(" 3. Removing rows that do not exist in the averages vector from public data");
+		JuhaPCA.PCA.log(" 3. Removing rows that do not exist in the averages vector from public data");
 		columnAverages.keepRows(singleSample);
 		if(!tpm && correctTotalReadCount < 1)
 		{
 			MatrixStruct quantVector = new MatrixStruct(vectorFolder+"SAMPLE_QuantileVector.txt");
-			pca.PCA.log(" 4. Quantile normalization adjustion");
+			JuhaPCA.PCA.log(" 4. Quantile normalization adjustion");
 			singleSample.expressionToRank(quantVector);
 			
 			String quantileAdjustedFN = writeFolder+ "Quantile_adjusted.txt";	
-			pca.PCA.log(" 5. Writing quantile normalization adjusted file to:" + quantileAdjustedFN);
+			JuhaPCA.PCA.log(" 5. Writing quantile normalization adjusted file to:" + quantileAdjustedFN);
 			singleSample.write(quantileAdjustedFN);
 		}
 		
 		if(correctTotalReadCount >0)
 		{
-			pca.PCA.log(" 6. Correcting for total read count");
+			JuhaPCA.PCA.log(" 6. Correcting for total read count");
 			//String correctedNotLogged =  writeFolder+ "SAMPLE_TotalReadCountNormalized.txt";
 			singleSample.correctForTotalReadCount(correctTotalReadCount,0.5);
 			singleSample.write(writeFolder + "correctTotalReadCount_"+correctTotalReadCount+".txt");
 		}
 		if(rLog > 0)
 		{
-			pca.PCA.log(" 6. rLog transformation");
+			JuhaPCA.PCA.log(" 6. rLog transformation");
 			MatrixStruct geoMeans = new MatrixStruct(vectorFolder+"geoMean.txt");
 			String swapFN = writeFolder + "swapFile.txt";
 			singleSample.write(swapFN);
@@ -130,7 +130,7 @@ public class RotateSample {
 		{
 //			if(correctTotalReadCount <= 0 && rLog <= 0) // need to add 1 before log to avoid log(0)
 //				addLogVal = 0.5;
-			pca.PCA.log(" 6. Log transforming");
+			JuhaPCA.PCA.log(" 6. Log transforming");
 			singleSample.log2Transform(addLogVal);//Doing this after the quantile normalization now
 			singleSample.write(writeFolder + "normalized_log2.txt");
 		}
@@ -139,7 +139,7 @@ public class RotateSample {
 		
 		if(spearman >= 0)
 		{
-			pca.PCA.log("Changing expression data into rank data");
+			JuhaPCA.PCA.log("Changing expression data into rank data");
 			expressionToPublicRank(singleSample,spearman,vectorFolder+ "beforeRanks.txt",vectorFolder+ "ranks.txt");
 			singleSample.write(writeFolder+"RankValues.txt");
 		}
@@ -147,7 +147,7 @@ public class RotateSample {
 		
 		if(STdevCorrect)
 		{
-			pca.PCA.log(" 7. Adjusting for STdevs");
+			JuhaPCA.PCA.log(" 7. Adjusting for STdevs");
 			String stdevFile = vectorFolder+ "gene_STDevs.txt";
 			MatrixStruct stDevs = new MatrixStruct(stdevFile);
 			singleSample.divideBy(stDevs, false);
@@ -157,7 +157,7 @@ public class RotateSample {
 			LowestToAverage.lowestToAverage(singleSample);
 		
 		//System.out.println("singleSample=" + singleSample.matrix.get(1, 1));
-		pca.PCA.log(" 8. Adjusting for column averages (centering to target PC space)");
+		JuhaPCA.PCA.log(" 8. Adjusting for column averages (centering to target PC space)");
 		singleSample.adjustForAverageAllCols(columnAverages);
 		//System.out.println("singleSample=" + singleSample.matrix.get(1, 1));
 		String centeredColsFN = writeFolder+ "centeredColsOnly.txt";
@@ -168,7 +168,7 @@ public class RotateSample {
 		averages.write(rowAveragesFileName);
 		if(adjustSampleAverages)
 		{
-			pca.PCA.log(" 9. Adjusting for row averages (centering to target PC space)");
+			JuhaPCA.PCA.log(" 9. Adjusting for row averages (centering to target PC space)");
 			singleSample.adjustForAverageAllrows(averages);
 		}
 		String centeredFN = writeFolder+ "centered.txt";
@@ -180,7 +180,7 @@ public class RotateSample {
 			singleSample = GCcontent.calculateAndCorrect(singleSample,gcPerGene, writeFolder+"gCperSampleWriteFN.txt", writeFolder + "GCcorrected.txt.gz");
 		}
 		
-		pca.PCA.log(" 10. Writing PC centered file to: " + centeredFN);
+		JuhaPCA.PCA.log(" 10. Writing PC centered file to: " + centeredFN);
 		singleSample.write(centeredFN);
 		return singleSample;
 	}

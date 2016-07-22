@@ -30,7 +30,7 @@ public class RLog
 	{
 		String swapFN = writeFolder + "swapFile.txt";
 		expressionStruct.write(swapFN);
-		pca.PCA.log(" 6. Rlog without log");
+		JuhaPCA.PCA.log(" 6. Rlog without log");
 		String correctedNotLogged =  writeFolder+ ".DESeqNorm.txt.gz";
 		expressionStruct.rLog(rLog, writeFolder, swapFN, writeGeoFN);
 		if(writeAll)

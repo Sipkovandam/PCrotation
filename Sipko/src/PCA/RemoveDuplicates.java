@@ -47,7 +47,7 @@ public class RemoveDuplicates {
 		//This saves some computational time
 		if(duplicateCutoff >= 1)
 			return;
-		pca.PCA.log(" 2. Removing duplicates (r>"+duplicateCutoff+")");
+		JuhaPCA.PCA.log(" 2. Removing duplicates (r>"+duplicateCutoff+")");
 		ArrayList<Integer> rowsToRemove = new ArrayList<Integer>();
 		for(int r = 0; r < expression.rows()-1; r++)
 		{
