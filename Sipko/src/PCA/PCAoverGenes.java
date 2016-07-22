@@ -4,7 +4,6 @@ import java.io.IOException;
 import java.nio.file.Paths;
 
 import no.uib.cipr.matrix.NotConvergedException;
-import pca.MatrixStruct;
 import umcg.genetica.math.stats.concurrent.ConcurrentCorrelation;
 import umcg.genetica.math.stats.concurrent.ConcurrentCovariation;
 

@@ -4,9 +4,10 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.IOException;
 import java.util.Hashtable;
-import java.io.FileWriter;
 
-import pca.MatrixStruct;
+import PCA.MatrixStruct;
+
+import java.io.FileWriter;
 
 public class RemoveBadSamples {
 	//removes samples with expression for less then 10% of the genes

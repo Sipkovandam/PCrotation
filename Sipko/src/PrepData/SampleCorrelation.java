@@ -3,7 +3,7 @@ package PrepData;
 import java.io.IOException;
 
 import Analyses.WilcoxonMannWhitney;
-import pca.MatrixStruct;
+import PCA.MatrixStruct;
 import umcg.genetica.math.stats.Correlation;
 
 public class SampleCorrelation {

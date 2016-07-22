@@ -2,8 +2,6 @@ package PCA;
 
 import java.io.IOException;
 
-import pca.MatrixStruct;
-
 public class zTransform {
 
 	static public String FN = "";

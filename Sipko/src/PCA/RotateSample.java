@@ -5,7 +5,6 @@ import java.io.IOException;
 import java.nio.file.Paths;
 
 import eqtlmappingpipeline.normalization.Normalizer;
-import pca.MatrixStruct;
 import pca.PCA;
 import umcg.genetica.math.matrix.DoubleMatrixDataset;
 

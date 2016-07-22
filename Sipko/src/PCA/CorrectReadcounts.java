@@ -2,8 +2,6 @@ package PCA;
 
 import java.io.IOException;
 
-import pca.MatrixStruct;
-
 public class CorrectReadcounts {
 
 	public static void main(String[] args) throws IOException 

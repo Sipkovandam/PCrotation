@@ -5,7 +5,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Hashtable;
 
-import pca.MatrixStruct;
 import umcg.genetica.math.stats.concurrent.ConcurrentCovariation;
 
 public class KeepTopVariance 

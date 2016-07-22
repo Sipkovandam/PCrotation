@@ -42,7 +42,6 @@ import com.google.gson.GsonBuilder;
 
 import eqtlmappingpipeline.normalization.Normalizer;
 import no.uib.cipr.matrix.NotConvergedException;
-import pca.MatrixStruct;
 import pca.PCA;
 
 public class CreateGeneEigenvectorFile 

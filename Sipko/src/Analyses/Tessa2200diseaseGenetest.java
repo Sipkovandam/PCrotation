@@ -12,7 +12,7 @@ import java.util.Enumeration;
 import java.util.HashSet;
 import java.util.Hashtable;
 
-import pca.MatrixStruct;
+import PCA.MatrixStruct;
 
 public class Tessa2200diseaseGenetest 
 {

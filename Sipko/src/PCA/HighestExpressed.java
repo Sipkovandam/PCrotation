@@ -2,8 +2,6 @@ package PCA;
 
 import java.io.IOException;
 
-import pca.MatrixStruct;
-
 public class HighestExpressed 
 {
 	public static void main(String[] args) throws IOException 

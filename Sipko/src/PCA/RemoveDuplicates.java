@@ -3,7 +3,6 @@ package PCA;
 import java.io.IOException;
 import java.util.ArrayList;
 
-import pca.MatrixStruct;
 import umcg.genetica.math.stats.Correlation;
 
 public class RemoveDuplicates {

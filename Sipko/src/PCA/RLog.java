@@ -3,8 +3,6 @@ package PCA;
 import java.io.File;
 import java.io.IOException;
 
-import pca.MatrixStruct;
-
 public class RLog 
 {
 	static String expressionFN = "E:/Groningen/Data/Annique/LLD_and_BIOS_Kallisto_EstimatedTranscriptCounts.ProbesWithZeroVarianceRemoved_removedBadSamples.txt.gz";

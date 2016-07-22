@@ -7,8 +7,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.stream.IntStream;
 
-import pca.MatrixStruct;
-
 public class IdentifyDiseaseGenes 
 {
 	static double cutoff = 3;//number of standard deviations that the average expression over the samples has to be away from the

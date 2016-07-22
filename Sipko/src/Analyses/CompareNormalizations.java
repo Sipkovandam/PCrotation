@@ -7,8 +7,8 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 
+import PCA.MatrixStruct;
 import PrepData.SearchFilesInDirectories;
-import pca.MatrixStruct;
 
 public class CompareNormalizations 
 {

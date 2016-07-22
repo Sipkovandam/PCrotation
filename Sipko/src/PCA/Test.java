@@ -9,7 +9,6 @@ import java.util.stream.Collectors;
 
 import org.apache.commons.math3.stat.StatUtils;
 
-import pca.MatrixStruct;
 import umcg.genetica.math.stats.Correlation;
 
 public class Test 

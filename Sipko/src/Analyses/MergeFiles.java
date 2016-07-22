@@ -2,7 +2,7 @@ package Analyses;
 
 import java.io.IOException;
 
-import pca.MatrixStruct;
+import PCA.MatrixStruct;
 
 public class MergeFiles {
 

@@ -6,7 +6,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
 
-import pca.MatrixStruct;
+import PCA.MatrixStruct;
 
 public class SearchFilesInDirectories 
 {

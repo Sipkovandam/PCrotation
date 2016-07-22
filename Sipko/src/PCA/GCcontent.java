@@ -3,7 +3,6 @@ package PCA;
 import java.io.IOException;
 
 import eqtlmappingpipeline.normalization.Normalizer;
-import pca.MatrixStruct;
 import umcg.genetica.math.matrix.DoubleMatrixDataset;
 
 public class GCcontent 

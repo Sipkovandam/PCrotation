@@ -7,8 +7,6 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.Hashtable;
 
-import pca.MatrixStruct;
-
 public class SortChromosome 
 {
 	

@@ -1,6 +1,6 @@
 package Analyses;
 
-import pca.MatrixStruct;
+import PCA.MatrixStruct;
 
 public class PC_to_biology 
 {

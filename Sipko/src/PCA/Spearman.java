@@ -2,8 +2,6 @@ package PCA;
 
 import java.io.IOException;
 
-import pca.MatrixStruct;
-
 public class Spearman 
 {
 	//does not actually calculate the correlation, only ranks the sample

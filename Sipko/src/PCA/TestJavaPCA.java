@@ -4,7 +4,6 @@ import java.io.IOException;
 import java.nio.file.Paths;
 
 import no.uib.cipr.matrix.NotConvergedException;
-import pca.MatrixStruct;
 import pca.PCA;
 
 public class TestJavaPCA 

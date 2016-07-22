@@ -6,7 +6,7 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.util.Hashtable;
 
-import pca.MatrixStruct;
+import PCA.MatrixStruct;
 
 public class IrisSampleNamesAdjust 
 {

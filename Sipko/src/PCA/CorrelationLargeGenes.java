@@ -2,7 +2,6 @@ package PCA;
 
 import java.io.IOException;
 
-import pca.MatrixStruct;
 import umcg.genetica.math.stats.concurrent.ConcurrentCovariation;
 
 public class CorrelationLargeGenes {

@@ -1,7 +1,7 @@
 package Tests;
 
 import PCA.Matrix;
-import pca.MatrixStruct;
+import PCA.MatrixStruct;
 import umcg.genetica.math.matrix.DoubleMatrixDataset;
 
 public class Test {

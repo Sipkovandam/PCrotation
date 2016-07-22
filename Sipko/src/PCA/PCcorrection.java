@@ -11,7 +11,6 @@ import java.util.Date;
 
 import org.apache.commons.math3.stat.inference.TTest;
 
-import pca.MatrixStruct;
 import umcg.genetica.math.stats.Correlation;
 
 public class PCcorrection 

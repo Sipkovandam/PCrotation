@@ -4,7 +4,7 @@ import java.io.IOException;
 import java.util.Enumeration;
 import java.util.Hashtable;
 
-import pca.MatrixStruct;
+import PCA.MatrixStruct;
 
 public class GCcontentCompare 
 {

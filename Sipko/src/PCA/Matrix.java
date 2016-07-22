@@ -24,9 +24,6 @@ import java.util.Enumeration;
 import java.util.Hashtable;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
-
-import pca.MatrixStruct;
-
 import java.nio.file.Path;
 
 public class Matrix 

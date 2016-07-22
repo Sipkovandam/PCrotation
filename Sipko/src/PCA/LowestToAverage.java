@@ -1,7 +1,5 @@
 package PCA;
 
-import pca.MatrixStruct;
-
 public class LowestToAverage {
 
 	public static void main(String[] args) 
