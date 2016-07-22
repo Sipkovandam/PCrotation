@@ -5,6 +5,7 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.stream.IntStream;
 
 import pca.MatrixStruct;
 
@@ -16,13 +17,13 @@ public class IdentifyDiseaseGenes
 	public static void main(String[] args) throws IOException
 	{
 		//Sample in which you wish to find outlier genes
-		String sampleFN = "E:/Groningen/Data/PublicSamples/Test13/directPCA_Voom_0.2/18DownSyndrome26Normal2Cancer_counts/PC_1-300_DevidedBySTdevs.txt";
+		//String sampleFN = "E:/Groningen/Data/PublicSamples/Test13/directPCA_Voom_0.2/18DownSyndrome26Normal2Cancer_counts/PC_1-300_DevidedBySTdevs.txt";
 		
-		//String sampleFN = "E:/Groningen/Data/Monogenetic_disease_samples_RadBoud/directPCA_Voom_0.2/CountsGENES_Radboud/PC_1-300_DevidedBySTdevs.txt";
+		String sampleFN = "E:/Groningen/Data/PublicSamples/05-2016/Tessa/est_counts_nocancernocellline_Rlog_covariance_Chr1-22_add0.0BeforeGeoMean/CountsGENES_5GPM_46Samples/PC_1-PC_1-300_DevidedBySTdevs.txt";
 		int startCol = 0;//first column to calculate the average from
-		int endCol = 9;// last column to calculate the average from
-		int[] cols = new int[]{2,13,18};//{0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18};
-		String writeName = "E:/Groningen/Data/PublicSamples/Test13/directPCA_Voom_0.2/18DownSyndrome26Normal2Cancer_counts/19-04-2016/PC_1-300_OutliersCol0-2_3Stdevs.txt";
+		int endCol = 6;// last column to calculate the average from
+		int[] cols = IntStream.rangeClosed(startCol, endCol).toArray();//new int[]{0,1,2};//{0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18};
+		String writeName = null;//"E:/Groningen/Data/PublicSamples/Test13/directPCA_Voom_0.2/18DownSyndrome26Normal2Cancer_counts/19-04-2016/PC_1-300_OutliersCol0-2_3Stdevs.txt";
 		
 		if(args.length < 2)
 			checkArgs(args);
@@ -55,7 +56,7 @@ public class IdentifyDiseaseGenes
 		}
 		
 		if(writeName == null)
-			writeName = sampleFN.replace(".txt", "diseaseGenes_"+endCol+"samples_"+cutoff+"STdevs.txt");
+			writeName = sampleFN.replace(".txt", "diseaseGenes_"+(endCol+1)+"samples_"+cutoff+"STdevs.txt");
 		MatrixStruct samples = new MatrixStruct(sampleFN);
 		samples.putGenesOnRows();
 		

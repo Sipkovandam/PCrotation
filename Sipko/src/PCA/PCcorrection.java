@@ -16,125 +16,25 @@ import umcg.genetica.math.stats.Correlation;
 
 public class PCcorrection 
 {
-	
-	static boolean setLowestToAverage = false;
-	static boolean adjustSampleAverages = true;
+	static Var var = new Var();
 	
 	public static void main (String[] args) throws IOException
 	{
-		//String sampleFile = "E:/Groningen/Data/PublicSamples/100SamplesTest/Rsample/" + "RandomSamples.txt";
-		String sampleFile = "E:/Groningen/Data/PublicSamples/100SamplesTest/Rsample/" + "TESTexpression.txt";
-		String vectorFolder = "E:/Groningen/Data/PublicSamples/100SamplesTest/Rsample/TESTexpression/";
-		String writeFolder = null;
-		String chr21FN = null;//"E:/Groningen/Data/PublicSamples/100SamplesTest/Rsample/Chr21FakeForTest.txt";
+		checkArgs(args);
 		
-//		String sampleFile = "E:/Groningen/Data/PublicSamples/Test12/" + "18DownSyndrome26Normal2Cancer_TPM.txt";
-//		String vectorFolder = "E:/Groningen/Data/PublicSamples/Test13/TPM_9900SamplesTop0.2/";
-//		String writeFolder = "E:/Groningen/Data/PublicSamples/Test13/TPM_9900SamplesTop0.2/18DownSyndrome26Normal2Cancer_TPM_N/";
-		
-//		String sampleFile = "E:/Groningen/Data/Monogenetic_disease_samples_RadBoud/" + "CountsGENES.txt";
-//		String vectorFolder = "E:/Groningen/Data/Monogenetic_disease_samples_RadBoud/directPCA_Rlog_1.0_Correl/";
-//		String writeFolder = "E:/Groningen/Data/Monogenetic_disease_samples_RadBoud/directPCA_Rlog_1.0_Correl/RadboudSamples/";
-		
-//		String sampleFile = "E:/Groningen/Data/Iris/CountsSD200/" + "CountsGENES.txt";
-//		String vectorFolder = "E:/Groningen/Data/PublicSamples/04-2016/directPCA_Rlog_0.2/";
-//		String writeFolder = "E:/Groningen/Data/Iris/CountsSD200/directPCA_Rlog_0.2_covar/IrisSD200_2/";
-		
-		String chromLocationsFile = "E:/Groningen/Data/GenePositionInfo_Chr1-22.txt";
-		//String chromLocationsFile = "E:/Groningen/Data/GenePositionInfo_23X_24Y_25MT_26rest.txt";
-		
-		boolean log2 = true;
-		boolean correctInputForSTdevs = false;
-		boolean correctResultsForSTdevs = true;
-		boolean skipQuantileNorm = true;
-		
-		int optimalPCremoval = -1;
-		
-		double zScoresCutoff = Double.parseDouble("0");//I removed this (commented out), as it seems pretty useless
-		double correctTotalReadCount = 1000000;//log((gene+0.5)/total*value) //value = number of counts the sample ends up having in total (does noting if 0 or lower)
-		double spearman = -1;//-1 is optimal per each sample. Any other "number" than 0 is optimal per "number" samples, where it benefits at least half those "number" of samples
-		double addBeforeLog = 0;
-		double rLog = -1;
-		
-		String PCs = "1-211";//null if you don't want to set any PCs to correct for (just corrects for the defaults (100,300,500,1000,5000)
-		
-		if(args.length==0) 
-			checkArgs(args);
-
-		for(int a = 0; a < args.length; a++)
+		if(var.writeFolderCorrected == null || var.writeFolderCorrected.length() == 0)
 		{
-			String arg = args[a].split("=")[0];
-			String value = args[a].split("=")[1];
-			switch (arg.toLowerCase()){
-				case "filename":
-					sampleFile = value;
-					break;
-				case "vectorfolder":
-					vectorFolder = value;
-					break;
-				case "chrom":
-					chromLocationsFile = value;
-//				case "zscorescutoff":
-//					zScoresCutoff = Double.parseDouble(value);
-//					break;
-				case "correctinputforstdevs":
-					correctInputForSTdevs = Boolean.parseBoolean(value);
-					break;
-				case "log2":
-					log2 = Boolean.parseBoolean(value);
-					break;
-				case "correctresultsforstdevs":
-					correctResultsForSTdevs = Boolean.parseBoolean(value);
-					break;
-				case "noqn":
-					skipQuantileNorm = Boolean.parseBoolean(value);
-					break;
-				case "writefolder":
-					writeFolder = value;
-					break;
-				case "chr21":
-					chr21FN = value;
-					break;
-				case "optimalpcremoval":
-					optimalPCremoval = Integer.parseInt(value);
-					break;
-				case "pcs":
-					PCs = value;
-					break;
-				case "correcttotalreadcount":
-					correctTotalReadCount = Double.parseDouble(value);
-					break;
-				case "spearman":
-					spearman = Double.parseDouble(value);
-					break;
-				case "rlog":
-					rLog = Double.parseDouble(value);
-					break;
-				case "lowesttoaverage":
-					setLowestToAverage = Boolean.parseBoolean(value);
-					break;
-				case "adjustsampleaverages":
-					adjustSampleAverages = Boolean.parseBoolean(value);
-					break;
-//				case "duplicate":
-//					duplicateCutoff = Double.parseDouble(value);
-//					break;
-				default:
-					checkArgs(args);
-					System.out.println("Incorrect argument supplied; exiting");
-					System.exit(1);
-			}
+			File sample = new File(var.sampleFile);
+			var.writeFolderCorrected = var.getFolderName(var.writeFolder)+sample.getName().replace(".txt", "").replace(".gz", "")+"/";
 		}
 		
-		if(writeFolder == null)
-			writeFolder = sampleFile.replace(".txt", "_Adj/");
+		makeFolder(var.writeFolderCorrected);
+		var.writeVars(var.writeFolderCorrected+"variables.txt");
 		
-		writeParameters(sampleFile, vectorFolder, writeFolder, log2, correctInputForSTdevs, zScoresCutoff, 
-				correctResultsForSTdevs, skipQuantileNorm, PCs, correctTotalReadCount, spearman, rLog);
-		
-		MatrixStruct[] rotationMatrixes = RotateSample.rotate(sampleFile, vectorFolder, writeFolder, correctInputForSTdevs, 
-				log2, skipQuantileNorm, correctTotalReadCount, spearman, adjustSampleAverages, setLowestToAverage,
-				addBeforeLog, rLog, sampleFile, chromLocationsFile);
+		//put the matrix in the same space and calculate the PC scores for the PCs defined based on the pulbic data
+		MatrixStruct[] rotationMatrixes = RotateSample.rotate(var.sampleFile, var.writeFolder, var.writeFolderCorrected, var.correctInputForSTdevs, 
+				var.log2, var.skipQuantileNorm, var.correctTotalReadCount, var.spearman, var.adjustSampleAverages, var.setLowestToAverage,
+				var.addLogVal, var.rLog, var.sampleFile, var.chromLocationsFile, var.correctGCSamples);
 		MatrixStruct sampleStruct = rotationMatrixes[2];
 		System.out.println("rows = " + sampleStruct.rows());
 		
@@ -145,77 +45,30 @@ public class PCcorrection
 //		Zscore.changeToZscores(zScoreMatrix, zScoreStats);
 //		
 //		pca.PCA.log("14. Writing zScores");
-//		zScoreMatrix.write(writeFolder+"pcZscoresSamples.txt");
+//		zScoreMatrix.write(writeFolder+"pcZscoresSamples.txt");\\\\\
 
-		String scoreFile = writeFolder + "SAMPLE.PC.scores.txt";
+		String scoreFile = var.writeFolderCorrected + "SAMPLE.PC.scores.txt";
 		MatrixStruct scores = new MatrixStruct(scoreFile);
 	
 		MatrixStruct eigenVectors = rotationMatrixes[3];
 		
 		pca.PCA.log("16. Adjusting for PCs");
 		
-		//some very sloppy code. Just want to do things quick atm...
-		int[] PCAadjustments = new int[]{0,100,1,25,300,500,1000};//,5000,eigenVectors.rows()};
+		int[] PCAadjustments = new int[]{0,100,2,25,300,500,1000};//,5000,eigenVectors.rows()};
 		MatrixStruct chr21 = null;
-		if(chr21FN != null && new File(chr21FN).exists())
-			chr21 = new MatrixStruct(chr21FN);
-			
-		adjustForPCs(sampleStruct, PCAadjustments, eigenVectors, scores, writeFolder, vectorFolder, 
-				zScoreMatrix, zScoresCutoff, log2, correctResultsForSTdevs,chr21, optimalPCremoval, PCs);
+		if(var.chr21FN != null && new File(var.chr21FN).exists())
+			chr21 = new MatrixStruct(var.chr21FN);
 		
-		System.out.println("Done, Results saved in: " + writeFolder);
-	}
-	private static void writeParameters(String sampleFile, String vectorFolder, String writeFolder, boolean log2,
-			boolean correctInputForSTdevs, double zScoresCutoff, boolean correctResultsForSTdevs, boolean skipQN, String PCs,
-			double correctTotalReadCount, double spearman, double rLog) throws IOException {
-		CreateGeneEigenvectorFile.makeFolder(writeFolder);
-		DateFormat dateFormat = new SimpleDateFormat("dd/MM/yyyy HH:mm:ss");
-		Date date = new Date();
-		BufferedWriter writer = new BufferedWriter(new FileWriter(new File(writeFolder+"parameters.txt")));
-		writer.write("Date\t" + dateFormat.format(date) + "\n");
-		writer.write("Input file\t" + sampleFile + "\n");
-		writer.write("writeFolder\t" + writeFolder + "\n");
-		writer.write("vectorFolder\t" + vectorFolder + "\n");
-		writer.write("log2\t" + log2 + "\n");
-		writer.write("correctInputForSTdevs\t" + correctInputForSTdevs + "\n");
-		writer.write("zScoresCutoff\t" + zScoresCutoff + "\n");
-		writer.write("correctResultsForSTdevs\t" + correctResultsForSTdevs + "\n");
-		writer.write("SkipQuantileNormalization\t" + skipQN + "\n");
-		writer.write("PCs to correct\t" + PCs + "\n");
-		writer.write("correctTotalReadCount\t" + correctTotalReadCount + "\n");
-		writer.write("spearman\t" + spearman + "\n");
-		writer.write("lowesttoaverage\t" + setLowestToAverage + "\n");
-		writer.write("adjustSampleAverages\t" + adjustSampleAverages + "\n");
-		writer.write("rLog\t" + rLog + "\n");
-		writer.close();
+		adjustForPCs(sampleStruct, PCAadjustments, eigenVectors, scores, var.writeFolderCorrected, var.writeFolder, 
+				zScoreMatrix, var.zScoresCutoff, var.log2, var.correctResultsForSTdevs, chr21, var.optimalPCremoval, var.PCs);
 		
+		System.out.println("Done, Results saved in: " + var.writeFolderCorrected);
 	}
 	private static void adjustForPCs(MatrixStruct inputMatrix, int[] PCAadjustments, MatrixStruct eigenVectors, MatrixStruct scores, 
 			String writeFolder, String vectorFolder, MatrixStruct zScores, double zScoresCutoff, boolean log2, 
 			boolean correctResultsForSTdevs, MatrixStruct chr21, int optimalPCremoval, String PCs) throws IOException 
 	{
-//		pca.PCA.log("Copying matrix");
-//		MatrixStruct sampleStruct = inputMatrix.copy();
-//		pca.PCA.log("Matrix copy done");
-//		if(zScoresCutoff >= 0)//if adjusting based on z-scores get the PCs that should be removed
-//		{
-//			for(int s = 0; s < sampleStruct.cols();s++)
-//			{	
-//				ArrayList<Integer> PCsToAdjust = new ArrayList<Integer>();
-//				String outputString = "";
-//				
-//				
-//				correctPCs(sampleStruct, scores, eigenVectors, PCsToAdjust, s);
-//				
-////				if(zScores != null)
-////					System.out.println("Sample: "+ s + "/" + zScores.cols()+ "-->" + sampleStruct.getColHeaders()[s] + " Removing " + PCsToAdjust.size() + "/ "+ zScores.rows() +" PCs; Remaining PCs:" + outputString);
-//
-//			}
-//			String writeFileName = writeFolder+"ZscoreCutoff_" + zScoresCutoff + ".txt";
-//			sampleStruct.write(writeFileName);
-//			createSmoothedFiles(sampleStruct,correctResultsForSTdevs,vectorFolder, writeFileName);
-//		}
-
+		//adjustOnZscores();
 		MatrixStruct tTestResults = null;
 		MatrixStruct difference = null;
 		
@@ -240,41 +93,11 @@ public class PCcorrection
 				PCsToAdjust = userList;
 				writePCName = PCs; 
 			}
-//				if(zScoresCutoff > 0)//for the remaining PCs correct only if Z-score is small
-//				{
-//					for(int z = adjustPCs; z < zScores.rows(); z++)
-//					{
-//						double zScore = zScores.matrix.get(z, s);
-//						if(zScore<zScoresCutoff && zScore > -zScoresCutoff)//add all PCs < then cuttoff and bigger then -cutoff
-//							PCsToAdjust.add(z+1);
-//					}
-//				}
+
 			if(PCsToAdjust.size() == 0 || chr21 == null)//!= PCAadjustments.length-1
 				correctPCs(sampleStruct, scores, eigenVectors, PCsToAdjust,null,null, null, optimalPCremoval);
 			else //if it is correcting for the full batch of PCs, also calculate how significant the expression changes are for genes on chr 21 for each PC that is subtracted
-			{
-				if(chr21 != null)
-				{
-					chr21.keepRows1Matrix(sampleStruct);
-					
-					tTestResults = new MatrixStruct(PCsToAdjust.size(), sampleStruct.cols());
-					difference = new MatrixStruct(PCsToAdjust.size(), sampleStruct.cols());
-					String[] rowHeaders = new String[PCsToAdjust.size()];
-					for(int p = 0; p < PCsToAdjust.size(); p++)
-					{
-						rowHeaders[p] = "PC"+Integer.toString(p+1);
-					}
-					tTestResults.setRowHeaders(rowHeaders);
-					tTestResults.setColHeaders(sampleStruct.getColHeaders());
-					difference.setRowHeaders(rowHeaders);
-					difference.setColHeaders(sampleStruct.getColHeaders());
-					
-					if(chr21.rows()>1)
-						correctPCs(sampleStruct, scores, eigenVectors, PCsToAdjust,chr21,tTestResults, difference, optimalPCremoval);
-					else
-						System.out.println("WARNING!: less then 2 genes of chr21 are present and thus no statistical test can be conducted on the difference after the correction of each PC");
-				}
-			}
+				correctPCsTrackChr21(sampleStruct,scores, eigenVectors,PCsToAdjust,chr21, tTestResults, difference, optimalPCremoval);
 			
 			String writeFileName = writeFolder+"PC_1-"+writePCName+"_.txt";
 			sampleStruct.write(writeFileName);
@@ -285,6 +108,53 @@ public class PCcorrection
 			tTestResults.write(writeFolder+"tTestPerPCchr21.txt");
 			difference.write(writeFolder+"differencePerPCchr21.txt");
 		}
+	}
+	private static void correctPCsTrackChr21(MatrixStruct sampleStruct, MatrixStruct scores, MatrixStruct eigenVectors, 
+			ArrayList<Integer> PCsToAdjust, MatrixStruct chr21, MatrixStruct tTestResults, MatrixStruct difference, int optimalPCremoval) {
+		if(chr21 != null)
+		{
+			chr21.keepRows1Matrix(sampleStruct);
+			
+			tTestResults = new MatrixStruct(PCsToAdjust.size(), sampleStruct.cols());
+			difference = new MatrixStruct(PCsToAdjust.size(), sampleStruct.cols());
+			String[] rowHeaders = new String[PCsToAdjust.size()];
+			for(int p = 0; p < PCsToAdjust.size(); p++)
+			{
+				rowHeaders[p] = "PC"+Integer.toString(p+1);
+			}
+			tTestResults.setRowHeaders(rowHeaders);
+			tTestResults.setColHeaders(sampleStruct.getColHeaders());
+			difference.setRowHeaders(rowHeaders);
+			difference.setColHeaders(sampleStruct.getColHeaders());
+			
+			if(chr21.rows()>1)
+				correctPCs(sampleStruct, scores, eigenVectors, PCsToAdjust,chr21,tTestResults, difference, optimalPCremoval);
+			else
+				System.out.println("WARNING!: less then 2 genes of chr21 are present and thus no statistical test can be conducted on the difference after the correction of each PC");
+		}
+	}
+	private static void adjustOnZscores() {
+//		pca.PCA.log("Copying matrix");
+//		MatrixStruct sampleStruct = inputMatrix.copy();
+//		pca.PCA.log("Matrix copy done");
+//		if(zScoresCutoff >= 0)//if adjusting based on z-scores get the PCs that should be removed
+//		{
+//			for(int s = 0; s < sampleStruct.cols();s++)
+//			{	
+//				ArrayList<Integer> PCsToAdjust = new ArrayList<Integer>();
+//				String outputString = "";
+//				
+//				
+//				correctPCs(sampleStruct, scores, eigenVectors, PCsToAdjust, s);
+//				
+////				if(zScores != null)
+////					System.out.println("Sample: "+ s + "/" + zScores.cols()+ "-->" + sampleStruct.getColHeaders()[s] + " Removing " + PCsToAdjust.size() + "/ "+ zScores.rows() +" PCs; Remaining PCs:" + outputString);
+//
+//			}
+//			String writeFileName = writeFolder+"ZscoreCutoff_" + zScoresCutoff + ".txt";
+//			sampleStruct.write(writeFileName);
+//			createSmoothedFiles(sampleStruct,correctResultsForSTdevs,vectorFolder, writeFileName);
+//		}
 	}
 	private static void varianceExplained(int i, String writeFolder, MatrixStruct eigenVectors, MatrixStruct sampleStruct) throws IOException {
 		MatrixStruct explained = new MatrixStruct(eigenVectors.rows(), sampleStruct.cols());
@@ -314,48 +184,59 @@ public class PCcorrection
 			{	
 				//remove the signal of this single PC from all the genes
 				double[][] out = removeSignalAllgenes(sampleStruct, chr21, scores, pc, s, eigenVectors, false);
-				double[] onChr21 = out[0];
-				double[] others = out[1];
-				//check if there is a significant difference
-				if(chr21 != null)
-				{
-					TTest tTest = new TTest();
-					double pValue = tTest.tTest(onChr21,others)/2;
-					double avgChr21 = org.apache.commons.math3.stat.StatUtils.mean(onChr21);
-					double avgOthers = org.apache.commons.math3.stat.StatUtils.mean(others);
-					double diff= avgOthers-avgChr21;
-					
-					if(optimalPCremoval == 1)
-						if(prevPvalue < pValue)//if the previous p-value is smaller, just add the signal back on
-						{
-							removeSignalAllgenes(sampleStruct, chr21, scores, pc, s, eigenVectors, true);//add signal back on
-							pValue = prevPvalue;
-						}
-					prevPvalue = pValue;
-					
-					tTestResults.matrix.set(outcol, s, pValue);
-					difference.matrix.set(outcol, s, diff);
-				}
+				
+				//check if there is a significant difference between chr21 and the rest
+				trackChr21(out, chr21, sampleStruct, scores, pc, s, eigenVectors, optimalPCremoval, prevPvalue, difference, difference, tTestResults, outcol);
 			}
 			outcol++;
+			
 			if(optimalPCremoval>0 && pc>1)//add signal back on that decreases the signal difference between chr21 and the other genes in at least half the down samples
-			{
-				//Find out if this last PC should have been kept
-				int n = 0;
-				for(int c = 0; c < optimalPCremoval; c++)
-				{
-					if(tTestResults.matrix.get(pc-1-1,c) < tTestResults.matrix.get(pc-1,c))
-						n++;
-				}
-				if(n>= optimalPCremoval/2)//the number of samples in which the PC has to be "bad"(decreasing the difference between genes on chr21 and the other genes)
-				{
-					for(int s = 0; s < sampleStruct.cols();s++)
-					{	
-						removeSignalAllgenes(sampleStruct, chr21, scores, pc, s, eigenVectors, true);//add signal back on
-					}
-				}
-			}	
+				restoreGoodSignal(sampleStruct, chr21, scores, pc, eigenVectors, true, optimalPCremoval, tTestResults);
 		}	
+	}
+	private static void restoreGoodSignal(MatrixStruct sampleStruct, MatrixStruct chr21, MatrixStruct scores, int pc,
+			MatrixStruct eigenVectors, boolean b, int optimalPCremoval, MatrixStruct tTestResults) {
+		//Find out if this last PC should have been kept
+		int n = 0;
+		for(int c = 0; c < optimalPCremoval; c++)
+		{
+			if(tTestResults.matrix.get(pc-1-1,c) < tTestResults.matrix.get(pc-1,c))
+				n++;
+		}
+		if(n>= optimalPCremoval/2)//the number of samples in which the PC has to be "bad"(decreasing the difference between genes on chr21 and the other genes)
+		{
+			for(int s = 0; s < sampleStruct.cols();s++)
+			{	
+				removeSignalAllgenes(sampleStruct, chr21, scores, pc, s, eigenVectors, true);//add signal back on
+			}
+		}
+	}
+	
+	private static void trackChr21(double[][] out, MatrixStruct chr21, MatrixStruct sampleStruct, MatrixStruct scores, int pc, int s,
+			MatrixStruct eigenVectors, int optimalPCremoval, double prevPvalue, MatrixStruct difference, MatrixStruct difference2, MatrixStruct tTestResults, int outcol) 
+	{
+		double[] onChr21 = out[0];
+		double[] others = out[1];
+		if(chr21 != null)
+		{
+			TTest tTest = new TTest();
+			double pValue = tTest.tTest(onChr21,others)/2;
+			double avgChr21 = org.apache.commons.math3.stat.StatUtils.mean(onChr21);
+			double avgOthers = org.apache.commons.math3.stat.StatUtils.mean(others);
+			double diff= avgOthers-avgChr21;
+			
+			if(optimalPCremoval == 1)
+				if(prevPvalue < pValue)//if the previous p-value is smaller, just add the signal back on
+				{
+					removeSignalAllgenes(sampleStruct, chr21, scores, pc, s, eigenVectors, true);//add signal back on
+					pValue = prevPvalue;
+				}
+			prevPvalue = pValue;
+			
+			tTestResults.matrix.set(outcol, s, pValue);
+			difference.matrix.set(outcol, s, diff);
+		}
+		
 	}
 	private static double[][] removeSignalAllgenes(MatrixStruct sampleStruct, MatrixStruct chr21, MatrixStruct scores, 
 			int pc, int s, MatrixStruct eigenVectors, boolean add) {
@@ -373,14 +254,16 @@ public class PCcorrection
 		for(int gene = 0; gene < sampleStruct.rows(); gene++)
 		{
 			double signal = scores.matrix.get(pc-1, s)*eigenVectors.matrix.get(pc-1, gene);
-//			if(gene == 0 && pc <= 2)
-//				System.out.println("gene = " +sampleStruct.getRowHeaders()[gene] + " PC =" +pc+" signal = \t" + signal + 
+			//if(gene == 0 && pc <= 2 && s==0)
+//			if(sampleStruct.getRowHeaders()[gene].contains("ENSG00000250360") && pc <= 2 && s==0)
+//				System.out.println("gene = " +sampleStruct.getRowHeaders()[gene] + " geneEigen = " + eigenVectors.getColHeaders()[gene] + " PC =" +pc+" signal = \t" + signal + 
 //						" score ="+ scores.matrix.get(pc-1, s) + " vectorValue= " + eigenVectors.matrix.get(pc-1, gene)+ "val before = " +sampleStruct.matrix.get(gene, s));
 			if(add)//add the signal instead of removing it
 				signal *= -1;
 			sampleStruct.matrix.add(gene, s, -signal);
-//			if(gene == 0 && pc <= 2)
-//				System.out.println("gene = " +sampleStruct.getRowHeaders()[gene] + " PC =" +pc+"val after = " +sampleStruct.matrix.get(gene, s));
+			//if(gene == 0 && pc <= 2 && s==0)
+//			if(sampleStruct.getRowHeaders()[gene].contains("ENSG00000250360") && pc <= 2 && s==0)
+//				System.out.println("gene = " +sampleStruct.getRowHeaders()[gene] + " geneEigen = " + eigenVectors.getColHeaders()[gene] + " PC =" +pc+"val after = " +sampleStruct.matrix.get(gene, s));
 			if(chr21 != null)
 			{
 				if(chr21.rowHash.containsKey(sampleStruct.getRowHeaders()[gene]))
@@ -442,6 +325,7 @@ public class PCcorrection
 		{
 			pca.PCA.log("16. Divide by standard deviation");
 			MatrixStruct STdevs = new MatrixStruct(vectorFolder+"gene_STDevs.txt");
+			STdevs.keepRows(sampleStruct);
 			//if the standard deviation is smaller then 1, set it to 1 to avoid inflated values for genes that have a very small stdev
 			for(int s = 0; s < STdevs.rows(); s++)
 				if(STdevs.matrix.get(s, 0) < 1)
@@ -513,6 +397,15 @@ public class PCcorrection
 		}
 		sampleStruct.write(writeFileName.replace(".txt", ".Smoothed"+n+"Genes.txt"));
 	}
+	static void makeFolder(String writeFolder) 
+	{
+		File folder = new File(writeFolder);
+		if(!folder.exists())
+		{
+			folder.mkdir();
+		}
+		
+	}
 	public static ArrayList<Integer> parsePCs(String PCsToAdjust) 
 	{//function takes format like: "1,4,5-10,3-10"
 		if(PCsToAdjust.contains("null"))
@@ -550,25 +443,83 @@ public class PCcorrection
 		
 		return PCs;
 	}
-	public static void checkArgs(String[] args)
+	static void checkArgs(String[] args) 
 	{
 		if(System.getProperty("user.dir").contains("C:\\Users\\Sipko\\git\\PCrotation\\Sipko"))
 			return;
-		System.out.println("This script calculates the eigenvectors over the genes and uses the following input:\n"
-				+ "fileName=<fileName> - Expression file (samples on rows, gene names on columns)\n"
-				+ "vectorFolder=<vectorfolder> - Folder with the gene eigen vectors created by CreageGeneEigenvectorFile.java.\n"
-				+ "correctinputforstdevs=<false/true> - Corrects for STdevs prior to centering the input data (default=false)\n"
-				+ "log2=<false/true> - Log2 transformation after quantile normalization (default=true)\n"
-				+ "correctresultsforstdevs=<false/true>  - Divide values obtained after correcting the data by standard deviation (default = true)\n"
-				+ "tpm=<false/true>  - Input values are TPM, make sure the eigenvector matrix was also calculated based on TPM values (default = false)\n"
-				+ "chr21FN=<fileName>  - File with geneNames. Script will calculate the p-value between the difference between genes"
-				+ "\tin this file and all remaining genes (default = null)\n"
-				+ "writeFolder=<folderName> - folder to write the results in (default=filename.replace(.txt,/)\n"
-				+ "PCs=<PCs> - PCs to correct for. The following formats can be used: \n"
-					+ "   1-100 \n"
-					+ "   1,2,6,8 \n"
-					+ "   or a combination: 1,5-10,66,100-200 (default = 300) \n");
-		System.exit(1);
+		if(args.length < 1)
+		{
+			System.out.println("Script requires the following arguments:\n"
+					+ "1. filename=<expressionFN.txt> - Expression file with genes on rows samples on columns\n"
+					+ "2. writeFolder=<writeFolderFN.txt> - Folder where the files will be written (default=parentFolder(input.txt))\n"
+					+ "3. geoFN=<geoFn.txt> - Optional file with geometric mean per gene to use (default=null)\n");
+			System.exit(1);
+		}
+		
+		for(int a = 0; a < args.length; a++)
+		{
+			String arg = args[a].split("=")[0];
+			String value = args[a].split("=")[1];
+			switch (arg.toLowerCase())
+			{
+				case "json":
+					var = var.readVars(value);
+				break;
+				case "correctresultsforstdevs":
+					var.correctResultsForSTdevs = Boolean.parseBoolean(value);
+					break;
+				case "chr21":
+					var.chr21FN = value;
+					break;
+				case "optimalpcremoval":
+					var.optimalPCremoval = Integer.parseInt(value);
+					break;
+				case "pcs":
+					var.PCs = value;
+					break;
+				case "filename":
+					var.sampleFile = value;
+					break;
+				case "vectorfolder":
+					var.writeFolder = value;
+					break;
+				case "chrom":
+					var.chromLocationsFile = value;
+				case "correctinputforstdevs":
+					var.correctInputForSTdevs = Boolean.parseBoolean(value);
+					break;
+				case "log2":
+					var.log2 = Boolean.parseBoolean(value);
+					break;		
+				case "noqn":
+					var.skipQuantileNorm = Boolean.parseBoolean(value);
+					break;
+				case "writefolder":
+					var.writeFolder = value;
+					break;		
+				case "correcttotalreadcount":
+					var.correctTotalReadCount = Double.parseDouble(value);
+					break;
+				case "spearman":
+					var.spearman = Double.parseDouble(value);
+					break;
+				case "rlog":
+					var.rLog = Double.parseDouble(value);
+					break;
+				case "addbeforelog":
+					var.addLogVal = Double.parseDouble(value);
+					break;
+				case "lowesttoaverage":
+					var.setLowestToAverage = Boolean.parseBoolean(value);
+					break;
+				case "adjustsampleaverages":
+					var.adjustSampleAverages = Boolean.parseBoolean(value);
+					break;
+				default:
+					System.out.println("Incorrect argument supplied:\n"+ args[a] +"\nexiting");
+					System.exit(1);
+			}
+		}
 	}
 }
 

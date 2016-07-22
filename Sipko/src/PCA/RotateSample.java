@@ -4,8 +4,10 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Paths;
 
+import eqtlmappingpipeline.normalization.Normalizer;
 import pca.MatrixStruct;
 import pca.PCA;
+import umcg.genetica.math.matrix.DoubleMatrixDataset;
 
 public class RotateSample {
 
@@ -37,27 +39,38 @@ public class RotateSample {
 	
 	public static MatrixStruct[] rotate(String sampleFile, String vectorFolder, String writeFolder, boolean STdevCorrect,
 			boolean log2, boolean tpm, double correctTotalReadCount, double spearman, boolean adjustSampleAverages,
-			boolean setLowestToAverage, double addBeforeLog, double rLog, String singleSampleFN, String chromLocationsFile) throws IOException
+			boolean setLowestToAverage, double addLogVal, double rLog, String singleSampleFN, String chromLocationsFile, String correctGC) throws IOException
 	{
 		/**6. Calculate PCscores for single sample**/
 		pca.PCA.log(" 1. Loading sample matrix");
 		MatrixStruct singleSample = new MatrixStruct(sampleFile);//expressionMatrix.getRow(0);
 		singleSample.putGenesOnRows();
 		
+		//keep only the genes/rows that were used in the public samples as well
 		String columnAveragesFN = vectorFolder+"SAMPLE_Norm_columnAverages.txt";
 		MatrixStruct columnAverages = new MatrixStruct(columnAveragesFN);
+		columnAverages.keepRows(singleSample);
+		
+		//rotate the sample to the same sample space
 		singleSample = center(singleSample, vectorFolder, writeFolder, STdevCorrect, log2, tpm, 
 				correctTotalReadCount,spearman, columnAverages, adjustSampleAverages, setLowestToAverage,
-				addBeforeLog, rLog, singleSampleFN);
+				addLogVal, rLog, singleSampleFN, correctGC);
+		
+		//Get the eigenvector file based on the public data and put it in the right orientation.
 		String saveNameSingleSampleScore = writeFolder + "SAMPLE.PC.txt";
 		pca.PCA.log(" 11. Loading gene eigen vector file: ");
-		MatrixStruct geneEigenVectors = new MatrixStruct(vectorFolder+"GENE.eigenvectors.txt", -1, 1000);//maximum 1000 PCs
+		File eigenFile = new File(vectorFolder+"GENE.eigenvectors.txt.gz");
+		if(!eigenFile.exists())
+			eigenFile = new File(vectorFolder+"GENE.eigenvectors.txt");
+
+		MatrixStruct geneEigenVectors = new MatrixStruct(eigenFile.getAbsolutePath(), -1, 5001);//maximum 1000 PCs
 		if(geneEigenVectors.getColHeaders()[0].contains("ENSG") || geneEigenVectors.getColHeaders()[0].contains("ENST"))
 		{
 			pca.PCA.log("Transposing");
 			geneEigenVectors.transpose();
 		}
 		
+		//put the eigenvector rows int he same order as the public data (not really needed anymore, since no multithreaded correlation is calculated which shifted this around)
 		columnAverages.keepRows(geneEigenVectors);//also changes the rows of geneEigenvectors to have the same positions as columnAverages
 		System.out.println("sample " + singleSample.rows() + " eigenvectors = " + geneEigenVectors.rows());
 		singleSample.putGenesOnRows();
@@ -68,7 +81,7 @@ public class RotateSample {
 		geneEigenVectors.transpose();
 		geneEigenVectors.write(vectorFolder+"GENE.eigenvectors2.txt");
 
-		pca.PCA.log(" 12. Rotating file to PC space: ");
+		pca.PCA.log(" 12. Calculate the PC scores: ");
 		MatrixStruct[] scoreResults = PCA.scores(geneEigenVectors,singleSample, saveNameSingleSampleScore,false, false);
 		
 		pca.PCA.log("Files Written to: " + writeFolder);
@@ -81,11 +94,11 @@ public class RotateSample {
 	public static MatrixStruct center(MatrixStruct singleSample, String vectorFolder, String writeFolder, 
 			boolean STdevCorrect, boolean log2,boolean tpm, double correctTotalReadCount, double spearman, 
 			MatrixStruct columnAverages, boolean adjustSampleAverages, boolean setLowestToAverage,
-			double addBeforeLog, double rLog, String singleSampleFN) throws IOException 
+			double addLogVal, double rLog, String singleSampleFN, String correctGC) throws IOException 
 	{
 		makeFolder(writeFolder);
 		pca.PCA.log(" 3. Removing rows that do not exist in the averages vector from public data");
-		
+		columnAverages.keepRows(singleSample);
 		if(!tpm && correctTotalReadCount < 1)
 		{
 			MatrixStruct quantVector = new MatrixStruct(vectorFolder+"SAMPLE_QuantileVector.txt");
@@ -110,20 +123,19 @@ public class RotateSample {
 			MatrixStruct geoMeans = new MatrixStruct(vectorFolder+"geoMean.txt");
 			String swapFN = writeFolder + "swapFile.txt";
 			singleSample.write(swapFN);
-			singleSample.rLog(rLog, writeFolder, swapFN, geoMeans);
+			singleSample.rLog(rLog, writeFolder, swapFN, geoMeans,null);
 			singleSample.write(writeFolder + "rLogTransformed_"+rLog+".txt");
 		}
 		
 		if(log2)
 		{
-			if(correctTotalReadCount <= 0 && rLog <= 0) // need to add 1 before log to avoid log(0)
-				addBeforeLog = 0.5;
+//			if(correctTotalReadCount <= 0 && rLog <= 0) // need to add 1 before log to avoid log(0)
+//				addLogVal = 0.5;
 			pca.PCA.log(" 6. Log transforming");
-			singleSample.log2Transform(addBeforeLog);//Doing this after the quantile normalization now
+			singleSample.log2Transform(addLogVal);//Doing this after the quantile normalization now
 			singleSample.write(writeFolder + "normalized_log2.txt");
 		}
 		
-		columnAverages.keepRows(singleSample);
 		singleSample.write(writeFolder+"keepRows.txt");
 		
 		if(spearman >= 0)
@@ -161,6 +173,13 @@ public class RotateSample {
 			singleSample.adjustForAverageAllrows(averages);
 		}
 		String centeredFN = writeFolder+ "centered.txt";
+		
+		//correct for GC content
+		if(correctGC != null && correctGC.length()>0)
+		{
+			MatrixStruct gcPerGene = new MatrixStruct(correctGC);
+			singleSample = GCcontent.calculateAndCorrect(singleSample,gcPerGene, writeFolder+"gCperSampleWriteFN.txt", writeFolder + "GCcorrected.txt.gz");
+		}
 		
 		pca.PCA.log(" 10. Writing PC centered file to: " + centeredFN);
 		singleSample.write(centeredFN);

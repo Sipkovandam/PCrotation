@@ -48,7 +48,7 @@ public class CombineKallistoFiles
 		}
 		
 		File file = new File(folderFN);
-		String parentPath = file.getAbsoluteFile().getParent();
+		String parentPath = file.getAbsolutePath();
 		String writeFileName = parentPath+"/Counts.txt";
 		if(column == 3)
 			writeFileName = writeFileName.replace(".txt", "_TPM_.txt");
@@ -158,10 +158,6 @@ public class CombineKallistoFiles
 			for(int r = 0; r < percentages.rowNames.length; r++)
 				percentages.values[r][0] = 1;
 		}
-		
-		
-		
-		
 
 		DecimalFormat formatter = new DecimalFormat("#.##");
 		String thresholdSaveName = parentPath+"/CountsGENES_"+formatter.format(threshold)+".txt";
@@ -350,8 +346,13 @@ public class CombineKallistoFiles
 
 	private static void printMsg() {
 		System.out.println("Function takes 1 argumentes\n"
-				+ "1. Foldername where the kallisto count files are located"
-				+ "2. noquality, if no quality files are available");
+				+ "1. \"noquality\", if no quality files are available\n"
+				+ "2. Folder with files that contain\n"
+				+ "3. Minimum reads mapping treshold (e.g. 0.7)\n"
+				+ "4. transcriptsToGenesFile (transcript names in first column, genes names in second)\n"
+				+ "5. kallisto output column to use (2 for counts 3 for TPM)\n"
+				+ "Example: \n"
+				+ "/Volumes/Promise_RAID/GeneNetwork/Sipko/combineKallistoFiles.jar <Folder waaruit je alle abundances.tsv files wil combineren (e.g. \"home/patrick/\")> noquality 0 /Volumes/Promise_RAID/GeneNetwork/Sipko/CountFiles/hg19.v75.cdna.all.enst2ensg.txt 2");
 		
 	}
 }

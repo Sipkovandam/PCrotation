@@ -22,28 +22,6 @@ public class SumTranscriptsToGenes
 		String countFileName = "E:/Groningen/Data/LifeLines/Counts.txt";
 		String transcriptToGeneFile = "E:/Groningen/Data/Annotation/hg19.v75.cdna.all.enst2ensg.txt";
 		
-	
-		//test files
-		/*
-		static String transcriptToGeneFile = "E:/Groningen/Test/sumTranscriptsToGenes.java/TranscriptsToGeneIDs(hg19.v75.cdna.all.enst2ensg).txt";
-		static String countFileName = "E:/Groningen/Test/sumTranscriptsToGenes.java/test.txt";
-		static String IDsToKeep = "E:/Groningen/Test/sumTranscriptsToGenes.java/IDsToKeep.txt";
-		
-		static String writeName = "E:/Groningen/Test/sumTranscriptsToGenes.java/LifeLinesKallistoCountsGENES.txt";;
-		
-		*/
-		
-		/*
-		String dir = System.getProperty("user.dir");
-		if(args.length != 2)
-		{
-			printMsg();
-			return;
-		}
-		else
-		{
-
-		}*/
 		if(args.length == 2)
 		{
 			countFileName = args[0];

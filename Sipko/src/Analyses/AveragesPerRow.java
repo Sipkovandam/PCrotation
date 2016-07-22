@@ -3,50 +3,41 @@ package Analyses;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.InputStreamReader;
+import java.util.zip.GZIPInputStream;
 
 public class AveragesPerRow {
-	
+	static String fileName = "/Volumes/Promise_RAID/GeneNetwork/Sipko/04-2016/22000Samples_rLog_1.0_Correl/gene_correlation.txt";
+	//static String writeFN = "/Volumes/Promise_RAID/GeneNetwork/Sipko/04-2016/22000Samples_rLog_1.0_Correl/gene_correlation_absoluteAverages.txt";
+	static String writeFN = null;
+	static boolean absolute = true;
+
 	public static void main(String[] args) throws IOException
 	{
-		String fileName = "/Volumes/Promise_RAID/GeneNetwork/Sipko/04-2016/22000Samples_rLog_1.0_Correl/gene_correlation.txt";
-		String writeFN = "/Volumes/Promise_RAID/GeneNetwork/Sipko/04-2016/22000Samples_rLog_1.0_Correl/gene_correlation_absoluteAverages.txt";
 		
 //		String fileName = "E:/Groningen/Data/PublicSamples/100SamplesTest/Rsample/TESTexpression/SAMPLE_covariance.txt";
 //		String writeFN = fileName.replace(".txt", "_absoluteAvg.txt");
+		checkArgs(args);
+		if(writeFN == null)
+			writeFN = fileName.replace(".txt", "").replace(".gz", "")+"_rowAverages.txt";
 		
-		boolean absolute = true;
-		
-		if(args.length < 1)
-			checkArgs(args);
-		
-		for(int a = 0; a < args.length; a++)
+		GZIPInputStream inputStream = null;
+		BufferedReader reader = null;
+		if(fileName.endsWith(".gz"))
 		{
-			String arg = args[a].split("=")[0];
-			String value = args[a].split("=")[1];
-			switch (arg.toLowerCase()){
-				case "filename":
-					fileName =value;
-					break;
-				case "writefn":
-					writeFN = value;
-					break;
-				case "absolute":
-					absolute = Boolean.parseBoolean(value);
-					break;
-				default:
-					checkArgs(args);
-					System.out.println("Incorrect argument supplied; exiting");
-					System.exit(1);
-			}
+			inputStream = new GZIPInputStream(new FileInputStream(fileName));
+			reader = new BufferedReader(new InputStreamReader(inputStream, "US_ASCII"));
 		}
-		
-		BufferedReader reader = new BufferedReader(new FileReader(new File(fileName)));
+		else
+			reader = new BufferedReader(new FileReader(new File(fileName)));
 		BufferedWriter writer = new BufferedWriter(new FileWriter(new File(writeFN)));
 		String line = reader.readLine();//skip header col
 		writer.write("RowName\tAverage\n");
+
 		while((line = reader.readLine()) !=null)
 		{
 			String[] eles = line.split("\t");
@@ -77,7 +68,34 @@ public class AveragesPerRow {
 	{
 		if(System.getProperty("user.dir").contains("C:\\Users\\Sipko\\git\\PCrotation\\Sipko"))
 			return;
-		System.out.println("Wrong arguments");
-		System.exit(1);
+		for(int a = 0; a < args.length; a++)
+		{
+			String arg = args[a].split("=")[0];
+			String value = args[a].split("=")[1];
+			switch (arg.toLowerCase()){
+				case "filename":
+					fileName =value;
+					break;
+				case "writefn":
+					writeFN = value;
+					break;
+				case "absolute":
+					absolute = Boolean.parseBoolean(value);
+					break;
+				default:
+					checkArgs(args);
+					System.out.println("Incorrect argument supplied: " + args[a] + " exiting");
+					System.exit(1);
+			}
+		}
+		if(args.length < 1)
+		{
+			System.out.println("Wrong arguments, requires:\n"
+					+ "1. fileName=<filename.txt> - name of the file.\n"
+					+ "2. writeFN=<writeFileName.txt> - name of the output file (default=<fileName>_rowAverages.txt\n"
+					+ "3. absolute=<true/false> - if true values will be made absolute before taking average");
+			System.exit(1);
+		}
+
 	}
 }

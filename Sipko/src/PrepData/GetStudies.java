@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import java.net.*;
 import java.io.*;
 
-public class getStudies 
+public class GetStudies 
 {
 	public static void main(String[] args) throws IOException
 	{

@@ -4,12 +4,15 @@ import java.io.IOException;
 import java.nio.file.Paths;
 import java.util.Arrays;
 
+import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.transform.TransformerException;
+
 import no.uib.cipr.matrix.NotConvergedException;
 import pca.PCA;
 
 public class PCrotation 
 {
-	public static void main(String[] args) throws IOException, NotConvergedException, InterruptedException
+	public static void main(String[] args) throws IOException, NotConvergedException, InterruptedException, ParserConfigurationException, TransformerException
 	{
 		if(args.length == 0)
 		{
@@ -22,9 +25,6 @@ public class PCrotation
 			case "geneeigenvectors":
 				CreateGeneEigenvectorFile.main(argsToPass);
 				break;
-			case "geneeigenvectorsdirect":
-				CreateEigenVectorsOverGenesDirect.main(argsToPass);
-				break;	
 //			case "rotatesamples":
 //				RotateSample.main(argsToPass);
 //				break;

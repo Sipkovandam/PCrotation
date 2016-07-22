@@ -3,11 +3,16 @@ package PCA;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.io.LineNumberReader;
+import java.io.OutputStreamWriter;
+import java.io.UnsupportedEncodingException;
 import java.text.DateFormat;
 import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
@@ -17,6 +22,8 @@ import java.util.Comparator;
 import java.util.Date;
 import java.util.Enumeration;
 import java.util.Hashtable;
+import java.util.zip.GZIPInputStream;
+import java.util.zip.GZIPOutputStream;
 
 import pca.MatrixStruct;
 
@@ -29,7 +36,8 @@ public class Matrix
 	public String[] rowNames;
 	public double[][] values;
 	public boolean verbose = false;
-	
+	protected static final String ENCODING = "ISO-8859-1";
+	public static final int DEFAULT_BUFFER_SIZE = 4096;
 	
 	public Matrix(int x, int y)
 	{
@@ -117,6 +125,7 @@ public class Matrix
 			System.out.println("File does not exist: " + fileName + "\n Exiting");
 			System.exit(1);
 		}
+
 		int nRows = 0;
 		if(maxX<1)
 			nRows = getRowNumber(fileName)-1;
@@ -125,11 +134,9 @@ public class Matrix
 				
 		try 
 		{
-			BufferedReader reader = new BufferedReader(new FileReader(new File(fileName)));
+			BufferedReader reader = getReader(fileName);
+			
 			String line = null;
-			
-
-			
 			line = reader.readLine();
 			String[] eles = line.split("\t");
 			int nCols= eles.length;
@@ -140,9 +147,7 @@ public class Matrix
 			{
 				System.out.println("Input file has the following format (rows,columns): (" + nRows + "," + nCols + ")");
 				//System.out.println("This includes 1 row and 1 column for the row/col names");
-			}
-			
-			
+			}	
 			
 			//Matrix looks like this:
 			//X n n n
@@ -186,17 +191,13 @@ public class Matrix
 				{
 					colNames[y] = "Col"+Integer.toString(y);
 				}
-				reader = new BufferedReader(new FileReader(new File(fileName)));
+				reader = getReader(fileName);
 			}
 			if(hasRowNames)
 				rowNames = new String[nRows-1];
 			else
 				rowNames = new String[nRows];
-			
-			//create the array for the rowNames & values
-			//System.out.println("rowlength = "+ rowNames.length);
-			
-			
+		
 			int num = 0;//number to substract if it has rowNames (1) or if it does not (0)
 			if(hasRowNames)
 				num = 1;
@@ -268,6 +269,18 @@ public class Matrix
 			System.out.println("Finished reading file");
 		
 	}
+	private BufferedReader getReader(String fileName) throws IOException 
+	{
+		BufferedReader reader = null;
+		if (fileName.endsWith(".gz"))
+		{
+			GZIPInputStream gzipInputStream = new GZIPInputStream(new FileInputStream(fileName));
+			reader = new BufferedReader(new InputStreamReader(gzipInputStream, "US-ASCII"));
+		} else 
+			reader = new BufferedReader(new InputStreamReader(new FileInputStream(fileName), ENCODING), 8096);
+		return reader;
+	}
+
 	public Hashtable<String,Integer> rowNamesToHash()
 	{
 		return namesToHash(this.rowNames);
@@ -371,11 +384,9 @@ public class Matrix
 		try 
 		{
 			BufferedWriter writer = null;
-			
 			if(fileName != null)
-			{
-					writer = new BufferedWriter(new FileWriter(new File(fileName)));	
-			}
+				writer = getWriter(fileName);
+			
 			String format = "#";
 			
 			int nDecimals = decimals;
@@ -433,6 +444,24 @@ public class Matrix
 		} catch (IOException e) {System.out.println("Oh noes! An error in your print function.");e.printStackTrace();}
 	}
 	
+	private BufferedWriter getWriter(String fileName) throws IOException {
+		BufferedWriter writer = null;
+		boolean gzipped = false;
+		if(fileName.endsWith(".gz"))
+			gzipped=true;
+		
+		if(fileName != null)
+		{
+			if (gzipped) {
+				GZIPOutputStream gzipOutputStream = new GZIPOutputStream(new FileOutputStream(fileName));
+				writer = new BufferedWriter(new OutputStreamWriter(gzipOutputStream), DEFAULT_BUFFER_SIZE);
+			} else {
+				writer = new BufferedWriter(new FileWriter(fileName), DEFAULT_BUFFER_SIZE);
+			}
+		}
+		return writer;
+	}
+
 	private void printOrWrite(String writeString, BufferedWriter writer) throws IOException 
 	{
 		if(writer == null)
@@ -454,7 +483,7 @@ public class Matrix
 	{
 		int nLines = 0;
 		try {
-			FileReader fileReader = new FileReader(new File(fileName));
+			BufferedReader fileReader = getReader(fileName);
 			LineNumberReader lnr = new LineNumberReader(fileReader);
 			lnr.skip(Long.MAX_VALUE);
 			nLines = lnr.getLineNumber() + 1; //Add 1 because line index starts at 0
@@ -895,7 +924,7 @@ public class Matrix
 		{
 			if(fileName != null)
 			{
-				writer = new BufferedWriter(new FileWriter(new File(fileName)));	
+				writer =  getWriter(fileName);	
 			}
 			String format = "#";
 			

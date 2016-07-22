@@ -5,13 +5,14 @@ import java.io.IOException;
 import pca.MatrixStruct;
 import umcg.genetica.math.stats.concurrent.ConcurrentCovariation;
 
-public class CorrelationMatrixLarge {
+public class CorrelationLargeGenes {
 
 	public static void main(String[] args) throws IOException 
 	{
-		String expressionFN = "E:/Groningen/Data/PublicSamples/100SamplesTest/Rsample/TESTexpression.txt";
+		String expressionFN = "E:/Groningen/Data/Test/pre_Correlation_Or_Covariance.txt.gz";
 		String writeFile = null;
-		boolean correlation = false;
+		int threads = 20;
+		boolean correlation = true;
 		
 		if(args.length==0) checkArgs(args);
 		
@@ -29,6 +30,9 @@ public class CorrelationMatrixLarge {
 				case "correlation":
 					correlation = Boolean.parseBoolean(value);
 					break;
+				case "threads":
+					threads = Integer.parseInt(value);
+					break;
 				default:
 					checkArgs(args);
 					System.out.println("Incorrect argument supplied; exiting");
@@ -38,17 +42,16 @@ public class CorrelationMatrixLarge {
 		if(writeFile == null)
 		{
 			if(correlation)
-				writeFile = expressionFN.replace(".txt", "_correlation.txt");
+				writeFile = expressionFN.replace(".txt", "").replace(".gz", "") + "_correlation.txt.gz";
 			else//if covariance
-				writeFile = expressionFN.replace(".txt", "_covariance.txt");
-		}	
+				writeFile = expressionFN.replace(".txt", "").replace(".gz", "") + "_covariance.txt.gz";
+		}
 		Matrix expression = new Matrix(expressionFN);
-		
-		correlation(writeFile, expression,correlation);
+		correlation(writeFile, expression,correlation,threads);
 		System.out.println("Done, file written to: "+ writeFile);
 	}
 
-	public static void correlation(String writeFile, Matrix expression, boolean correlation) throws IOException 
+	public static void correlation(String writeFile, Matrix expression, boolean correlation, int threads) throws IOException 
 	{
 		expression.putGenesOnRows();
 		
@@ -57,9 +60,11 @@ public class CorrelationMatrixLarge {
 		rowAverages.write(writeFile.replace(".txt", "_inputRowAverages.txt"));
 		expression.adjustForAverageAllrows(rowAverages);
 		
-		ConcurrentCovariation calculatorGenes = new ConcurrentCovariation(20);
+		ConcurrentCovariation calculatorGenes = new ConcurrentCovariation(threads);
 		double[][] matrix = calculatorGenes.pairwiseCovariation(expression.values,false, writeFile, expression.rowNames,correlation, null);//last argument, if false = covariance; true = correlation.
 		Matrix covMat = new Matrix(expression.rowNames, expression.rowNames, matrix);
+		Matrix averages = covMat.getAverageCols(true);
+		averages.write(writeFile.replace(".txt", "_absoluteAverages.txt"));
 		covMat.write(writeFile);
 	}
 	static void checkArgs(String[] args) 
