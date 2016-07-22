@@ -3,6 +3,9 @@
 	<name>Sipko</name>
 	<comment></comment>
 	<projects>
+		<project>eqtl-mapping-pipeline</project>
+		<project>genetica-libraries</project>
+		<project>Juha</project>
 	</projects>
 	<buildSpec>
 		<buildCommand>

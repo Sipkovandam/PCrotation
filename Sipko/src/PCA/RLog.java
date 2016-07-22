@@ -25,7 +25,7 @@ public class RLog
 		MatrixStruct expressionStruct = new MatrixStruct(expressionFN);
 		rLog(writeFolder, expressionStruct, rLog, writeAll, geoFN);
 		expressionStruct.log2Transform(1);
-		expressionStruct.write(expressionFN.replace(".txt", "").replace(".gz",  "") + ".deSeqNorm.Log2.txt.gz");
+		expressionStruct.write(expressionFN.replace(".txt", "").replace(".gz",  "") + ".DESeqNorm.Log2.txt.gz");
 	}
 
 	public static void rLog(String writeFolder, MatrixStruct expressionStruct, double rLog, boolean writeAll, String writeGeoFN) throws IOException 
@@ -33,7 +33,7 @@ public class RLog
 		String swapFN = writeFolder + "swapFile.txt";
 		expressionStruct.write(swapFN);
 		pca.PCA.log(" 6. Rlog without log");
-		String correctedNotLogged =  writeFolder+ ".deSeqNorm.txt.gz";
+		String correctedNotLogged =  writeFolder+ ".DESeqNorm.txt.gz";
 		expressionStruct.rLog(rLog, writeFolder, swapFN, writeGeoFN);
 		if(writeAll)
 			expressionStruct.write(correctedNotLogged);
