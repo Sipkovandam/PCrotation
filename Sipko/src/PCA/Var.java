@@ -47,7 +47,6 @@ public class Var
 	public  double addLogVal = 1;
 	public  double correctTotalReadCount = 0;//log((gene+0.5)/total*value)
 	public  double rLog = 1000000;
-	public  double topVariance = 1;
 	public  double randomValue = 0;
 	public  double duplicateCutoff = 1;
 	public  double highestExpressed = 1;//1 = all genes, 0.5 = 50% highest expressed genes only (removes 50% lowest expressed genes after quantile normalization (then re-normalizes)).

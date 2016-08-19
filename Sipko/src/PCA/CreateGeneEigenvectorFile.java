@@ -142,9 +142,6 @@ public class CreateGeneEigenvectorFile
 				case "zscores":
 					var.zScores = Boolean.parseBoolean(value);
 					break;
-				case "topvariance":
-					var.topVariance = Double.parseDouble(value);
-					break;
 				case "directpca":
 					var.directPCA = Boolean.parseBoolean(value);
 					break;
@@ -271,7 +268,7 @@ public class CreateGeneEigenvectorFile
 			String writeGeoFN = var.writeFolder+ "geoMean.txt";
 			addToXML("geofile",writeGeoFN);
 			writeXML();
-			RLog.rLog(var.writeFolder, expressionStruct, var.rLog, var.writeAll, writeGeoFN);
+			RLog.rLog(var.writeFolder, expressionStruct, var.writeAll, writeGeoFN);
 		}
 		
 		if(var.log2)
@@ -282,9 +279,6 @@ public class CreateGeneEigenvectorFile
 		
 		JuhaPCA.PCA.log("11. Transposing");
 		expressionStruct.transpose();
-		
-		if(var.topVariance > 0 && var.topVariance !=1)
-			KeepTopVariance.keepTopVariance(expressionStruct, true, var.ignoreLowestValues, var.writeFolder, var.topVariance);
 		
 		JuhaPCA.PCA.log("12 Calculating STdevs");
 		System.gc();System.gc();
@@ -332,9 +326,6 @@ public class CreateGeneEigenvectorFile
 		String expNormLogCentFile = var.writeFolder+"MATRIX_Centered.txt.gz";
 		JuhaPCA.PCA.log("19. Writing centered file in: " + expNormLogCentFile);
 		expressionStruct.write(expNormLogCentFile);
-		
-		double[] cutoffs = KeepTopVariance.getCutoffs(var.ignoreLowestValues, expressionStruct);
-		MatrixStruct geneEigenVectors = null;
 		
 		if(var.correctInputForSTdevsAfterCenter)
 		{

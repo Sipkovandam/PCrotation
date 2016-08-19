@@ -8,9 +8,10 @@ import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.transform.TransformerException;
 
 import JuhaPCA.PCA;
+import PrepData.GetSamplesWithEmptyCells;
 import no.uib.cipr.matrix.NotConvergedException;
 
-public class PCrotation 
+public class Toolkit 
 {
 	public static void main(String[] args) throws IOException, NotConvergedException, InterruptedException, ParserConfigurationException, TransformerException
 	{
@@ -24,6 +25,9 @@ public class PCrotation
 		{
 			case "geneeigenvectors":
 				CreateGeneEigenvectorFile.main(argsToPass);
+				break;
+			case "getsampleswithemptycells":
+				GetSamplesWithEmptyCells.main(argsToPass);
 				break;
 //			case "rotatesamples":
 //				RotateSample.main(argsToPass);

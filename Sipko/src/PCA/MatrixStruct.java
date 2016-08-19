@@ -40,7 +40,7 @@ public class MatrixStruct
 	private String[] rowHeaders;
 	private String[] colHeaders;
 	public DenseMatrix matrix;
-	MatrixStruct(DenseMatrix matrix)
+	public MatrixStruct(DenseMatrix matrix)
 	{
 		this.matrix = matrix;
 	}
@@ -50,7 +50,7 @@ public class MatrixStruct
 		this.setColHeaders(makeHeaders("Col",nCols));
 		this.matrix = new DenseMatrix(getRowHeaders().length, getColHeaders().length);
 	}
-	MatrixStruct(DenseMatrix matrix, String[] rowHeaders, String[] colHeaders)
+	public MatrixStruct(DenseMatrix matrix, String[] rowHeaders, String[] colHeaders)
 	{
 		this.setRowHeaders(rowHeaders);
 		this.setColHeaders(colHeaders);
@@ -90,7 +90,7 @@ public class MatrixStruct
 			}
 		}
 	}
-	private void readFile(String fileName) {
+	void readFile(String fileName) {
 		readFile(fileName, -1, -1);
 	}
 	private void readFile(String fileName, int nRows, int nCols) {
@@ -902,83 +902,8 @@ public class MatrixStruct
 			}
 		}
 	}
-	public void rLog(double rLog, String writeFolder, String fileName, String writeGeoFN) throws IOException 
-	{
-		rLog(rLog, writeFolder, fileName, null, writeGeoFN);
-	}
-	public void rLog(double rLog, String writeFolder, String fileName, MatrixStruct geoMean, String writeGeoFN) throws IOException 
-	{
-		double addVal = 0;
-			
-		if(geoMean == null)
-		{
-			geoMean = getGeoMeans(writeFolder, addVal, writeGeoFN);
-			//need to read the matrix again here...
-			this.readFile(fileName);
-		}
-		geoMean.keepRows(this);//keep only the rows that are also in the geomean file
-
-		this.write(fileName.replace(".txt", "geoRowsOnly.txt"));
-		MatrixStruct denominators = new MatrixStruct(this.cols(),1);
-		denominators.setRowHeaders(this.getColHeaders());
-		
-		//determine the denominator per sample
-		for(int c = 0; c < this.cols(); c++)
-		{
-			//get the correct denominator
-			double[] column = new double[this.rows()];
-			for(int r = 0; r < column.length; r++)
-			{
-				column[r] = (this.matrix.get(r,c)+addVal) / geoMean.matrix.get(r,0);
-			}
-			Arrays.sort(column);
-			
-			org.apache.commons.math3.stat.descriptive.rank.Median med = new org.apache.commons.math3.stat.descriptive.rank.Median();
-			denominators.matrix.set(c,0,med.evaluate(column));
-		}
-		if(writeFolder != null)
-			denominators.write(writeFolder + "Denominators.txt");
-		
-		this.readFile(fileName);
-		//calculate the normalized readcounts
-		for(int c = 0; c < this.cols(); c++)
-		{
-			for(int r = 0; r < this.rows(); r++)
-			{
-				this.matrix.set(r,c,this.matrix.get(r,c)/denominators.matrix.get(c,0));	
-			}
-		}
-		
-		
-	}
-	private MatrixStruct getGeoMeans(String writeFolder, double addVal, String writeGeoFN) throws IOException {
-		this.logTransform(10,addVal);
-		MatrixStruct geoMean = new MatrixStruct(this.rows(),1);
-		geoMean.setRowHeaders(this.getRowHeaders());
-		MatrixStruct keepGenes = new MatrixStruct(this.rows(),1);
-		for(int r =0; r < this.rows(); r++)
-		{
-			double gM = this.sumRow(r)/this.cols();
-			if(Double.isFinite(gM))
-			{
-				geoMean.matrix.set(r,0,gM);
-				geoMean.matrix.set(r,0,Math.pow(10,geoMean.matrix.get(r,0)));
-				keepGenes.setRowHeader(r, this.getRowHeaders()[r]);
-			}
-// would generate really big file...
-//			else
-//				removeGenes.setRow(r, this.getRowHeaders()[r], this.getRowValues(r));// will contain all the rows that get removed
-		}
-		
-		if(writeFolder != null)
-		{
-//			removeGenes.write(writeFolder+ "RemovedForGeoMean.txt");
-			geoMean.keepRows(keepGenes);
-			System.out.println("geofilename=" + writeGeoFN);
-			geoMean.write(writeGeoFN);
-		}
-		return geoMean;
-	}
+	
+	
 	public void log2Transform(double add)//add +1 before transforming
 	{
 		logTransform(2,add);
@@ -1009,7 +934,7 @@ public class MatrixStruct
 		double avg = sum/denom;
 		return avg;
 	}
-	private double sumRow(int r) {
+	double sumRow(int r) {
 		double sum = 0;
 		for(int c = 0; c < cols(); c++)
 		{

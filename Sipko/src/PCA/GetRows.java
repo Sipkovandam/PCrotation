@@ -11,11 +11,12 @@ import java.util.Hashtable;
 
 public class GetRows 
 {
+	//gets the rows defined in the getGenesFN
 
 	public static void main(String args[]) throws IOException
 	{
 		String fileName = "E:/Groningen/Data/PublicSamples/05-2016/Flexo/22214Samples_RLOG_Correlation_Top1.0_AvgToZero/SAMPLE_Norm_columnAverages.txt";
-		String fileName2 = "E:/Groningen/Data/PublicSamples/05-2016/Flexo/22214Samples_RLOG_Correlation_Top1.0_AvgToZero/gene_correlation_Absolute_averages.txt";
+		String getGenesFN = "E:/Groningen/Data/PublicSamples/05-2016/Flexo/22214Samples_RLOG_Correlation_Top1.0_AvgToZero/gene_correlation_Absolute_averages.txt";
 		//String fileName2 = "ENSG00000268903,ENSG00000269981,ENSG00000225630";
 		String writeName = "E:/Groningen/Data/PublicSamples/05-2016/Flexo/22214Samples_RLOG_Correlation_Top1.0_AvgToZero/SAMPLE_Norm_columnAverages_ALIGNED.txt";
 		String replace = null;
@@ -32,10 +33,10 @@ public class GetRows
 						fileName = value;
 						break;
 					case "getgenes":
-						fileName2 = value;
+						getGenesFN = value;
 						break;
 					case "rowstoget":
-						fileName2 = value;
+						getGenesFN = value;
 						break;
 					case "writename":
 						writeName = value;
@@ -55,10 +56,10 @@ public class GetRows
 		
 		Matrix file2 = null;
 		
-		if(!fileName2.contains(",") && fileName2.contains(".txt"))
-			file2 = new Matrix(fileName2);
+		if(!getGenesFN.contains(",") && getGenesFN.contains(".txt"))
+			file2 = new Matrix(getGenesFN);
 		else{
-			String[] rowNames = fileName2.split(",");
+			String[] rowNames = getGenesFN.split(",");
 			file2 = new Matrix(rowNames.length, 1);
 			file2.rowNames = rowNames;
 			file2.colNames[0] = "-";

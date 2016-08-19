@@ -35,12 +35,34 @@ public class Matrix
 	public boolean verbose = false;
 	protected static final String ENCODING = "ISO-8859-1";
 	public static final int DEFAULT_BUFFER_SIZE = 4096;
+	class GetVal
+	{
+		double[][] values;
+		
+		GetVal(double[][] matrix)
+		{
+			values = matrix;
+		}
+		public double get(int r, int c)
+		{
+			return values[r][c];
+		}
+		public void set(int r, int c, double d) {
+			values[r][c]=d;
+		};
+	}
+	GetVal matrix = new GetVal(values);
 	
+	public Matrix()
+	{
+		
+	}
 	public Matrix(int x, int y)
 	{
 		rowNames = new String[x];
 		colNames = new String[y];
 		values = new double[x][y];
+		matrix = new GetVal(values);
 		
 		numberNames(rowNames, "Row");
 		numberNames(colNames, "Col");		
@@ -51,6 +73,7 @@ public class Matrix
 		this.rowNames = rowNames;
 		this.colNames = colNames;
 		values = new double[x][y];
+		matrix = new GetVal(values);
 	}
 	
 	
@@ -76,16 +99,22 @@ public class Matrix
 		this.rowNames = rowNames;
 		this.colNames = colNames;
 		this.values = matrix;
+		this.matrix = new GetVal(values);
 	}
 	public Matrix(MatrixStruct expressionMatrixStruct) 
 	{
 		this.rowNames = expressionMatrixStruct.getRowHeaders();
 		this.colNames = expressionMatrixStruct.getColHeaders();
 		this.values = new double[this.rowNames.length][];
+		matrix = new GetVal(values);
 		for(int r = 0; r < this.rowNames.length; r++)
 			this.values[r] = expressionMatrixStruct.getRowValues(r);
 	}
-
+	
+	public void readFile(String fileName)
+	{
+		readFile(fileName,true,true);
+	}
 	public void readFile(String fileName,boolean hasRowNames, boolean hasColName)
 	{
 		readFile(fileName, hasRowNames, hasColName, -1, -1);
@@ -105,12 +134,16 @@ public class Matrix
 	}
 	public void logTransform(int val)//add +1 before transforming
 	{
+		logTransform(val,1);
+	}
+	public void logTransform(int val, double addval)//add +1 before transforming
+	{
 		double logVal = Math.log(val);
 		for(int x = 0; x < this.rowNames.length; x++)
 		{
 			for(int y = 0; y < this.colNames.length; y++)
 			{
-				this.values[x][y] = Math.log(this.values[x][y]+1)/logVal;
+				this.values[x][y] = Math.log(this.values[x][y]+addval)/logVal;
 			}
 		}
 	}
@@ -169,7 +202,7 @@ public class Matrix
 				values = new double[nRows-1][nCols];
 			else
 				values = new double[nRows][nCols];
-			
+			matrix = new GetVal(values);
 			if(hasColNames)
 			{
 				colNames = new String[nCols-minusCol];//-1 because one of them is for the rowNames, that column does not have a column name
@@ -234,21 +267,24 @@ public class Matrix
 				
 				for(int y =0; y < nCols-num;y++)
 				{
-					
-						
 					try
 					{
-						if(hasRowNames)
-							values[x][y]= Double.parseDouble(eles[y+1]);
-						else
-							values[x][y]= Double.parseDouble(eles[y]);
+						double value = 0;
+						if(hasRowNames && eles[y+1].length()>0)
+							value= Double.parseDouble(eles[y+1]);
+						else if (eles[y].length()>0)
+							value= Double.parseDouble(eles[y]);
+						
+						values[x][y] = value;
 					}catch (Exception e1)
 					{
 						System.out.println("FileName =  " + fileName);
-						System.out.println("cols =  " + values[x].length+" y = " +  y + "cols.length  = " + colNames.length);
-						System.out.println("exception =  " + e1);
 						System.out.println("x =  " + x + " y = " + y + " cols[y] = " + colNames[y]);
+						System.out.println("rows.length =  " + values.length + "cols.length  = " + values[x].length);
+						System.out.println("eles.length =  " + eles.length);
+						System.out.println("exception =  " + e1);
 						values[x][y] = 0;
+						System.exit(666);
 					}
 					if(maxY > 0 && y >= maxY-1)
 						break;
@@ -302,18 +338,18 @@ public class Matrix
 	public void keepRows(Matrix m2)//Changes both matrixes if necessary, Makes sure same IDs are on same line in both files
 	{
 		//find all the IDs shared by both files
-		Hashtable<String,Integer> allIDs = rowNamesToHash();
+		Hashtable<String,Integer> allIDs = m2.rowNamesToHash();
 		Hashtable<String,Integer> toKeep = new Hashtable<String,Integer>();
 		int newPos = 0;
-		for(int r = 0; r < m2.rowNames.length;r++)
+		for(int r = 0; r < this.rowNames.length;r++)
 		{
-			if(allIDs.containsKey(m2.rowNames[r]))
+			if(allIDs.containsKey(this.rowNames[r]))
 			{
-				toKeep.put(m2.rowNames[r], newPos);
+				toKeep.put(this.rowNames[r], newPos);
 				newPos++;
 			}
 		}
-		keepIDsInHash(toKeep);
+		this.keepIDsInHash(toKeep);
 		m2.keepIDsInHash(toKeep);
 	}
 	
@@ -333,6 +369,7 @@ public class Matrix
 			}
 		}
 		this.values = vals;
+		matrix = new GetVal(values);
 		this.rowNames = rN;
 	}
 
@@ -529,7 +566,7 @@ public class Matrix
 		}
 		this.values = remainder;
 		this.rowNames = remainderRowNames;
-
+		matrix = new GetVal(values);
 		JuhaPCA.PCA.log(" 5.1 Writing file from which genes without variance are removed");
 		if(removedGenesFN != null)this.write(removedGenesFN);
 	}
@@ -1056,48 +1093,141 @@ public class Matrix
 		}
 	}
 
-	public void rLog(double rLog, String writeFolder, String fileName) 
+//	public void rLog(double rLog, String writeFolder, String fileName) 
+//	{
+//		this.logTransform(10);
+//		Matrix geoMean = new Matrix(this.rowNames.length,1);
+//		for(int r =0; r < this.rowNames.length; r++)
+//		{
+//			geoMean.values[r][0] = this.sumRow(r)/this.colNames.length;
+//			
+//			geoMean.values[r][0] = Math.pow(10,geoMean.values[r][0]);
+//		}
+//		System.out.println("GEO "+geoMean.rowNames.length);
+//		if(writeFolder != null)
+//			geoMean.write(writeFolder+ "geoMean.txt");
+//		this.pow(10,1);//i could save the initial matrix, but this uses less memory
+//					 //may be better to read in the matrix again to avoid rounding errors
+//		this.divideByCol(geoMean,0);
+//		
+//		//need to read the matrix again here...
+//		this.readFile(fileName, true, true);
+//		Matrix denominators = new Matrix(this.colNames.length,1);
+//
+//		for(int c = 0; c < this.colNames.length; c++)
+//		{
+//			double[] column = new double[this.rowNames.length];
+//			for(int r = 0; r < column.length; r++)
+//			{
+//				column[r] = (this.values[r][c]+1) / geoMean.values[r][0];// Adding +1 here just as in the log calculation earlier (if not the median can be 0 causing a division by 0 lateron)
+//			}
+//			Arrays.sort(column);
+//			
+//			denominators.values[c][0] =column[column.length/2];
+//			
+//			for(int r = 0; r < column.length; r++)
+//			{
+//				this.values[r][c] /= denominators.values[c][0];
+//			}
+//			
+//		}
+//		if(writeFolder != null)
+//			denominators.write(writeFolder + "Denominators.txt");
+//	}
+	public void rLog(double rLog, String writeFolder, String fileName, String writeGeoFN) throws IOException 
 	{
-		this.logTransform(10);
-		Matrix geoMean = new Matrix(this.rowNames.length,1);
-		for(int r =0; r < this.rowNames.length; r++)
+		rLog(rLog, writeFolder, fileName, null, writeGeoFN);
+	}
+	public void rLog(double rLog, String writeFolder, String fileName, MatrixStruct geoMean, String writeGeoFN) throws IOException 
+	{
+		double addVal = 0;
+		if(geoMean == null)
 		{
-			geoMean.values[r][0] = this.sumRow(r)/this.colNames.length;
-			
-			geoMean.values[r][0] = Math.pow(10,geoMean.values[r][0]);
+			geoMean = getGeoMeans(writeFolder, addVal, writeGeoFN);
+			//need to read the matrix again here...
+			this.readFile(fileName);
 		}
-		System.out.println("GEO "+geoMean.rowNames.length);
-		if(writeFolder != null)
-			geoMean.write(writeFolder+ "geoMean.txt");
-		this.pow(10,1);//i could save the initial matrix, but this uses less memory
-					 //may be better to read in the matrix again to avoid rounding errors
-		this.divideByCol(geoMean,0);
+		//geoMean.keepRows(this);
+		Matrix geoMeanMat = new Matrix(geoMean);
+		geoMeanMat.keepRows(this);//keep only the rows that are also in the geomean file
 		
-		//need to read the matrix again here...
-		this.readFile(fileName, true, true);
-		Matrix denominators = new Matrix(this.colNames.length,1);
-
-		for(int c = 0; c < this.colNames.length; c++)
+		this.write(fileName.replace(".txt", "geoRowsOnly.txt"));
+		MatrixStruct denominators = new MatrixStruct(this.cols(),1);
+		denominators.setRowHeaders(this.getColHeaders());
+		
+		//determine the denominator per sample
+		for(int c = 0; c < this.cols(); c++)
 		{
-			double[] column = new double[this.rowNames.length];
+			//get the correct denominator
+			double[] column = new double[this.rows()];
 			for(int r = 0; r < column.length; r++)
 			{
-				column[r] = (this.values[r][c]+1) / geoMean.values[r][0];// Adding +1 here just as in the log calculation earlier (if not the median can be 0 causing a division by 0 lateron)
+				column[r] = (this.matrix.get(r,c)+addVal) / geoMean.matrix.get(r,0);
 			}
 			Arrays.sort(column);
 			
-			denominators.values[c][0] =column[column.length/2];
-			
-			for(int r = 0; r < column.length; r++)
-			{
-				this.values[r][c] /= denominators.values[c][0];
-			}
-			
+			org.apache.commons.math3.stat.descriptive.rank.Median med = new org.apache.commons.math3.stat.descriptive.rank.Median();
+			denominators.matrix.set(c,0,med.evaluate(column));
 		}
 		if(writeFolder != null)
 			denominators.write(writeFolder + "Denominators.txt");
+		
+		this.readFile(fileName);
+		//calculate the normalized readcounts
+		for(int c = 0; c < this.cols(); c++)
+		{
+			for(int r = 0; r < this.rows(); r++)
+			{
+				this.matrix.set(r,c,this.matrix.get(r,c)/denominators.matrix.get(c,0));	
+			}
+		}
 	}
-
+	
+	private MatrixStruct getGeoMeans(String writeFolder, double addVal, String writeGeoFN) throws IOException {
+		this.logTransform(10,addVal);
+		MatrixStruct geoMean = new MatrixStruct(this.rows(),1);
+		geoMean.setRowHeaders(this.getRowHeaders());
+		MatrixStruct keepGenes = new MatrixStruct(this.rows(),1);
+		for(int r =0; r < this.rows(); r++)
+		{
+			double gM = this.sumRow(r)/this.cols();
+			if(Double.isFinite(gM))
+			{
+				geoMean.matrix.set(r,0,gM);
+				geoMean.matrix.set(r,0,Math.pow(10,geoMean.matrix.get(r,0)));
+				keepGenes.setRowHeader(r, this.getRowHeaders()[r]);
+			}
+// would generate really big file...
+//			else
+//				removeGenes.setRow(r, this.getRowHeaders()[r], this.getRowValues(r));// will contain all the rows that get removed
+		}
+		
+		if(writeFolder != null)
+		{
+//			removeGenes.write(writeFolder+ "RemovedForGeoMean.txt");
+			geoMean.keepRows(keepGenes);
+			System.out.println("geofilename=" + writeGeoFN);
+			geoMean.write(writeGeoFN);
+		}
+		return geoMean;
+	}
+	public String[] getRowHeaders()
+	{
+		return this.rowNames;
+	}
+	public String[] getColHeaders()
+	{
+		return this.colNames;
+	}
+	public int rows()
+	{
+		return this.rowNames.length;
+	}
+	public int cols()
+	{
+		return this.colNames.length;
+	}
+	
 	private void divideByCol(Matrix denominators, int col) 
 	{
 		for(int c = 0; c < this.colNames.length; c++)

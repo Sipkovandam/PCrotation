@@ -2,6 +2,7 @@ package PCA;
 
 import java.io.IOException;
 
+import umcg.genetica.math.stats.concurrent.ConcurrentCorrelation;
 import umcg.genetica.math.stats.concurrent.ConcurrentCovariation;
 
 public class CorrelationLargeGenes {
@@ -58,9 +59,17 @@ public class CorrelationLargeGenes {
 		Matrix rowAverages = expression.calcAvgRows();
 		rowAverages.write(writeFile.replace(".txt", "_inputRowAverages.txt"));
 		expression.adjustForAverageAllrows(rowAverages);
-		
-		ConcurrentCovariation calculatorGenes = new ConcurrentCovariation(threads);
-		double[][] matrix = calculatorGenes.pairwiseCovariation(expression.values,false, writeFile, expression.rowNames,correlation, null);//last argument, if false = covariance; true = correlation.
+		double[][] matrix = null;
+		if(correlation)
+		{
+			ConcurrentCorrelation calculatorGenes = new ConcurrentCorrelation(threads);
+			matrix = calculatorGenes.pairwiseCorrelation(expression.values);//last argument, if false = covariance; true = correlation.			
+		}
+		else
+		{
+			ConcurrentCovariation calculatorGenes = new ConcurrentCovariation(threads);
+			matrix = calculatorGenes.pairwiseCovariation(expression.values);//last argument, if false = covariance; true = correlation.
+		}
 		Matrix covMat = new Matrix(expression.rowNames, expression.rowNames, matrix);
 		Matrix averages = covMat.getAverageCols(true);
 		averages.write(writeFile.replace(".txt", "_absoluteAverages.txt"));

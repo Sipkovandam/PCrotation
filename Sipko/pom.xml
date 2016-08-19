@@ -14,12 +14,8 @@
   		<artifactId>Juha</artifactId>
   		<version>0.0.1-SNAPSHOT</version>
   	</dependency>
-  	<dependency>
-  		<groupId>Groningen</groupId>
-  		<artifactId>Groningen</artifactId>
- 		<version>0.0.1-SNAPSHOT</version>
-  	</dependency>
   </dependencies>
+  
   <build>
     <sourceDirectory>src</sourceDirectory>
     <plugins>
@@ -31,6 +27,30 @@
           <target>1.8</target>
         </configuration>
       </plugin>
+      <plugin>
+    <artifactId>maven-assembly-plugin</artifactId>
+    <configuration>
+     <descriptorRefs>
+      <descriptorRef>jar-with-dependencies</descriptorRef>
+     </descriptorRefs>
+     <archive>
+      <manifest>
+       <mainClass>PCA.Toolkit</mainClass>
+      </manifest>
+     </archive>
+    </configuration>
+    <executions>
+     <execution>
+      <phase>package</phase>
+      <goals>
+       <goal>single</goal>
+      </goals>
+     </execution>
+    </executions>
+   </plugin>
     </plugins>
   </build>
 </project>
+
+
+ 

@@ -5,6 +5,9 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Random;
+import java.util.concurrent.ExecutorCompletionService;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.stream.Collectors;
 
 import org.apache.commons.math3.stat.StatUtils;
@@ -30,6 +33,11 @@ public class Test
 			System.out.println("test =" + test);
 		double r = Correlation.correlate(avg1,avg2, s1,s2);
 		System.out.println("correlation =" + r);
+		
+		//ExecutorService threadpool = Executors.newFixedThreadPool(10);
+		//ExecutorCompletionService<String> pool = new ExecutorCompletionService(threadpool);
+		
+		
 		//test(matrixStruct);
 		
 		

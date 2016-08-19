@@ -122,7 +122,7 @@ public class RotateSample {
 			MatrixStruct geoMeans = new MatrixStruct(vectorFolder+"geoMean.txt");
 			String swapFN = writeFolder + "swapFile.txt";
 			singleSample.write(swapFN);
-			singleSample.rLog(rLog, writeFolder, swapFN, geoMeans,null);
+			RLog.rLog(singleSample, writeFolder, swapFN, geoMeans,null);
 			singleSample.write(writeFolder + "rLogTransformed_"+rLog+".txt");
 		}
 		

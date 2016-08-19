@@ -15,7 +15,7 @@ public class KallistoAllSteps
 		checkArgs(args);
 		String fastqFilesFN = folder+"fastqs.txt";
 		SearchFilesInDirectories.searchDirectory(new File(folder), fastqFilesFN, ".fastq", ".out");
-		RunKallistoOnFastqFiles();
+		//RunKallistoOnFastqFiles();
 		
 	}
 	static void checkArgs(String[] args) 
