@@ -9,6 +9,8 @@ import java.util.stream.IntStream;
 
 public class IdentifyDiseaseGenes 
 {
+	//identifies outlier genes per sample (those that are <cutoffs> standard deviations away from the average expression of all genes) 
+	
 	static double cutoff = 3;//number of standard deviations that the average expression over the samples has to be away from the
 						//average expression of all genes, to be considered a disease gene
 	

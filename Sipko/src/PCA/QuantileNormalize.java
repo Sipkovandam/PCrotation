@@ -4,6 +4,8 @@ import java.io.IOException;
 
 public class QuantileNormalize 
 {
+	//Quantile normalizes a dataset
+	
 	public static void main(String[] args) throws IOException 
 	{
 		String expressionFN = "";

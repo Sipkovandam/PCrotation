@@ -4,6 +4,8 @@ import java.io.IOException;
 
 public class HighestExpressed 
 {
+	//retrieves and creates a new file with the highest <highestExpressed> percentage of genes.
+	
 	public static void main(String[] args) throws IOException 
 	{
 		String expressionFN = "";

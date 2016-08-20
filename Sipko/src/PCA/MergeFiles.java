@@ -6,6 +6,8 @@ public class MergeFiles
 {
 	public static void main(String[] args) throws IOException
 	{
+		//Merges 2 files, keeping only the rows present in both files (alligns files based on rownames).
+		
 //		String inputFN = "E:/Groningen/Data/PublicSamples/100SamplesTest/Rsample/TESTexpression_Splits1_transposed.txt";
 //		String additonFN = "E:/Groningen/Data/PublicSamples/100SamplesTest/Rsample/TESTexpression_Splits2_transposed.txt";
 		

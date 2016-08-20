@@ -9,6 +9,8 @@ import JuhaPCA.PCA;
 
 public class IdentifySimilarSamples 
 {
+	//identifies samples that have similar outlier genes (using a Mann-Withney U test, based on those that are outliers and those that are not in the original sample)
+	
 	public static void main (String[] args) throws IOException
 	{
 		//The samples you want to rank (corrected samples)

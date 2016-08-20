@@ -1,7 +1,8 @@
 package PCA;
 
 public class LowestToAverage {
-
+	//sets the lowest value in a dataset to the average
+	
 	public static void main(String[] args) 
 	{
 		String expressionFN = "";

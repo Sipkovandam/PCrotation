@@ -8,6 +8,8 @@ public class CorrectSampleForPCsLudeApproach
 {
 	public static void main(String[] args) throws IOException
 	{
+		//PC correction using Lude's old method.
+		
 		String sampleFile = "E:/Groningen/Data/PublicSamples/100SamplesTest/Rsample/" + "RandomSamples.txt";
 		String vectorFolder = "E:/Groningen/Data/PublicSamples/100SamplesTest/Rsample/TESTexpression/";
 		

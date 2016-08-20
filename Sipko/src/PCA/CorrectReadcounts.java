@@ -3,7 +3,7 @@ package PCA;
 import java.io.IOException;
 
 public class CorrectReadcounts {
-
+	//corrects an expression matrix for total read counts (per sample)
 	public static void main(String[] args) throws IOException 
 	{
 		String expressionFN = "";

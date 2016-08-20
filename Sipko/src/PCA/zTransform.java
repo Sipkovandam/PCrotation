@@ -3,14 +3,13 @@ package PCA;
 import java.io.IOException;
 
 public class zTransform {
-
+	//similar to Zscore? :S
 	static public String FN = "";
 	static public String writeFN = null;
 	static public boolean rows = true;
 	
 	public static void main(String[] args) throws IOException 
 	{
-		
 		if(args.length == 0)
 			checkArgs(args);
 		for(int a = 0; a < args.length; a++)

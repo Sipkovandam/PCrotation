@@ -15,6 +15,8 @@ import umcg.genetica.math.stats.Correlation;
 
 public class PCcorrection 
 {
+	//Corrects the data for a number of Principal Components obtained/created from a different file.
+	
 	static Var var = new Var();
 	
 	public static void main (String[] args) throws IOException

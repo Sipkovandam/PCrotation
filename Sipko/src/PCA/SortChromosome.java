@@ -9,6 +9,7 @@ import java.util.Hashtable;
 
 public class SortChromosome 
 {
+	//Sorts genes in a file by chromosome location.
 	
 	public static void main(String[] args) throws IOException
 	{

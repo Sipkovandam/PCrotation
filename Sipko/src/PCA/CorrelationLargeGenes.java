@@ -6,7 +6,9 @@ import umcg.genetica.math.stats.concurrent.ConcurrentCorrelation;
 import umcg.genetica.math.stats.concurrent.ConcurrentCovariation;
 
 public class CorrelationLargeGenes {
-
+	//creates a correlation matrix without the limitation of a java array size. Limitation is now the memory of the machine
+	
+	
 	public static void main(String[] args) throws IOException 
 	{
 		String expressionFN = "E:/Groningen/Data/Test/pre_Correlation_Or_Covariance.txt.gz";
@@ -63,12 +65,12 @@ public class CorrelationLargeGenes {
 		if(correlation)
 		{
 			ConcurrentCorrelation calculatorGenes = new ConcurrentCorrelation(threads);
-			matrix = calculatorGenes.pairwiseCorrelation(expression.values);//last argument, if false = covariance; true = correlation.			
+			matrix = calculatorGenes.pairwiseCorrelation(expression.values);			
 		}
 		else
 		{
 			ConcurrentCovariation calculatorGenes = new ConcurrentCovariation(threads);
-			matrix = calculatorGenes.pairwiseCovariation(expression.values);//last argument, if false = covariance; true = correlation.
+			matrix = calculatorGenes.pairwiseCovariation(expression.values);
 		}
 		Matrix covMat = new Matrix(expression.rowNames, expression.rowNames, matrix);
 		Matrix averages = covMat.getAverageCols(true);

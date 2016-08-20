@@ -5,6 +5,7 @@ import java.io.IOException;
 public class Spearman 
 {
 	//does not actually calculate the correlation, only ranks the sample
+	//This can then be followed up by calculating the correlation.
 	public static void main(String[] args) throws IOException 
 	{
 		String expressionFN = "";

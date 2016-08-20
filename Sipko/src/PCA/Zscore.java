@@ -12,6 +12,8 @@ import org.apache.commons.math3.stat.StatUtils;
 
 public class Zscore
 {
+	//Converts PC-scores to Z-scores per gene across all samples
+	
 	public static double zScoreCutoff = 2;
 	
 	public static void main(String[] args) throws IOException

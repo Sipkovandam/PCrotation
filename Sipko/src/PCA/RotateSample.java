@@ -10,6 +10,8 @@ import umcg.genetica.math.matrix.DoubleMatrixDataset;
 
 public class RotateSample {
 
+	//"Rotates" a sample into the same space as another sample, by normalizing and centering it in the same way.
+	
 	public static void main(String[] args) throws IOException 
 	{
 //		String sampleFile = "E:/Groningen/Data/PublicSamples/100SamplesTest/Rsample/" + "RandomSamples.txt";
@@ -31,10 +33,6 @@ public class RotateSample {
 //		
 //		rotate(sampleFile, vectorFolder, writeFolder, tpm, correctTotalReadCount);	
 	}
-//	public static MatrixStruct[] rotate(String sampleFile, String vectorFolder, String writeFolder, boolean tpm, double correctTotalReadCount) throws IOException
-//	{
-//		return rotate(sampleFile, vectorFolder, writeFolder, true, true, tpm, correctTotalReadCount, -1, true);
-//	}
 	
 	public static MatrixStruct[] rotate(String sampleFile, String vectorFolder, String writeFolder, boolean STdevCorrect,
 			boolean log2, boolean tpm, double correctTotalReadCount, double spearman, boolean adjustSampleAverages,

@@ -4,6 +4,8 @@ import java.io.IOException;
 
 public class LogTransform 
 {
+	//log 2 Transforms the data
+	
 	public static void main(String[] args) throws IOException 
 	{
 		String expressionFN = "";

@@ -28,6 +28,8 @@ import java.nio.file.Path;
 
 public class Matrix 
 {
+	//a matrix class that is not limited to max java array size
+	
 	public String firstField;
 	public String[] colNames;
 	public String[] rowNames;
@@ -35,7 +37,7 @@ public class Matrix
 	public boolean verbose = false;
 	protected static final String ENCODING = "ISO-8859-1";
 	public static final int DEFAULT_BUFFER_SIZE = 4096;
-	class GetVal
+	public class GetVal
 	{
 		double[][] values;
 		
@@ -51,7 +53,7 @@ public class Matrix
 			values[r][c]=d;
 		};
 	}
-	GetVal matrix = new GetVal(values);
+	public GetVal matrix = new GetVal(values);
 	
 	public Matrix()
 	{
@@ -610,7 +612,7 @@ public class Matrix
 		double avg = sumRow(r)/colNames.length;
 		return avg;
 	}
-	private double sumRow(int r) {
+	double sumRow(int r) {
 		double sum = 0;
 		for(int c = 0; c < colNames.length; c++)
 		{
@@ -944,6 +946,7 @@ public class Matrix
 			}
 		}
 		values = temp;
+		matrix = new GetVal(values);
 	}
 
 	public void writeTransposed(String fileName) 
@@ -1033,6 +1036,7 @@ public class Matrix
 		temp.values[0] = this.values[i];
 		return temp;
 	}
+	
 	public class Timer 
 	{
 		long startTime ;
@@ -1134,83 +1138,7 @@ public class Matrix
 //		if(writeFolder != null)
 //			denominators.write(writeFolder + "Denominators.txt");
 //	}
-	public void rLog(double rLog, String writeFolder, String fileName, String writeGeoFN) throws IOException 
-	{
-		rLog(rLog, writeFolder, fileName, null, writeGeoFN);
-	}
-	public void rLog(double rLog, String writeFolder, String fileName, MatrixStruct geoMean, String writeGeoFN) throws IOException 
-	{
-		double addVal = 0;
-		if(geoMean == null)
-		{
-			geoMean = getGeoMeans(writeFolder, addVal, writeGeoFN);
-			//need to read the matrix again here...
-			this.readFile(fileName);
-		}
-		//geoMean.keepRows(this);
-		Matrix geoMeanMat = new Matrix(geoMean);
-		geoMeanMat.keepRows(this);//keep only the rows that are also in the geomean file
-		
-		this.write(fileName.replace(".txt", "geoRowsOnly.txt"));
-		MatrixStruct denominators = new MatrixStruct(this.cols(),1);
-		denominators.setRowHeaders(this.getColHeaders());
-		
-		//determine the denominator per sample
-		for(int c = 0; c < this.cols(); c++)
-		{
-			//get the correct denominator
-			double[] column = new double[this.rows()];
-			for(int r = 0; r < column.length; r++)
-			{
-				column[r] = (this.matrix.get(r,c)+addVal) / geoMean.matrix.get(r,0);
-			}
-			Arrays.sort(column);
-			
-			org.apache.commons.math3.stat.descriptive.rank.Median med = new org.apache.commons.math3.stat.descriptive.rank.Median();
-			denominators.matrix.set(c,0,med.evaluate(column));
-		}
-		if(writeFolder != null)
-			denominators.write(writeFolder + "Denominators.txt");
-		
-		this.readFile(fileName);
-		//calculate the normalized readcounts
-		for(int c = 0; c < this.cols(); c++)
-		{
-			for(int r = 0; r < this.rows(); r++)
-			{
-				this.matrix.set(r,c,this.matrix.get(r,c)/denominators.matrix.get(c,0));	
-			}
-		}
-	}
 	
-	private MatrixStruct getGeoMeans(String writeFolder, double addVal, String writeGeoFN) throws IOException {
-		this.logTransform(10,addVal);
-		MatrixStruct geoMean = new MatrixStruct(this.rows(),1);
-		geoMean.setRowHeaders(this.getRowHeaders());
-		MatrixStruct keepGenes = new MatrixStruct(this.rows(),1);
-		for(int r =0; r < this.rows(); r++)
-		{
-			double gM = this.sumRow(r)/this.cols();
-			if(Double.isFinite(gM))
-			{
-				geoMean.matrix.set(r,0,gM);
-				geoMean.matrix.set(r,0,Math.pow(10,geoMean.matrix.get(r,0)));
-				keepGenes.setRowHeader(r, this.getRowHeaders()[r]);
-			}
-// would generate really big file...
-//			else
-//				removeGenes.setRow(r, this.getRowHeaders()[r], this.getRowValues(r));// will contain all the rows that get removed
-		}
-		
-		if(writeFolder != null)
-		{
-//			removeGenes.write(writeFolder+ "RemovedForGeoMean.txt");
-			geoMean.keepRows(keepGenes);
-			System.out.println("geofilename=" + writeGeoFN);
-			geoMean.write(writeGeoFN);
-		}
-		return geoMean;
-	}
 	public String[] getRowHeaders()
 	{
 		return this.rowNames;
@@ -1261,5 +1189,11 @@ public class Matrix
 			this.transpose();
 		}
 		
+	}
+	public void setRowHeaders(String[] rowHeaders) {
+		this.rowNames = rowHeaders;
+	}
+	public void setColHeader(int outCol, String string) {
+		this.colNames[outCol] = string;
 	}
 }

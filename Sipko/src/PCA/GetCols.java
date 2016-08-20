@@ -3,7 +3,7 @@ package PCA;
 import java.util.Hashtable;
 
 public class GetCols {
-
+	//get some columns from a file
 	public static void main(String[] args)
 	{
 		String fileName = "E:/Groningen/Data/PublicSamples/Test13/directPCA_Voom_0.2/est_counts_nocancernocellline/PC_1-300_DevidedBySTdevs.txt";

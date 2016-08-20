@@ -6,7 +6,9 @@ import java.util.ArrayList;
 import umcg.genetica.math.stats.Correlation;
 
 public class RemoveDuplicates {
-
+	//Removes duplicate samples. Duplicates are defined as <removeDuplicates> correlated.
+	//Warning: Assumes duplicates are next to eachother (this was faster and is usually the case in biological data, but definetly not always)
+	
 	public static void main(String[] args) throws IOException 
 	{
 		String expressionFN = "";

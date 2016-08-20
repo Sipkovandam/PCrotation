@@ -7,6 +7,8 @@ import umcg.genetica.math.matrix.DoubleMatrixDataset;
 
 public class GCcontent 
 {
+	//estimates and corrects the GC content of a sample, based on the GC content per gene (from ensembl)
+	//The correlation with the actual GC content is approximately 53% (E:/Groningen/Data/GCcontent/GCcompare_result.xlsx)
 	static String expressionFN = "";
 	static String gcContentFN = "";
 	static String writeFN = null;

@@ -28,6 +28,8 @@ import com.google.gson.GsonBuilder;
 
 public class Var 
 {
+	//A class that holds all the variables for PCcorrection and CreateGeneEigenvectorFile
+	
 	public  boolean correlation = true; //if false uses covariance
 	public  boolean setLowestToAverage = false;// sets all the lowest values in a sample to the average, effectively this means any gene that has an expression of does not contribute to the covariance or correlation
 	public  boolean adjustSampleAverages = true;// addjusts the expression of genes so that the average expression of a sample become 0 (centering over the samples)

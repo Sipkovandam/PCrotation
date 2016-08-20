@@ -34,6 +34,8 @@ import org.apache.commons.math3.stat.descriptive.moment.Variance;
 
 public class MatrixStruct 
 {
+	//A java class that is limited to a Java array max size, but faster then Matrix
+	
 	public Hashtable<String, Integer> rowHash;
 	public Hashtable<String, Integer> colHash;
 	

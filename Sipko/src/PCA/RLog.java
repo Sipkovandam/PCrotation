@@ -6,13 +6,15 @@ import java.util.Arrays;
 
 public class RLog 
 {
+	//This is doing the DESeq normalization, which does not use replicate information.
+	
 	//static String expressionFN = "E:/Groningen/Data/Annique/LLD_and_BIOS_Kallisto_EstimatedTranscriptCounts.ProbesWithZeroVarianceRemoved_removedBadSamples.txt.gz";
 	static String expressionFN = "E:/Groningen/Scripts/Tests/Rlog.java/Samples.txt";
 	
 	static String writeFolder = null;//if null becomes new File(expressionFN).getParent()+"/";
 	static String geoFN = null;//if null calculates geometric means based on this dataset
 	static boolean writeAll = true;	//write all intemediary files too
-	static double rLog = 1;//previously used to multiply the results by this number, but seems pointless since it does not have any effect, so does not do anything anymore
+	static double rLog = 0.5;//previously used to multiply the results by this number, but seems pointless since it does not have any effect, so does not do anything anymore
 	
 	public static void main(String[] args) throws IOException 
 	{
@@ -31,7 +33,7 @@ public class RLog
 		MatrixStruct expressionStruct = new MatrixStruct(expressionFN);
 		double start = System.nanoTime();
 		rLog(writeFolder, expressionStruct, writeAll, geoFN);
-		expressionStruct.log2Transform(0.5);
+		expressionStruct.log2Transform(rLog);
 		double end = System.nanoTime();
 		System.out.println((end-start)/1000/1000 + " ms");
 		//write the results

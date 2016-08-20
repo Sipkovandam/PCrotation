@@ -16,6 +16,7 @@ import umcg.genetica.math.stats.Correlation;
 
 public class Test 
 {
+	//Script to test things
 	
 	public static void main(String[] args) throws IOException, InterruptedException
 	{
