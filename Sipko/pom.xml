@@ -17,7 +17,6 @@
   </dependencies>
   
   <build>
-    <sourceDirectory>src</sourceDirectory>
     <plugins>
       <plugin>
         <artifactId>maven-compiler-plugin</artifactId>
@@ -35,7 +34,7 @@
      </descriptorRefs>
      <archive>
       <manifest>
-       <mainClass>PCA.Toolkit</mainClass>
+       <mainClass>Tools.Toolkit</mainClass>
       </manifest>
      </archive>
     </configuration>
