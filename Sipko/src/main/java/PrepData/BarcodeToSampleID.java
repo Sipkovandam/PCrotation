@@ -47,6 +47,8 @@ public class BarcodeToSampleID {
 		{
 			String[] cells = line.split("\t");
 			conversion.put("L"+cells[lane]+"_"+cells[barcode], cells[name]);
+			//in some cases is different so just add that option as well:
+			conversion.put("_"+cells[barcode]+"_L"+cells[lane], cells[name]);
 		}
 		return conversion;
 	}

@@ -57,8 +57,8 @@ public class RotateSample {
 		
 		//keep only the genes/rows that were used in the public samples as well
 		String geneAveragesFN = vectorFolder+"SAMPLE_Norm_GeneAverages.txt";
-		MatrixStruct columnAverages = new MatrixStruct(geneAveragesFN);
-		columnAverages.keepRows(singleSample);
+		MatrixStruct geneAverages = new MatrixStruct(geneAveragesFN);
+		geneAverages.keepRows(singleSample);
 		
 		//rotate the sample to the same sample space
 		singleSample = center(	singleSample, 
@@ -69,7 +69,7 @@ public class RotateSample {
 								skipQuantileNorm,
 								correctTotalReadCount,
 								spearman, 
-								columnAverages, 
+								geneAverages, 
 								adjustSampleAverages, 
 								setLowestToAverage,
 								addLogVal, 
@@ -100,7 +100,7 @@ public class RotateSample {
 			geneEigenVectors = new MatrixStruct(eigen2Name);//maximum 5001 PCs
 		}
 		System.out.println("sample0 " + singleSample.rows() + " eigenvectors = " + geneEigenVectors.rows());
-		columnAverages.keepRows(geneEigenVectors);//also changes the rows of geneEigenvectors to have the same positions as columnAverages
+		geneAverages.keepRows(geneEigenVectors);//also changes the rows of geneEigenvectors to have the same positions as columnAverages
 		System.out.println("sample " + singleSample.rows() + " eigenvectors = " + geneEigenVectors.rows());
 		singleSample.putGenesOnRows();
 		singleSample.keepRows1Matrix(geneEigenVectors);//necessary with some normalizations
@@ -115,8 +115,6 @@ public class RotateSample {
 		}
 		
 		JuhaPCA.PCA.log(" 12. Calculate the PC scores: ");
-		singleSample.write(vectorFolder+"TESTSAMPLEOUT.txt");
-		geneEigenVectors.write(vectorFolder+"TESTVECTOROUT.txt");
 		MatrixStruct[] scoreResults = PCA.scores(geneEigenVectors,singleSample, saveNameSingleSampleScore,false, false);
 		
 		JuhaPCA.PCA.log("Files Written to: " + writeFolder);
@@ -205,9 +203,9 @@ public class RotateSample {
 		if(setLowestToAverage)//this will cause the lowest values not to contribute to correlation or covariance
 			LowestToAverage.lowestToAverage(singleSample);
 		
-		MatrixStruct averages = singleSample.getAveragesPerRow();
-		String rowAveragesFileName = writeFolder+"rowAverages.txt";
-		averages.write(rowAveragesFileName);
+		MatrixStruct sampleAvgs = singleSample.getAveragesPerCol();
+		String sampleAveragesFileName = writeFolder+"rowAverages.txt";
+		sampleAvgs.write(sampleAveragesFileName);
 		
 		//correct for GC content
 		if(correctGC != null)
@@ -219,7 +217,7 @@ public class RotateSample {
 		if(adjustSampleAverages)
 		{
 			JuhaPCA.PCA.log(" 8. Adjusting for row averages (centering to target PC space)");
-			singleSample.adjustForAverageAllsamples(averages);
+			singleSample.adjustForAverageAllSamples(sampleAvgs);
 		}
 		
 		JuhaPCA.PCA.log(" 9. Adjusting for gene averages (centering to target PC space)");

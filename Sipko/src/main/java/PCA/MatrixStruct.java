@@ -773,14 +773,14 @@ public class MatrixStruct
 		
 		return avg;
 	}
-	public void adjustForAverageAllsamples(MatrixStruct rowAverages) //can be called with null and will use the for the averages of the columns of this matrix
+	public void adjustForAverageAllGenes(MatrixStruct rowAverages) //can be called with null and will use the for the averages of the columns of this matrix
 	{
 		for(int r =0; r < rows(); r++)
 		{
 			adjustForAverageRow(rowAverages, r);
 		}
 	}
-	public void adjustForAverageAllGenes(MatrixStruct columnAverages) //can be called with null and will use the for the averages of the columns of this MatrixStruct
+	public void adjustForAverageAllSamples(MatrixStruct columnAverages) //can be called with null and will use the for the averages of the columns of this MatrixStruct
 	{
 		for(int y =0; y < cols(); y++)
 		{

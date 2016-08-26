@@ -316,7 +316,7 @@ public class CreateGeneEigenvectorFile
 		if(var.centerSamples)
 		{
 			JuhaPCA.PCA.log("16. Centering samples: Adjusting for sample averages");
-			expressionStruct.adjustForAverageAllGenes(colAverages);
+			expressionStruct.adjustForAverageAllSamples(colAverages);
 			expressionStruct.write(var.writeFolder +"SAMPLE_adjustedForSampleAverages.txt.gz");
 		}
 		JuhaPCA.PCA.log("17. Calculating row averages");
@@ -325,7 +325,7 @@ public class CreateGeneEigenvectorFile
 		if(var.centerGenes)
 		{
 			JuhaPCA.PCA.log("18. Centegering genes: Adjusting for gene averages");
-			expressionStruct.adjustForAverageAllsamples(rowAverages);
+			expressionStruct.adjustForAverageAllGenes(rowAverages);
 		}
 	
 		String expNormLogCentFile = var.writeFolder+"MATRIX_Centered.txt.gz";
