@@ -17,6 +17,7 @@ public class RLog
 	static double logAdd = 0.5;//previously used to multiply the results by this number, but seems pointless since it does not have any effect, so does not do anything anymore
 	static boolean log = false;
 	static boolean genes = true;
+	static boolean roundValues = true;//rounds expression values to whole counts
 	
 	public static void main(String[] args) throws IOException 
 	{
@@ -28,12 +29,12 @@ public class RLog
 		}
 		if(!new File(writeFolder).exists())
 			new File(writeFolder).mkdirs();
-		if(geoFN == null)
-			geoFN = writeFolder+ "geoMean.txt";
 		
 		MatrixStruct expressionStruct = new MatrixStruct(expressionFN);
 		if(genes)
 			expressionStruct.putGenesOnRows();
+		if(roundValues)
+			expressionStruct.roundValues();
 		double start = System.nanoTime();
 		rLog(writeFolder, expressionStruct, writeAll, geoFN);
 		double end = System.nanoTime();
@@ -46,13 +47,16 @@ public class RLog
 		}
 	}
 
-	public static void rLog(String writeFolder, MatrixStruct expressionStruct, boolean writeAll, String writeGeoFN) throws IOException 
+	public static void rLog(String writeFolder, MatrixStruct expressionStruct, boolean writeAll, String geoFN) throws IOException 
 	{
 		String swapFN = writeFolder + "swapFile.txt";
 		expressionStruct.write(swapFN);
 		JuhaPCA.PCA.log(" 6. Rlog without log");
 		String correctedNotLogged =  writeFolder + new File(expressionFN).getName().replace(".txt", "").replace(".gz","") + ".DESeqNorm.txt.gz";
-		rLog(expressionStruct, writeFolder, swapFN, writeGeoFN);
+		if(geoFN!= null && new File(geoFN).exists())
+			rLog(expressionStruct, writeFolder, swapFN, new MatrixStruct(geoFN), null);
+		else
+			rLog(expressionStruct, writeFolder, swapFN, null, null);
 		if(writeAll)
 			expressionStruct.write(correctedNotLogged);
 	}
@@ -189,6 +193,9 @@ public class RLog
 				break;
 				case "log":
 					log = Boolean.parseBoolean(value);
+				break;
+				case "roundvalues":
+					roundValues = Boolean.parseBoolean(value);
 				break;
 				default:
 					printUsage();

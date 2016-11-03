@@ -10,11 +10,12 @@ public class RlogLargeMatrix
 	//Also works for matrixes of larger then MAXint sizes
 	
 	//static String expressionFN = "E:/Groningen/Data/Annique/LLD_and_BIOS_Kallisto_EstimatedTranscriptCounts.ProbesWithZeroVarianceRemoved_removedBadSamples.txt.gz";
-	static String expressionFN = "E:/Groningen/Data/Juha/Calculon/JuhaMerged/31.txt";//"/groups/umcg-wijmenga/tmp04/umcg-jkarjalainen/31.txt";
-	static String writeFolder = "E:/Groningen/Data/Juha/Calculon/JuhaMerged/test/";//if null becomes new File(expressionFN).getParent()+"/";
-	static String geoFN = null;//if null calculates geometric means based on this dataset
+	static String expressionFN = "E:/Groningen/Scripts/Tests/Rlog.java/Samples.txt";//"E:/Groningen/Data/RNAseq_clinic/5GPM/GRCh38/counts_GENES_ScaffoldGenesRemovedcounts_DiscardedRemoved.txt.gz";//"/groups/umcg-wijmenga/tmp04/umcg-jkarjalainen/31.txt";
+	static String writeFolder = null;//if null becomes new File(expressionFN).getParent()+"/";
+	static String geoFN = "E:/Groningen/Scripts/Tests/Rlog.java/DESeqNorm2/geoMean.txt";//"E:/Groningen/Data/Juha/Genes31995/DuplicatesRemoved/geoMean.txt";//if null calculates geometric means based on this dataset
 	static boolean writeAll = true;	//write all intemediary files too
 	static double logAdd = 0.5;//previously used to multiply the results by this number, but seems pointless since it does not have any effect, so does not do anything anymore
+	static boolean roundValues = true;//rounds expression values to whole counts
 	
 	public static void main(String[] args) throws IOException 
 	{
@@ -25,11 +26,10 @@ public class RlogLargeMatrix
 		{
 			new File(writeFolder).mkdir();
 		}
-		if(geoFN == null)
-			geoFN = writeFolder+ "geoMean.txt";
 		
 		Matrix expression = new Matrix(expressionFN);
-		
+		if(roundValues)
+			expression.roundValues();
 		double start = System.nanoTime();
 		rLog(writeFolder, expression, writeAll, geoFN);
 		expression.logTransform(2,logAdd);//adds +0.5 before log
@@ -38,18 +38,22 @@ public class RlogLargeMatrix
 		expression.write(writeFolder + new File(expressionFN).getName().replace(".txt", "").replace(".gz","")+".DESeqNorm.Log2.txt.gz");
 	}
 
-	public static void rLog(String writeFolder, Matrix expression, boolean writeAll, String writeGeoFN) throws IOException 
+	public static void rLog(String writeFolder, Matrix expression, boolean writeAll, String geoFN) throws IOException 
 	{
+		MatrixStruct geoMean = null;
+		if(geoFN!= null)
+			new MatrixStruct(geoFN);
 		expression.putGenesOnRows();
 		String swapFN = writeFolder + "swapFile.txt";
 		expression.write(swapFN);
 		JuhaPCA.PCA.log(" 6. Rlog without log");
 		String correctedNotLogged =  writeFolder + new File(expressionFN).getName().replace(".txt", "").replace(".gz","") + ".DESeqNorm.txt.gz";
-		rLog(expression, writeFolder, swapFN, writeGeoFN);
+		rLog(expression, writeFolder, swapFN, geoMean, null);
 		
 		if(writeAll)
 			expression.write(correctedNotLogged);
 	}
+	
 	public static void rLog(Matrix expression, String writeFolder, String fileName, String writeGeoFN) throws IOException 
 	{
 		rLog(expression, writeFolder, fileName, null, writeGeoFN);
@@ -117,6 +121,8 @@ public class RlogLargeMatrix
 		if(writeFolder != null)
 		{
 			geoMean.keepRows(keepGenes);
+			if(writeGeoFN == null)
+				writeGeoFN = writeFolder+ "geoMean.txt";
 			System.out.println("geofilename=" + writeGeoFN);
 			geoMean.write(writeGeoFN);
 		}
@@ -156,6 +162,9 @@ public class RlogLargeMatrix
 					break;
 				case "totalreadcount":
 					logAdd = Double.parseDouble(value);
+				break;
+				case "roundvalues":
+					roundValues = Boolean.parseBoolean(value);
 				break;
 				default:
 					System.out.println("Incorrect argument supplied:\n"+ args[a] +"\nexiting");

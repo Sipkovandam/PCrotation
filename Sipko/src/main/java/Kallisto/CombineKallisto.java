@@ -16,23 +16,26 @@ import Tools.SearchFilesInDirectories;
 
 public class CombineKallisto {
 	
-	static String kallistoOutputFolder = "E:/Groningen/Test/JSON/ServerTest/Kallisto/Results/";
+	static String kallistoOutputFolder = "E:/Groningen/Data/Juha/Genes31995/RemoveDuplicateTranscripts/Samples/IncDups/";
 	static String writeFolder = null;
 	static int kallistoColumn = 2;//2 is read counts, 3 is TPM values in kallisto output
-	static String transcriptsToGenesFN = "E:/Groningen/Data/Annotation/hg19.v75.cdna.all.enst2ensg.txt";
+	static String transcriptsToGenesFN = "E:/Groningen/Data/Juha/Genes31995/RemoveDuplicateTranscripts/DuplicateTranscriptsAndEnsemblMapping/ENSt2ENSg83.txt";//"E:/Groningen/Data/Annotation/hg19.v75.cdna.all.enst2ensg.txt";
 	static double threshold = 0.7;
 	static int minPercentageFeaturesExpressed=10;//features are either transcripts or genes
-	static String mappingPercentagesFN = "E:/Groningen/Test/JSON/ServerTest/Kallisto/mappingPerSample.txt";
-	static String tsvThatshouldBeThereFN = "E:/Groningen/Test/JSON/ServerTest/Kallisto/scriptNumberToFiles.txt";//should have the .tsv filenames in the first column (including path)
+	static String mappingPercentagesFN = null;//"E:/Groningen/Test/JSON/ServerTest/Kallisto/mappingPerSample.txt";
+	static String tsvThatshouldBeThereFN = null;//"E:/Groningen/Test/JSON/ServerTest/Kallisto/scriptNumberToFiles.txt";//should have the .tsv filenames in the first column (including path)
 	
 	public static void main(String[] args) throws Exception 
 	{
 		checkArgs(args);
 		if(writeFolder == null)
-			writeFolder = new File(kallistoOutputFolder).getAbsolutePath();
+			writeFolder = new File(kallistoOutputFolder).getAbsolutePath()+"/";
 		
-		ArrayList<String> tsvThatshouldBeThere = FileUtils.readArrayList(tsvThatshouldBeThereFN);
-		checkMissing(tsvThatshouldBeThere);
+		if(tsvThatshouldBeThereFN !=null)
+		{
+			ArrayList<String> tsvThatshouldBeThere = FileUtils.readArrayList(tsvThatshouldBeThereFN);
+			checkMissing(tsvThatshouldBeThere);
+		}
 		
 		String tsvFN = writeFolder+"tsvFileNames.txt";
 		searchFilesInDirectores(tsvFN);
@@ -40,20 +43,25 @@ public class CombineKallisto {
 		String combindedFN = writeFolder+"counts.txt.gz";
 		combineFiles(outputFiles,combindedFN);//Combining files
 		String genesFN = FileUtils.replaceEnd(combindedFN, "_GENES.txt.gz");
-		sumTranscriptsToGenes(combindedFN,genesFN);
 		
-		System.out.println("Removing samples where less than " + (threshold*100) + "% of reads map");
-		String writeFNtranscritps = FileUtils.replaceEnd(combindedFN, "_"+threshold+".txt.gz");
-		keepThresholdSamples(combindedFN, writeFNtranscritps);
-		String writeFNgenes = FileUtils.replaceEnd(genesFN, "_"+threshold+".txt.gz");
-		keepThresholdSamples(genesFN,writeFNgenes);
+		if(transcriptsToGenesFN != null)
+			sumTranscriptsToGenes(combindedFN,genesFN);
 		
-		System.out.println("Removing bad samples (where less then"+minPercentageFeaturesExpressed+"% of the genes/transcripts are expressed)");
-		removeBadSamples(writeFNtranscritps);
-		removeBadSamples(writeFNgenes);
+		if(mappingPercentagesFN != null)
+		{
+			System.out.println("Removing samples where less than " + (threshold*100) + "% of reads map");
+			String writeFNtranscritps = FileUtils.replaceEnd(combindedFN, "_"+threshold+".txt.gz");
+			keepThresholdSamples(combindedFN, writeFNtranscritps);
+			String writeFNgenes = FileUtils.replaceEnd(genesFN, "_"+threshold+".txt.gz");
+			keepThresholdSamples(genesFN,writeFNgenes);
 		
-		System.out.println("Combined expression files in folder: " + kallistoOutputFolder);
-		System.out.println("Files written to: " + writeFolder);
+			System.out.println("Removing bad samples (where less then"+minPercentageFeaturesExpressed+"% of the genes/transcripts are expressed)");
+			removeBadSamples(writeFNtranscritps);
+			removeBadSamples(writeFNgenes);
+			
+			System.out.println("Combined expression files in folder: " + kallistoOutputFolder);
+			System.out.println("Files written to: " + writeFolder);
+		}
 	}
 
 	private static void removeBadSamples(String filename) throws IOException {
@@ -64,14 +72,14 @@ public class CombineKallisto {
 	}
 
 	private static void keepThresholdSamples(String combindedFN, String writeFN) throws FileNotFoundException, IOException {
-		KeepThresholdSamples.main(new String[]{	"countsFN="+combindedFN,
+		KeepThresholdSamples.main(new String[]{	"filename="+combindedFN,
 												"mappingPercentageFN="+mappingPercentagesFN,
 												"writeFN="+writeFN,
 												"threshold="+threshold});
 	}
 
 	private static void sumTranscriptsToGenes(String combindedFN, String genesFN) {
-		SumTranscriptsToGenes.main(new String[]{"countFN="+combindedFN,
+		SumTranscriptsToGenes.main(new String[]{"filename="+combindedFN,
 												"transcriptToGeneFN="+transcriptsToGenesFN,
 												"writeFN="+genesFN});
 	}
@@ -114,6 +122,8 @@ public class CombineKallisto {
 		Matrix output = null;
 		for(int f = 0; f < tsvFiles.size(); f++)
 		{
+			if(f%100==0)
+				System.out.println("f=" + f + "/" +  tsvFiles.size() + " = " + tsvFiles.get(f));
 			String fileName = tsvFiles.get(f);	
 			printStatus(f, tsvFiles, fileName);
 			
@@ -124,6 +134,7 @@ public class CombineKallisto {
 		}
 		
 		output.write(combindedFN);
+		System.out.println("File written to: " + combindedFN);
 	}
 	private static Matrix addValuesToMatrix(String fileName, Matrix output, int outC, Matrix counts) {
 		File tempName = new File(fileName);

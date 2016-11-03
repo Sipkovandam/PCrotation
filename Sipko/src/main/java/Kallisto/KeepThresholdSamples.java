@@ -14,12 +14,14 @@ public class KeepThresholdSamples
 {
 	static String countsFN = "E:/Groningen/Test/JSON/ServerTest/Kallisto/Resultscounts.txt.gz";
 	static String mappingPercentageFN = "E:/Groningen/Test/JSON/ServerTest/Kallisto/mappingPerSample.txt"; 
-	static String writeFN = "Resultscounts_0.7.txt.gz"; 
+	static String writeFN = null; 
 	static double threshold = 0.7;
 	
 	public static void main(String[] args) throws FileNotFoundException, IOException
 	{
 		checkArgs(args);
+		if(writeFN==null)
+			writeFN=FileUtils.replaceEnd(countsFN, "0.7.txt.gz");
 		
 		Hashtable<String, Double> mappingPercentage = FileUtils.readDoublehash(mappingPercentageFN);
 		BufferedReader reader = FileUtils.createReader(mappingPercentageFN);
@@ -33,14 +35,16 @@ public class KeepThresholdSamples
 			double percentage = mapping/total;
 			mappingPercentage.put(fn, percentage);
 		}
-		Hashtable<String, Double> mappingAboveCutoff = getN_AboveCutoff(mappingPercentage);
-		
-		Matrix output = getMappingAboveCutoff(mappingAboveCutoff);
-		
-		output.write(writeFN);	
-	}
-	private static Matrix getMappingAboveCutoff(Hashtable<String, Double> mappingAboveCutoff) {
 		Matrix counts = new Matrix(countsFN);
+		Hashtable<String, Double> mappingAboveCutoff = getN_AboveCutoff(mappingPercentage,counts);
+		
+		Matrix output = getMappingAboveCutoff(mappingAboveCutoff,counts);
+		
+		output.write(writeFN);
+		System.out.println("mappingPercentageFile file written to: " + writeFN );
+	}
+	private static Matrix getMappingAboveCutoff(Hashtable<String, Double> mappingAboveCutoff, Matrix counts) {
+		
 		Matrix output = new Matrix(counts.rows(),mappingAboveCutoff.size());
 		output.rowNames=counts.getRowHeaders();
 
@@ -59,7 +63,7 @@ public class KeepThresholdSamples
 		}
 		return output;
 	}
-	private static Hashtable<String, Double> getN_AboveCutoff(Hashtable<String, Double> mappingPercentage) {
+	private static Hashtable<String, Double> getN_AboveCutoff(Hashtable<String, Double> mappingPercentage, Matrix counts) {
 		Enumeration<String> fileNames = mappingPercentage.keys();
 		Hashtable<String, Double> mappingAboveCutoff = new Hashtable<String, Double>();
 		while(fileNames.hasMoreElements())
@@ -69,7 +73,7 @@ public class KeepThresholdSamples
 			File path = new File(errorFile.getParent());
 			String colName =  path.getName();
 			double percentage = mappingPercentage.get(errorFN);
-			if(percentage>threshold)
+			if(percentage>threshold && counts.getColHash().containsKey(colName))
 				mappingAboveCutoff.put(colName, percentage);
 		}
 		return mappingAboveCutoff;
@@ -96,7 +100,10 @@ public class KeepThresholdSamples
 			switch (arg.toLowerCase())
 			{
 //				var = new JSONutil<Vars>().read(var.JSON_FN, var);
-				case "countsfn":
+				case "countsFN":
+					countsFN =value;
+				break;
+				case "filename":
 					countsFN =value;
 					break;
 				case "mappingpercentagefn":

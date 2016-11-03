@@ -34,90 +34,44 @@ public class RotateSample {
 //		rotate(sampleFile, vectorFolder, writeFolder, tpm, correctTotalReadCount);	
 	}
 	
-	public static MatrixStruct[] rotate(String sampleFile, 
-										String vectorFolder, 
-										String writeFolder, 
-										boolean STdevCorrect,
-										boolean log2,
-										boolean skipQuantileNorm, 
-										double correctTotalReadCount, 
-										double spearman, 
-										boolean adjustSampleAverages,
-										boolean setLowestToAverage, 
-										double addLogVal, 
-										boolean rLog, 
-										String singleSampleFN, 
-										String chromLocationsFile, 
-										String correctGC, Var var) throws IOException
+	public static MatrixStruct[] rotate(Var var) throws IOException
 	{
 		/**6. Calculate PCscores for single sample**/
 		JuhaPCA.PCA.log(" 1. Loading sample matrix");
-		MatrixStruct singleSample = new MatrixStruct(sampleFile);//expressionMatrix.getRow(0);
+		MatrixStruct singleSample = new MatrixStruct(var.sampleFile);//expressionMatrix.getRow(0);
 		singleSample.putGenesOnRows();
 		
 		//keep only the genes/rows that were used in the public samples as well
-		String geneAveragesFN = vectorFolder+"SAMPLE_Norm_GeneAverages.txt";
+		String geneAveragesFN = var.writeFolder+"SAMPLE_Norm_GeneAverages.txt";
 		MatrixStruct geneAverages = new MatrixStruct(geneAveragesFN);
 		geneAverages.keepRows(singleSample);
 		
 		//rotate the sample to the same sample space
 		singleSample = center(	singleSample, 
-								vectorFolder, 
-								writeFolder, 
-								STdevCorrect, 
-								log2, 
-								skipQuantileNorm,
-								correctTotalReadCount,
-								spearman, 
 								geneAverages, 
-								adjustSampleAverages, 
-								setLowestToAverage,
-								addLogVal, 
-								rLog, 
-								singleSampleFN, 
-								correctGC);
+								var);
 		
 		//calculate the PC scores
 		//Get the eigenvector file based on the public data and put it in the right orientation.
-		String saveNameSingleSampleScore = writeFolder + "SAMPLE.PC.txt";
+		String saveNameSingleSampleScore = var.writeFolderCorrected + "SAMPLE.PC.txt";
 		JuhaPCA.PCA.log(" 11. Loading gene eigen vector file: ");
-		File eigenFile = new File(vectorFolder+"GENE.eigenvectors.txt.gz");
+		File eigenFile = new File(var.writeFolder+"GENE.eigenvectors.txt.gz");
 		if(!eigenFile.exists())
-			eigenFile = new File(vectorFolder+"GENE.eigenvectors.txt");
-	
-		MatrixStruct geneEigenVectors = null;
-		String eigen2Name = vectorFolder+"GENE.eigenvectors2.txt.gz";
-		if(!var.reUseEigen2 || !new File(eigen2Name).exists())
-		{
-			//read in matrix (genes are on the rows, PCs are on the columns in the eigenFile)
-			geneEigenVectors = new MatrixStruct(eigenFile.getAbsolutePath(), -1, 5001);//maximum 5001 PCs
-			
-			//geneEigenVectors.putGenesOnRows();
+			eigenFile = new File(var.writeFolder+"GENE.eigenvectors.txt");
 
-		}
-		else
-		{
-			geneEigenVectors = new MatrixStruct(eigen2Name);//maximum 5001 PCs
-		}
-		System.out.println("sample0 " + singleSample.rows() + " eigenvectors = " + geneEigenVectors.rows());
+		//read in matrix (genes are on the rows, PCs are on the columns in the eigenFile)
+		MatrixStruct geneEigenVectors = new MatrixStruct(eigenFile.getAbsolutePath(), -1, 5001);//maximum 5001 PCs 
+		geneEigenVectors.putGenesOnRows();
+
 		geneAverages.keepRows(geneEigenVectors);//also changes the rows of geneEigenvectors to have the same positions as columnAverages
-		System.out.println("sample " + singleSample.rows() + " eigenvectors = " + geneEigenVectors.rows());
 		singleSample.putGenesOnRows();
-		singleSample.keepRows1Matrix(geneEigenVectors);//necessary with some normalizations
-		System.out.println("sample1 " + singleSample.rows() + " eigenvectors = " + geneEigenVectors.rows());
+		singleSample.keepRows1Matrix(geneEigenVectors);//necessary with some normalizations (quantile norm can introduce more 0 values into your matrix after the normalization creating a need for these to be removed afterward again)
 		
-		//if the eigen2 file does not exist, write it so we can do this faster next time we correct our data
-		if(!new File(eigen2Name).exists())
-		{
-			JuhaPCA.PCA.log("Transposing");
-			geneEigenVectors.transpose();//Puts the genes on the columns (and the PCs on the rows)
-			geneEigenVectors.write(vectorFolder+"GENE.eigenvectors2.txt");//had genes on columns and is only part of geneEigenvectors.txt (5000 PCs)
-		}
-		
+		geneEigenVectors.putGenesOnCols();
 		JuhaPCA.PCA.log(" 12. Calculate the PC scores: ");
 		MatrixStruct[] scoreResults = PCA.scores(geneEigenVectors,singleSample, saveNameSingleSampleScore,false, false);
 		
-		JuhaPCA.PCA.log("Files Written to: " + writeFolder);
+		JuhaPCA.PCA.log("Files Written to: " + var.writeFolderCorrected);
 		return scoreResults;
 	}
 //	public static MatrixStruct center(MatrixStruct singleSample, String vectorFolder, String writeFolder, MatrixStruct columnAverages) throws IOException
@@ -125,105 +79,95 @@ public class RotateSample {
 //		return center(singleSample, vectorFolder, writeFolder, true, true,false,0, -1, columnAverages, true);
 //	}
 	public static MatrixStruct center(	MatrixStruct singleSample, 
-										String vectorFolder, 
-										String writeFolder, 
-										boolean STdevCorrect, 
-										boolean log2,
-										boolean skipQuantileNorm, 
-										double correctTotalReadCount, 
-										double spearman, 
 										MatrixStruct geneAverages, 
-										boolean adjustSampleAverages,
-										boolean setLowestToAverage,
-										double addLogVal, 
-										boolean rLog, 
-										String singleSampleFN, 
-										String correctGC) throws IOException 
+										Var var) throws IOException 
 	{
-		makeFolder(writeFolder);
+		makeFolder(var.writeFolderCorrected);
 		JuhaPCA.PCA.log(" 3. Removing rows that do not exist in the averages vector from public data");
 		geneAverages.keepRows(singleSample);
-		if(!skipQuantileNorm && correctTotalReadCount < 1)//prevents quantile norm from happening whilst also correctTotalReadCountis happening
+		if(!var.skipQuantileNorm && var.correctTotalReadCount < 1)//prevents quantile norm from happening whilst also correctTotalReadCountis happening
 		{
-			
-			MatrixStruct quantVector = new MatrixStruct(vectorFolder+"SAMPLE_QuantileVector.txt");
+			MatrixStruct quantVector = new MatrixStruct(var.writeFolder+"SAMPLE_QuantileVector.txt");
 			JuhaPCA.PCA.log(" 4. Quantile normalization adjustion");
 			//use quantile normalize distribtion from public data <quantVector>
 			singleSample.expressionToRank(quantVector);
 			
-			String quantileAdjustedFN = writeFolder+ "Quantile_adjusted.txt";	
+			String quantileAdjustedFN = var.writeFolderCorrected+ "Quantile_adjusted.txt";	
 			JuhaPCA.PCA.log(" 5. Writing quantile normalization adjusted file to:" + quantileAdjustedFN);
 			singleSample.write(quantileAdjustedFN);
 		}
 		
 		//correct for the total number of reads in a sample
-		if(correctTotalReadCount >0)
+		if(var.correctTotalReadCount >0)
 		{
 			JuhaPCA.PCA.log(" 6. Correcting for total read count");
 			//String correctedNotLogged =  writeFolder+ "SAMPLE_TotalReadCountNormalized.txt";
-			singleSample.correctForTotalReadCount(correctTotalReadCount,0.5);
-			singleSample.write(writeFolder + "correctTotalReadCount_"+correctTotalReadCount+".txt");
+			singleSample.correctForTotalReadCount(var.correctTotalReadCount,0.5);
+			singleSample.write(var.writeFolderCorrected + "correctTotalReadCount_"+var.correctTotalReadCount+".txt");
 		}
-		if(rLog)
+		if(var.rLog)
 		{
 			JuhaPCA.PCA.log(" 6. rLog transformation");
-			MatrixStruct geoMeans = new MatrixStruct(vectorFolder+"geoMean.txt");
-			String swapFN = writeFolder + "swapFile.txt";
+			MatrixStruct geoMeans = new MatrixStruct(var.writeFolder+"geoMean.txt");
+			String swapFN = var.writeFolderCorrected + "swapFile.txt";
 			singleSample.write(swapFN);
-			RLog.rLog(singleSample, writeFolder, swapFN, geoMeans,null);
-			singleSample.write(writeFolder + "rLogTransformed_"+rLog+".txt");
+			RLog.rLog(singleSample, var.writeFolderCorrected, swapFN, geoMeans,null);
+			singleSample.write(var.writeFolderCorrected + "rLogTransformed_"+var.rLog+".txt");
 		}
 		
-		if(log2)
+		if(var.log2)
 		{
 //			if(correctTotalReadCount <= 0 && rLog <= 0) // need to add 1 before log to avoid log(0)
 //				addLogVal = 0.5;
 			JuhaPCA.PCA.log(" 6. Log transforming");
-			singleSample.log2Transform(addLogVal);//Doing this after the quantile normalization now
-			singleSample.write(writeFolder + "normalized_log2.txt");
+			singleSample.log2Transform(var.addLogVal);//Doing this after the quantile normalization now
+			singleSample.write(var.writeFolderCorrected + "normalized_log2.txt");
 		}
 		
-		singleSample.write(writeFolder+"keepRows.txt");
+		singleSample.write(var.writeFolderCorrected+"keepRows.txt");
 		
-		if(spearman >= 0)
+		if(var.spearman >= 0)
 		{
 			JuhaPCA.PCA.log("Changing expression data into rank data");
-			expressionToPublicRank(singleSample,spearman,vectorFolder+ "beforeRanks.txt",vectorFolder+ "ranks.txt");
-			singleSample.write(writeFolder+"RankValues.txt");
+			expressionToPublicRank(singleSample, var.spearman, var.writeFolder+ "beforeRanks.txt", var.writeFolder+ "ranks.txt");
+			singleSample.write(var.writeFolderCorrected+"RankValues.txt");
 		}
 		
-		if(STdevCorrect)
+		if(var.correctInputForSTdevs)
 		{
 			JuhaPCA.PCA.log(" 7. Adjusting for STdevs");
-			String stdevFile = vectorFolder+ "gene_STDevs.txt";
+			String stdevFile = var.writeFolder+ "gene_STDevs.txt";
 			MatrixStruct stDevs = new MatrixStruct(stdevFile);
 			singleSample.divideBy(stDevs, false);
-			singleSample.write(writeFolder+"Centered.DivideBySTdev.txt");
+			singleSample.write(var.writeFolderCorrected+"Centered.DivideBySTdev.txt");
 		}
-		if(setLowestToAverage)//this will cause the lowest values not to contribute to correlation or covariance
+		if(var.setLowestToAverage)//this will cause the lowest values not to contribute to correlation or covariance
 			LowestToAverage.lowestToAverage(singleSample);
 		
 		MatrixStruct sampleAvgs = singleSample.getAveragesPerCol();
-		String sampleAveragesFileName = writeFolder+"rowAverages.txt";
+		String sampleAveragesFileName = var.writeFolderCorrected+"rowAverages.txt";
 		sampleAvgs.write(sampleAveragesFileName);
 		
-		//correct for GC content
-		if(correctGC != null)
+		//correct for GC content, not tested yet
+		if(var.GCgenes != null)
 		{
-			MatrixStruct gcPerGene = new MatrixStruct(correctGC);
-			singleSample = GCcontent.calculateAndCorrect(singleSample,gcPerGene, writeFolder+"gCperSampleWriteFN.txt", writeFolder + "GCcorrected.txt.gz");
+			MatrixStruct gcPerGene = new MatrixStruct(var.GCgenes);
+			singleSample = GCcontent.calculateAndCorrect(singleSample,gcPerGene, var.writeFolderCorrected+"gCperSampleWriteFN.txt", var.writeFolderCorrected + "GCcorrected.txt.gz");
 		}
 		
-		if(adjustSampleAverages)
+		if(var.centerSamples)
 		{
 			JuhaPCA.PCA.log(" 8. Adjusting for row averages (centering to target PC space)");
 			singleSample.adjustForAverageAllSamples(sampleAvgs);
 		}
 		
+		if(var.centerGenes)
+		{
 		JuhaPCA.PCA.log(" 9. Adjusting for gene averages (centering to target PC space)");
 		singleSample.adjustForAverageAllGenes(geneAverages);
-		String centeredFN = writeFolder+ "centered.txt";
+		}
 		
+		String centeredFN = var.writeFolderCorrected+ "centered.txt";
 		JuhaPCA.PCA.log(" 10. Writing PC centered file to: " + centeredFN);
 		singleSample.write(centeredFN);
 		return singleSample;

@@ -1,40 +1,24 @@
 package PCA;
 
+import java.io.File;
 import java.io.IOException;
 
 public class LogTransform 
 {
 	//log 2 Transforms the data
+	static String filename = "";
+	static String writeFolder = null;
 	
 	public static void main(String[] args) throws IOException 
 	{
-		String expressionFN = "";
-		String writeFolder = "";
 		boolean writeAll = true;
-		
-		for(int a = 0; a < args.length; a++)
-		{
-			String arg = args[a].split("=")[0];
-			String value = args[a].split("=")[1];
-			switch (arg.toLowerCase()){
-				case "filename":
-					expressionFN =value;
-					break;
-				case "writefolder":
-					writeFolder = value;
-					break;
-				case "writeall":
-					writeAll = Boolean.parseBoolean(value);
-					break;
-				default:
-					checkArgs(args);
-					System.out.println("Incorrect argument supplied; exiting");
-					System.exit(1);
-			}
-		}
-		
-		MatrixStruct expressionStruct = new MatrixStruct(expressionFN);
+		checkArgs(args);
+		if(writeFolder==null)
+			writeFolder = new File(filename).getParent();
+		MatrixStruct expressionStruct = new MatrixStruct(filename);
 		log2(writeFolder, expressionStruct, writeAll, 1);
+		String quantFN = writeFolder+ "/SAMPLE_NormalizedLog2.txt";
+		System.out.println("File written to:" + quantFN);
 	}
 
 	public static void log2(String writeFolder, MatrixStruct expressionStruct, boolean writeAll, double add) throws IOException {
@@ -47,10 +31,34 @@ public class LogTransform
 	}
 	static void checkArgs(String[] args) 
 	{
-		if(System.getProperty("user.dir").contains("C:\\Users\\Sipko\\git\\PCrotation\\Sipko"))
+		if(System.getProperty("user.dir").contains("C:\\Users\\Sipko\\git\\PCrotation\\Sipko") && args.length < 1)
 			return;
-		System.out.println("Wrong arguments");
-		System.exit(1);
+		if(args.length < 1)
+		{
+			System.out.println("Script requires the following argumetns:\n"
+					+ "1. filename=<filename.txt> - File for which the values should be logged (log2)\n"
+					+ "2. writefolder=<writefolder> - Name of path where output should be written (default=parentDirectory(<filename>)\n");
+			System.exit(1);
+		}
+		
+		for(int a = 0; a < args.length; a++)
+		{
+			String arg = args[a].split("=")[0];
+			String value = args[a].split("=")[1];
+			switch (arg.toLowerCase())
+			{
+//				var = new JSONutil<Vars>().read(var.JSON_FN, var);
+				case "filename":
+					filename =value;
+					break;
+				case "writefolder":
+					writeFolder =value;
+					break;
+				default:
+					System.out.println("Incorrect argument supplied:\n"+ args[a] +"\nexiting");
+					System.exit(1);
+			}
+		}
 	}
 		
 }

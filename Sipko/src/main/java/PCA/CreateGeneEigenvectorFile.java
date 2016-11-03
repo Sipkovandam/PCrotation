@@ -20,6 +20,8 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
 import java.util.Hashtable;
+import java.util.stream.IntStream;
+import java.util.stream.Stream;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -77,9 +79,9 @@ public class CreateGeneEigenvectorFile
 	27. Put in database 
 	*/
 	//static CreateGeneEigenvectorFileVariables Var = new CreateGeneEigenvectorFileVariables();
-	static Var var = null;
+	public static Var var = null;
 	static Document xml= null;
-	static void checkArgs(String[] args) 
+	public static void checkArgs(String[] args) 
 	{
 		if(System.getProperty("user.dir").contains("C:\\Users\\Sipko\\git\\PCrotation\\Sipko") && args.length < 1)
 			return;
@@ -96,7 +98,8 @@ public class CreateGeneEigenvectorFile
 					+ "duplicate=<number> - correlation cutoff to consider samples as duplicates (default=0.999)\n"
 					+ "skipQN=<false/true> - whether to skip the Quantile normalizatin or not (default=true)\n"
 					+ "DESeqNorm=<false/true> - whether to use DESeq normalization (default=true)\n"
-					+ "highestExpressed=<number> - Percentage of genes to keep (genes most highly expressed on average)");
+					+ "highestExpressed=<number> - Percentage of genes to keep (genes most highly expressed on average)"
+					+ "genestoinclude=<filename> - File with in the first column the genes to keep (assumes column headers)");
 			System.exit(1);
 		}
 		
@@ -127,6 +130,9 @@ public class CreateGeneEigenvectorFile
 					var.correctTotalReadCount = Double.parseDouble(value);
 					break;
 				case "deseqnorm":
+					var.rLog = Boolean.parseBoolean(value);
+					break;
+				case "rlog":
 					var.rLog = Boolean.parseBoolean(value);
 					break;
 				case "log2":
@@ -189,6 +195,9 @@ public class CreateGeneEigenvectorFile
 				case "correctgc":
 					var.GCgenes = value;
 					break;
+				case "genestoinclude":
+					var.genesToInclude = value;
+					break;
 				default:
 					System.out.println("Incorrect argument supplied:\n"+ args[a] +"\nexiting");
 					System.exit(1);
@@ -213,6 +222,11 @@ public class CreateGeneEigenvectorFile
 		//3. calculate cronbach alphas
 		pca();
 	}
+	private static void selectGenes(MatrixStruct expressionStruct, String genesToInclude) throws IOException {
+		if(genesToInclude!=null)
+			new MatrixStruct(genesToInclude).keepRows(expressionStruct); //keeps them in the original order
+	}
+	
 	private static void addToXML(String variableName, String variable) 
 	{
 		addToXML(variableName, variable, false);
@@ -233,12 +247,15 @@ public class CreateGeneEigenvectorFile
 	{		
 		JuhaPCA.PCA.log(" 1. Reading expression file");
 		MatrixStruct expressionStruct = new MatrixStruct(var.expFile);
+		//transposes matrix if genes/transcripts are not on rows
+		expressionStruct.putGenesOnRows();
+				
+		//keep only a subset of genes
+		selectGenes(expressionStruct, var.genesToInclude);
 		
 		if(var.writeAll)
 			expressionStruct.write(var.writeFolder+"startMatrix.txt.gz");
-		//transposes matrix if genes/transcripts are not on rows
-		expressionStruct.putGenesOnRows();
-		
+				
 		//removes duplicates if var.duplicateCutoff <1
 		RemoveDuplicates.removeDuplicates(expressionStruct, var.duplicateCutoff, var.writeFolder, var.writeAll);
 	
@@ -348,41 +365,12 @@ public class CreateGeneEigenvectorFile
 		expressionStruct = null; System.gc();System.gc();System.gc();
 	}
 	
-	private static void writeParameters() throws IOException, ParserConfigurationException, TransformerException {
+	public static void writeParameters() throws IOException, ParserConfigurationException, TransformerException {
 		makeFolder(var.writeFolder);
 		
 		DateFormat dateFormat = new SimpleDateFormat("dd/MM/yyyy HH:mm:ss");
 		Date date = new Date();
-		//this can be removed since it makes an .xml file now
-		BufferedWriter writer = new BufferedWriter(new FileWriter(new File(var.writeFolder+"parameters.txt")));
-		
-		writer.write("Date\t" + dateFormat.format(date) + "\n");
-		writer.write("Input file\t" + var.expFile + "\n");
-		writer.write("writeFolder\t" + var.writeFolder + "\n");
-		writer.write("chromLocationsFile\t" + var.chromLocationsFile + "\n");
-		writer.write("writeAll\t" + var.writeAll + "\n");
-		writer.write("correctTotalReadCount\t" + var.correctTotalReadCount + "\n");
-		writer.write("log2\t" + var.log2 + "\n");
-		writer.write("correctInputForSTdevs\t" + var.correctInputForSTdevs + "\n");
-		writer.write("randomValue\t" + var.randomValue + "\n");
-		writer.write("duplicateCutoff\t" + var.duplicateCutoff + "\n");
-		writer.write("TopXhighestExpressed\t" + var.highestExpressed + "\n");
-		writer.write("skipQuantileNorm\t" + var.skipQuantileNorm + "\n");
-		writer.write("STdevCutoff\t" + var.STdevCutoff + "\n");
-		writer.write("zScores\t" + var.zScores + "\n");
-		writer.write("directPCA\t" + var.directPCA + "\n");
-		writer.write("spearman\t" + var.spearman + "\n");
-		writer.write("setLowestToAverage\t" + var.setLowestToAverage + "\n");
-		writer.write("adjustSampleAverages\t" + var.centerSamples + "\n");
-		writer.write("removeGene\t" + var.removeGene + "\n");
-		writer.write("minExpression\t" + var.minExpression + "\n");
-		writer.write("minSamplesExpressed\t" + var.minSamplesExpressed + "\n");
-		writer.write("correlation\t" + var.correlation + "\n");
-		writer.write("addLogVal\t" + var.addLogVal + "\n");
-		
-		writer.close();
-		
-		//create an XML file:
+		//create an XML file: //need to fix this so I can use it for calling Tessa's/Juha's prediction program that calculates AUCs per Reactome/GO term
 		DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
 		DocumentBuilder db = dbf.newDocumentBuilder();
 		xml = db.newDocument();
@@ -391,9 +379,10 @@ public class CreateGeneEigenvectorFile
 		addToXML("date", dateFormat.format(date));
 		addToXML("xmlfile", var.xmlFN);
 		writeXML();
+		//create json File
 		var.jsonFN=var.writeFolder+"config.json";
-		if(var.jsonFN == null)
-			System.exit(1);
+//		if(var.jsonFN == null)
+//			System.exit(1);
 		var.writeVars(var.jsonFN);
 	}
 	
@@ -448,6 +437,7 @@ public class CreateGeneEigenvectorFile
 		writer.write("export DYLD_LIBRARY_PATH=\"/opt/intel/mkl/lib/\":\"/opt/intel/compilers_and_libraries_2016.1.111/mac/compiler/lib\":$DYLD_LIBRARY_PATH\n");
 		writer.write("java -jar -Xmx60g "+ var.correlationScript +" filename=" + var.tempName + " writefile=" + covMatFN + " correlation=" + var.correlation +"\n");
 		writer.write("cd " + var.writeFolder +"\n");
+		//writer.write("pcav0 evd" + covMatFN +"\n");
 		writer.write("/Volumes/Promise_RAID/juha/PCA++/pca evd " + covMatFN +"\n");
 		writer.write("mv eigenvectors.txt " + var.writeFolder + "GENE.eigenvectors.txt"+"\n");
 		writer.write("/Volumes/Promise_RAID/juha/PCA++/pca pc-scores " + type + " " + var.tempName + " GENE.eigenvectors.txt" + "\n");
@@ -492,7 +482,7 @@ public class CreateGeneEigenvectorFile
 //		//writer.write("java -jar -Xmx60g /Volumes/Promise_RAID/GeneNetwork/Sipko/CorrelationLargeGenes.jar "\n);
 //		writeExtraVarsXML(geneEigenVectorFN, date, dateFormat);
 		
-			writer.close();	
+		writer.close();	
 		String command = "sh "+ var.writeFolder + "export.sh";
 		run(command);
 		

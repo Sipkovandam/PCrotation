@@ -17,15 +17,15 @@ public class SumTranscriptsToGenes
 {
 	//Sums up all read counts originating from the same gene
 	//transcripts should be on rows, but script will transpose if needed
-	static String countFileName = "E:/Groningen/Data/LifeLines/Counts.txt";
-	static String transcriptToGeneFile = "E:/Groningen/Data/Annotation/hg19.v75.cdna.all.enst2ensg.txt";
+	static String countFN = "E:/Groningen/Data/LifeLines/Counts.txt";
+	static String transcriptToGeneFN = "E:/Groningen/Data/Annotation/hg19.v75.cdna.all.enst2ensg.txt";
 	static String writeName = null;
 	
 	public static void main(String[] args)
 	{
 		checkArgs(args);
 		
-		run(countFileName, transcriptToGeneFile);
+		run(countFN, transcriptToGeneFN);
 		
 		System.out.println("Done!");
 	}
@@ -117,7 +117,9 @@ public class SumTranscriptsToGenes
 			}
 			for(int x = 0; x < counts.rowNames.length;x++)//add the counts of the transcripts to each of the corresponding genes for this column
 			{
-				String geneID = transcriptToGeneIDs.get(counts.rowNames[x]);
+				//revome .1 .2 etc from transcript identifiers
+				String geneID = transcriptToGeneIDs.get(counts.rowNames[x].split("\\.")[0]);
+				
 				if(geneID== null)
 					continue;
 				double n = counts.values[x][y];
@@ -164,11 +166,14 @@ public class SumTranscriptsToGenes
 			switch (arg.toLowerCase())
 			{
 //				var = new JSONutil<Vars>().read(var.JSON_FN, var);
+				case "filename":
+					countFN =value;
+				break;	
 				case "countfn":
-					countFileName =value;
+					countFN =value;
 					break;
 				case "transcripttogenefn":
-					transcriptToGeneFile =value;
+					transcriptToGeneFN =value;
 					break;
 				case "writefn":
 					writeName =value;

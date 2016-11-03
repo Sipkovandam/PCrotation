@@ -6,10 +6,10 @@ public class GetCols {
 	//get some columns from a file
 	public static void main(String[] args)
 	{
-		String fileName = "E:/Groningen/Data/PublicSamples/Test13/directPCA_Voom_0.2/est_counts_nocancernocellline/PC_1-300_DevidedBySTdevs.txt";
+		String fileName = "E:/Groningen/Data/Iris/Public_T-cell/22114based_T-cell_noCancer.txt.gz";
 		//String fileName2 = "E:/Groningen/Data/PublicSamples/Test9/PublicSamplesWithoutDownSyndrome.txt";
-		String fileName2 = "SRR514129";
-		String writeName = "E:/Groningen/Data/PublicSamples/Test13/directPCA_Voom_0.2/est_counts_nocancernocellline/PC_1-300_DevidedBySTdevs_SRR514129.txt";
+		String fileName2 = "E:/Groningen/Data/Iris/Public_T-cell/T-cell_SampleNames.txt";
+		String writeName = "E:/Groningen/Data/Iris/Public_T-cell/22114based_T-cell.txt";
 		String remove = "_200";
 		
 		checkArgs(args);

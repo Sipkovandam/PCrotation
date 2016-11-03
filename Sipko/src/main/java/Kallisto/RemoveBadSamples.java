@@ -13,7 +13,7 @@ import java.io.FileWriter;
 public class RemoveBadSamples {
 	//removes samples with expression for less then 10% of the genes
 	
-	public static String expressionFN = "E:/Groningen/Data/Juha/Rlog67000Samples/31.07.expressed100Lines.txt";
+	public static String expressionFN = "E:/Groningen/Data/RNAseq_clinic/DownSamples/GRCh38/31.07.pc1.illumina.genes.expressed_DownSamples_ScaffoldGenesRemoved.txt";
 	public static String writeFolder = null;
 	public static int cutOff =0;//number of reads/transcripts that should be expressed (if 0, will become based on minPercentageExpressed)
 	public static int minPercentageExpressed= 10;
@@ -46,7 +46,7 @@ public class RemoveBadSamples {
 			}
 			writer.write(expression.getColHeaders()[c]+"\t"+expressed+"\t"+expression.rows()+"\n");
 			genesExpressed.put(expression.getColHeaders()[c], expressed);
-			if(expressed > cutOff)
+			if(expressed > cutOff && !expression.colNames[c].contains("DISCARDED"))
 				nGood++;
 			else
 				System.out.println("Sample removed:" + expression.getColHeaders()[c]);//samples that do not make the cutoff (e.g. the bad samples)
@@ -69,14 +69,14 @@ public class RemoveBadSamples {
 		nExpressed.colNames=new String[]{"expressedN","total"};
 		for(int c = 0; c < expression.cols(); c++)
 		{
-			if(genesExpressed.get(expression.getColHeaders()[c]) <= cutOff)
+			if(genesExpressed.get(expression.getColHeaders()[c]) <= cutOff || expression.colNames[c].contains("DISCARDED"))
 				continue;
 			result.setColHeader(outCol,expression.getColHeaders()[c]);
 			for(int r = 0; r < result.rows(); r++)
 			{
 				double value = expression.matrix.get(r, c);
 				result.matrix.set(r, outCol, value);
-				if(value !=0)
+				if(value >0)
 					nExpressed.values[r][0]++;
 				if(c==0)
 					nExpressed.values[r][1]=nGood;
@@ -109,6 +109,9 @@ public class RemoveBadSamples {
 			String value = args[a].split("=")[1];
 			switch (arg.toLowerCase())
 			{
+				case "countFN":
+					expressionFN =value;
+				break;
 				case "filename":
 					expressionFN =value;
 					break;

@@ -11,9 +11,12 @@ import Tools.FileUtils;
 public class BarcodeToSampleID {
 	//converts the fastq filename names in the counts file to the RNAseq id of interest
 	//conversionFN uses Gerbens files 
-	static String conversionFN = "E:/Groningen/Data/Cardiomyopathy/1512_Cardio_RNAseq.txt";
-	static String countFN = "E:/Groningen/Test/JSON/ServerTest/Kallistocounts.txt.gz";
+	//static String conversionFN = "E:/Groningen/Data/RNAseq_clinic/Cardiomyopathy/1512_Cardio_RNAseq.txt";
+	//static String countFN = "E:/Groningen/Test/JSON/ServerTest/Kallistocounts.txt.gz";
 	
+	static String conversionFN = "E:/Groningen/Data/RNAseq_clinic/RNAseq_Info.txt";
+	static String countFN = "E:/Groningen/Data/RNAseq_clinic/5GPM/GRCh38/counts_GENES.txt";
+		
 	public static void main(String[] args) throws FileNotFoundException, IOException {
 		checkArgs(args);
 		Hashtable<String, String> conversion = getConversionHash();
@@ -23,7 +26,10 @@ public class BarcodeToSampleID {
 		{//160120_SN163_0694_AC8N1LACXX_L5_ATTCCT
 			String[] eles = counts.colNames[c].split("_");
 			int len = eles.length;
-			String identifier = eles[len-2]+"_"+eles[len-1];
+			if(len<5)
+				continue;
+			String identifier = eles[len-4]+"_"+eles[len-2]+"_"+eles[len-1];
+			System.out.println("id = " + identifier);
 			if(!conversion.containsKey(identifier))
 				continue;
 			counts.colNames[c] = conversion.get(identifier);
@@ -42,11 +48,22 @@ public class BarcodeToSampleID {
 		
 		int barcode = colIndex.get("barcode");
 		int lane = colIndex.get("lane");
+		int run = colIndex.get("run");
 		int name = colIndex.get("externalSampleID");
 		while((line = reader.readLine())!=null)
 		{
 			String[] cells = line.split("\t");
-			conversion.put("L"+cells[lane]+"_"+cells[barcode], cells[name]);
+			if(cells.length < barcode)
+				continue;
+			String runID = "";
+			if(run< cells.length)
+			{
+				runID= cells[run];
+				while(runID.length() < 4)
+					runID="0"+runID;
+			}
+			System.out.println("key = " + runID+"_L"+cells[lane]+"_"+cells[barcode] + "\t" + cells[name]);
+			conversion.put(runID+"_L"+cells[lane]+"_"+cells[barcode], cells[name]);
 			//in some cases is different so just add that option as well:
 			conversion.put("_"+cells[barcode]+"_L"+cells[lane], cells[name]);
 		}

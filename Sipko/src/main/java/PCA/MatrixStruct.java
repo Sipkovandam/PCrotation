@@ -16,6 +16,7 @@ import java.util.Enumeration;
 import java.util.Hashtable;
 
 import no.uib.cipr.matrix.DenseMatrix;
+import umcg.genetica.containers.Pair;
 
 import java.lang.Math;
 import java.util.List;
@@ -361,6 +362,7 @@ public class MatrixStruct
 			if(toKeep.get(this.rowHeaders[r]) == null)
 				continue;
 			int row = toKeep.get(this.rowHeaders[r]);
+//			System.out.println(this.rowHeaders[r] + " tokeepsize = " + toKeep.size());
 			temp.setRow(row, this.rowHeaders[r], this.getRowValues(r));
 		}
 		this.setRowHeaders(temp.getRowHeaders());
@@ -524,15 +526,23 @@ public class MatrixStruct
 		}
 		this.rowHash = makeHash(this.getRowHeaders());
 	}
-	public MatrixStruct mergeColumns(MatrixStruct addition)//adds columns to a matrix
+	public MatrixStruct mergeColumns(MatrixStruct addition)
+	{
+		return mergeColumns(addition, false);
+	}
+	public MatrixStruct mergeColumns(MatrixStruct addition, boolean keepAll)//adds columns to a matrix
 	{
 		int n = 0;
-		for(int r = 0; r< this.rows(); r++)
-		{
-			if(!addition.getRowHash().containsKey(this.getRowHeaders()[r]))//if this row does not exist in the other file skip it
-				continue;
-			n++;
-		}
+		if(keepAll == true)
+			n=this.rows();
+		else
+			for(int r = 0; r< this.rows(); r++)
+			{
+				if(!addition.getRowHash().containsKey(this.getRowHeaders()[r]))//if this row does not exist in the other file skip it
+					continue;
+				n++;
+			}
+		
 		MatrixStruct result = new MatrixStruct(n, this.cols()+addition.cols());
 		int outC = 0;
 		for(int c = 0; c < this.cols(); c++)//copy original column headers
@@ -553,19 +563,21 @@ public class MatrixStruct
 		{
 			int cOut = 0;
 			double[] row = new double[this.cols()+addition.cols()];
-			if(!addition.getRowHash().containsKey(this.getRowHeaders()[r]))//if this row does not exist in the other file skip it
+			if(!keepAll && !addition.getRowHash().containsKey(this.getRowHeaders()[r]))//if this row does not exist in the other file skip it
 				continue;
 			for(int c = 0; c < this.cols(); c++)
 			{
 				row[cOut] = this.matrix.get(r, c);
 				cOut++;
 			}
-			int rowToGet = this.getRowHash().get(this.getRowHeaders()[r]); 
-			for(int c = 0; c < addition.cols(); c++)
+			if(addition.getRowHash().get(this.getRowHeaders()[r]) != null)//if it exists in the added file
 			{
-				row[cOut] = addition.matrix.get(rowToGet, c);
-				cOut++;
-				
+				int rowToGet = addition.getRowHash().get(this.getRowHeaders()[r]); 
+				for(int c = 0; c < addition.cols(); c++)
+				{
+					row[cOut] = addition.matrix.get(rowToGet, c);
+					cOut++;
+				}
 			}
 			result.setRow(rOut, this.getRowHeaders()[r], row);
 			rOut++;
@@ -827,11 +839,11 @@ public class MatrixStruct
 	}
 	public void removeLowExpression(String removedGenesFN, double minSamplesExpressed, double minExpression) throws IOException
 	{
-		//important that he probes/gene/transcripts are on the X-axis (rowNames)
+		//important that he probes/gene/transcripts are on the rowNames
 		if(minSamplesExpressed <1)
 			minSamplesExpressed = this.cols();
-		ArrayList<Integer> noVarRows = new ArrayList<Integer>();
-		for(int x = 0; x < this.rows();x++)//Identify all rows that have no variance
+		ArrayList<Integer> noVarRows = new ArrayList<Integer>();//contains rows that should be removed
+		for(int x = 0; x < this.rows();x++)//Identify all rows that have no variance or expressed in less then "minSamplesExpressed" samples
 		{
 			int[] res = hasVariance(x,minExpression);
 			int countExpressed = res[1];
@@ -852,7 +864,6 @@ public class MatrixStruct
 		}
 		
 		MatrixStruct remainder = new MatrixStruct(this.rows()-noVarRows.size(),this.cols());
-		
 		int nextRow = 0;
 		int n = 0;
 		int skip = noVarRows.get(n);n++;
@@ -1108,5 +1119,43 @@ public class MatrixStruct
 	public void setColValues(double[] values, int c) {
 		for(int r = 0; r < this.rows(); r++)
 			this.matrix.set(r,c, values[r]);
+	}
+	public Pair<Integer, Double> getRowLargest(int r) {
+		double largest = 0;
+		int index = 0;
+		for(int c = 0; c < this.cols(); c++)
+		{
+			double value = this.matrix.get(r, c);
+			if(value > largest)
+			{
+				index = c;
+				largest = value;
+			}
+		}
+		Pair<Integer,Double> pair = new Pair<Integer,Double>(index,largest);
+		return pair;
+	}
+	public Pair<Integer, Double> getRowSmallest(int r) {
+		double smallest = Double.POSITIVE_INFINITY;
+		int index = 0;
+		for(int c = 0; c < this.cols(); c++)
+		{
+			double value = this.matrix.get(r, c);
+			if(value < smallest)
+			{
+				index = c;
+				smallest = value;
+			}
+		}
+		Pair<Integer,Double> pair = new Pair<Integer,Double>(index,smallest);
+		return pair;
+	}
+	public void roundValues() 
+	{
+		for(int x = 0; x < this.rows(); x++)
+		{
+			for(int y = 0; y < this.cols(); y++)
+				this.matrix.set(x,y,(double)(int)this.matrix.get(x,y));
+		}
 	}
 }

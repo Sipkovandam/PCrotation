@@ -12,7 +12,7 @@ import PCA.MatrixStruct;
 
 public class GeneToTranscript 
 {
-
+	//Converts gene names to transcript names
 	public static void main(String[] args) throws IOException
 	{
 		String genesFN = "E:/Groningen/Data/GenePositionInfo_23X_24Y_25MT_26rest.txt";

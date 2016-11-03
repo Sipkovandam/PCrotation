@@ -78,8 +78,8 @@ public class KallistoSlurm {
 	{
 		//carefull with this. Kallisto200sh script does not update! You need to delete and reimport project of that!
 		tempFolder.create();
+		
 		String kallistoShellFN = "Kallisto200.sh";
-
 		System.out.println("exists = " + new File(kallistoShellFN).exists());
 		String command = "bash " + kallistoShellFN + " " + scriptsFolderName +"*.sh "+kallistoOutputRoot+" "+ slurmUserName + " "+ mappingPercentagesFN +" " + finishedemailaddress;
 		System.out.println("Shellcommand = " + command);

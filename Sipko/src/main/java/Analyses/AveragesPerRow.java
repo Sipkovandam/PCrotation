@@ -10,11 +10,15 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.zip.GZIPInputStream;
 
+import Tools.FileUtils;
+
 public class AveragesPerRow {
-	static String fileName = "/Volumes/Promise_RAID/GeneNetwork/Sipko/04-2016/22000Samples_rLog_1.0_Correl/gene_correlation.txt";
+	// calculates the averages and standard deviations per row, excluding NaN and INFINITE numbers.
+	
+	static String fileName = "E:/Groningen/Data/PublicSamples/100SamplesTest/Rsample/TESTexpression.txt";
 	//static String writeFN = "/Volumes/Promise_RAID/GeneNetwork/Sipko/04-2016/22000Samples_rLog_1.0_Correl/gene_correlation_absoluteAverages.txt";
 	static String writeFN = null;
-	static boolean absolute = true;
+	static boolean absolute = false;
 
 	public static void main(String[] args) throws IOException
 	{
@@ -25,24 +29,31 @@ public class AveragesPerRow {
 		if(writeFN == null)
 			writeFN = fileName.replace(".txt", "").replace(".gz", "")+"_rowAverages.txt";
 		
-		GZIPInputStream inputStream = null;
-		BufferedReader reader = null;
-		if(fileName.endsWith(".gz"))
-		{
-			inputStream = new GZIPInputStream(new FileInputStream(fileName));
-			reader = new BufferedReader(new InputStreamReader(inputStream, "US_ASCII"));
-		}
-		else
-			reader = new BufferedReader(new FileReader(new File(fileName)));
-		BufferedWriter writer = new BufferedWriter(new FileWriter(new File(writeFN)));
+		BufferedReader reader = FileUtils.createReader(fileName);
+		BufferedWriter writerAverages = new BufferedWriter(new FileWriter(new File(writeFN)));
+		BufferedWriter writerSTdevs = new BufferedWriter(new FileWriter(new File(writeFN.replace("_rowAverages.txt", "row_STDevs.txt"))));
+		
 		String line = reader.readLine();//skip header col
-		writer.write("RowName\tAverage\n");
-
+		writerAverages.write("RowName\tAverage\n");
+		writerSTdevs.write("RowName\tStandard deviation\n");
+		
 		while((line = reader.readLine()) !=null)
 		{
 			String[] eles = line.split("\t");
 			double total = 0;
 			double totalEles = (eles.length-1);
+
+			int nValid = 0;
+			for(int e = 1; e < eles.length; e++)// this makes this script a lot slower having to parse the same number 2X, but w/e
+			{
+				double number = Double.parseDouble(eles[e]);
+				if(!Double.isNaN(number) && !Double.isInfinite(number))
+					nValid++;
+			}
+			
+			double[] rowValues = new double[nValid];//used to calculate stdevs
+			int index = 0;
+			
 			for(int e = 1; e < eles.length; e++)
 			{
 				double number = Double.parseDouble(eles[e]);
@@ -56,12 +67,21 @@ public class AveragesPerRow {
 					total+=Math.abs(number);
 				else
 					total+=number;
+				
+				rowValues[index] = number;
+				index++;
 			}
 			double average = total/totalEles;
-			writer.write(eles[0]+"\t" + average+"\n");
+			double variance = org.apache.commons.math3.stat.StatUtils.variance(rowValues);
+			double standardDev = java.lang.Math.pow(variance,0.5);
+			writerAverages.write(eles[0]+"\t" + average+"\n");
+			writerSTdevs.write(eles[0]+"\t" + standardDev +"\n");
 		}
-		writer.close();
+		writerAverages.close();
+		writerSTdevs.close();
 		reader.close();
+		
+		
 		System.out.println("Done! File written to: " + writeFN);
 	}
 	static void checkArgs(String[] args) 

@@ -36,6 +36,7 @@ public class Matrix
 	public double[][] values;
 	public boolean verbose = false;
 	private Hashtable<String,Integer> rowHash = null;
+	private Hashtable<String,Integer> colHash = null;
 	protected static final String ENCODING = "ISO-8859-1";
 	public static final int DEFAULT_BUFFER_SIZE = 4096;
 	public class GetVal
@@ -778,21 +779,7 @@ public class Matrix
 
 	public Matrix averagesPerRow(Matrix sortedCols) 
 	{
-		Matrix qNormVector = new Matrix(sortedCols.rowNames.length, 1);
-		for(int x = 0; x < sortedCols.rowNames.length; x++)
-		{
-			double average = 0;
-			for(int y = 0; y < sortedCols.colNames.length; y++)
-			{
-				average += sortedCols.values[x][y];
-			}
-			average /= sortedCols.colNames.length;
-			
-			qNormVector.values[x][0] = average;
-		}
-		qNormVector.rowNames = sortedCols.rowNames;
-		qNormVector.colNames = new String[]{"Averages"};
-		return qNormVector;
+		return this.calcAvgRows();
 	}
 
 	public void quantileNormAdjust(Matrix qNormVector)//this comes after calculating the determining the means for each rank
@@ -1150,6 +1137,12 @@ public class Matrix
 			this.rowHash = makeHash(this.rowNames);
 		return this.rowHash;
 	}
+	public Hashtable<String,Integer> getColHash()
+	{
+		if(this.colHash == null || this.colHash.size() != this.getColHeaders().length)
+			this.colHash = makeHash(this.colNames);
+		return this.colHash;
+	}
 	private Hashtable<String, Integer> makeHash(String[] names) {
 		Hashtable<String,Integer> hash = new Hashtable<String,Integer>();
 		for(int n = 0; n < names.length; n++)
@@ -1210,5 +1203,14 @@ public class Matrix
 	}
 	public void setColHeader(int outCol, String string) {
 		this.colNames[outCol] = string;
+	}
+	
+	public void roundValues() 
+	{
+		for(int x = 0; x < this.rows(); x++)
+		{
+			for(int y = 0; y < this.cols(); y++)
+				this.matrix.set(x,y,(double)(int)this.matrix.get(x,y));
+		}
 	}
 }

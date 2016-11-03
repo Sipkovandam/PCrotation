@@ -9,16 +9,18 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.Hashtable;
 
+import Tools.FileUtils;
+
 public class GetRows 
 {
 	//gets the rows defined in the getGenesFN
 
 	public static void main(String args[]) throws IOException
 	{
-		String fileName = "E:/Groningen/Data/PublicSamples/05-2016/Flexo/22214Samples_RLOG_Correlation_Top1.0_AvgToZero/SAMPLE_Norm_columnAverages.txt";
-		String getGenesFN = "E:/Groningen/Data/PublicSamples/05-2016/Flexo/22214Samples_RLOG_Correlation_Top1.0_AvgToZero/gene_correlation_Absolute_averages.txt";
+		String fileName = "E:/Groningen/Data/Juha/Genes31995/Healthy/PCA/31.07.pc1.illumina.genes.expressed_DownSamples/PC_1-229_DevidedBySTdevs.txt";
+		String getGenesFN = "E:/Groningen/Data/Juha/Genes31995/Old/31.07.pc1.illumina.genes.expressed.DEseqnorm_notRounded/18DownSyndrome26Normal2Cancer_counts_transposed/PC_1-300_DevidedBySTdevsTop12000Expressed.txt";
 		//String fileName2 = "ENSG00000268903,ENSG00000269981,ENSG00000225630";
-		String writeName = "E:/Groningen/Data/PublicSamples/05-2016/Flexo/22214Samples_RLOG_Correlation_Top1.0_AvgToZero/SAMPLE_Norm_columnAverages_ALIGNED.txt";
+		String writeName = "E:/Groningen/Data/Juha/Genes31995/Healthy/PCA/31.07.pc1.illumina.genes.expressed_DownSamples/PC_1-229_DevidedBySTdevs_12000highest.txt";
 		String replace = null;
 		
 		checkArgs(args);
@@ -65,8 +67,8 @@ public class GetRows
 			file2.colNames[0] = "-";
 		}
 		
-		BufferedReader reader = new BufferedReader(new FileReader(new File(fileName)));
-		BufferedWriter writer = new BufferedWriter(new FileWriter(new File(writeName)));
+		BufferedReader reader = FileUtils.createReader(fileName);
+		BufferedWriter writer = FileUtils.createWriter(writeName);
 		String line = reader.readLine();
 		writer.write(line+"\n");//write the first line by default (headers)
 		Hashtable<String, Integer> toGet = file2.namesToHash(file2.rowNames);
@@ -103,12 +105,11 @@ public class GetRows
 			System.out.println("Arguments supplied =" + args.length);
 			System.out.println("This script retrieves rows for which rowNames are present in 1 file "
 					+ "from another matrix file (automagically keeps header row).\n"
-					+ "It uses the following 2 arguments:\n"
+					+ "It uses the following 3 arguments:\n"
 					+ "1. fileName=<fileName> -  File to retrieve rows from\n"
 					+ "2.1 rowstoget=<fileName> -  File with the rows to keep in the first column(header row is ignored)\n"
 					+ "2.2 rowstoget=<gene1,gene2,gene3> - Alternatively you can use a comma separated list of rowNames you wish to retrive (SRR001,SR002,...)\n"
-					+ "3. writeName=<fileName> - Name of the file to write to \n"
-					+ "Make sure each file has at least 2 columns and rows (just at a bunch of 0's in the 2nd column if you must) \n");
+					+ "3. writeName=<fileName> - Name of the file to write to \n");
 			System.exit(1);
 		}
 	}

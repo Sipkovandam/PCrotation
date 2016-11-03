@@ -1,5 +1,6 @@
 package PCA;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -58,9 +59,15 @@ public class SortChromosome
 	}
 	public static MatrixStruct sort(MatrixStruct samples, String chromLocationsFile)
 	{
-		
-		if(chromLocationsFile == null)
+		if(chromLocationsFile==null)
 			return samples;
+		
+		File chromfile = new File(chromLocationsFile);
+		if(!chromfile.exists())
+		{
+			System.out.println("Genes are not sorted based on their chromosome locations because this file does not exist: \n" + chromfile.getAbsolutePath());
+			return samples;
+		}
 	
 		JuhaPCA.PCA.log("Sorting IDs based on chromosome locations");
 		MatrixStruct chromLocs = new MatrixStruct(chromLocationsFile);

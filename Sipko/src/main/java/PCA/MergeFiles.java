@@ -11,11 +11,12 @@ public class MergeFiles
 //		String inputFN = "E:/Groningen/Data/PublicSamples/100SamplesTest/Rsample/TESTexpression_Splits1_transposed.txt";
 //		String additonFN = "E:/Groningen/Data/PublicSamples/100SamplesTest/Rsample/TESTexpression_Splits2_transposed.txt";
 		
-		String inputFN = "E:/Groningen/Data/bbmri/CountsGENES_0.7.txt";
-		String additonFN = "E:/Groningen/Data/LifeLines/Phenotypes/CountsGENES_0.7.txt";
+		String inputFN = "E:/Sipko/Thesis resubmission/FDR analysis/TopXpvalues_genes.out";
+		String additonFN = "E:/Sipko/Thesis resubmission/Reactome Files/EnsemblGeneToType.txt";
 		
 		boolean transposeInput = false;
 		boolean transposeOutput = false;
+		boolean keepAll = true;
 				
 		if(args.length!=0) 
 		{
@@ -35,8 +36,11 @@ public class MergeFiles
 		MatrixStruct addition = new MatrixStruct(additonFN);
 		if(transposeOutput)
 			addition.transpose();
-		addition.keepRows(input);
-		MatrixStruct result = input.mergeColumns(addition);
+		if(keepAll)
+			addition.keepRows1Matrix(input);
+		else
+			addition.keepRows(input);
+		MatrixStruct result = input.mergeColumns(addition,keepAll);
 		
 		if(transposeInput)
 			result.transpose();

@@ -7,7 +7,7 @@ public class Transpose
 	public static void main (String[] args)
 	{
 		//String fileName = "E:/Groningen/Data/PublicSamples/05-2016/22214Samples_Voom_Correl/SAMPLE_NormalizedLog2_10Rows.txt";//
-		String fileName = "E:/Groningen/Test/PCA_createTestMatrix/18DownSyndrome26Normal2Cancer_counts.txt";
+		String fileName = "E:/Groningen/Data/Juha/Genes31995/SingleSample_DRR001632/DRR001632_juha_transcripts.txt";
 		if(args.length < 1)
 			checkArgs(args);
 		if(!System.getProperty("user.dir").contains("C:\\Users\\Sipko\\git\\PCrotation\\Sipko"))

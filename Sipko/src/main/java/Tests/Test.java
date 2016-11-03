@@ -6,6 +6,8 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.util.Arrays;
+import java.util.stream.IntStream;
 
 import org.junit.rules.TemporaryFolder;
 
@@ -19,28 +21,20 @@ public class Test {
 	
 	public static void main(String[] args) throws IOException
 	{	
+		double testval= 1.7;
+		
+		double[] testVals = new double[]{1,2,3,4,5};
+		IntStream.range(0, testVals.length).forEach(x -> System.out.println(testVals[x]));
+
+
 //		String geoFN= "E:/Groningen/Scripts/Tests/Rlog.java/DESeqNorm/Samples.DESeqNorm.txt.gz";
 //		CompareFiles.compare(geoFN,"TestCaseFiles/Result_Samples.txt",true);
 //		
-		String fileName = "TestCaseFiles/Samples.txt";
-		String folderName = new File(fileName).getParent()+"/DESeqNorm/";
-//		
-//		TemporaryFolder folder = new TemporaryFolder();
-//		System.out.println(folderName);
-//		File tempFolder = folder.newFolder("test");
-		
-		TemporaryFolder testFolder = new TemporaryFolder();
-		 File tempFile = testFolder.newFile("file.txt");
-	        File tempFolder = testFolder.newFolder("folder");
-	        System.out.println("Test folder: " + testFolder.getRoot());
-	        // test...
-		
-		//		folder.newFolder(folderName);
-//		File f = new File(folderName);
-//		System.out.println(f.exists());
-//		BufferedWriter writer = new BufferedWriter(new FileWriter(new File(folderName+"test.txt")));
-//		writer.write("test");
-//		writer.close();
-	}
 
+	}
+	public void print()
+	{
+		
+		
+	}
 }

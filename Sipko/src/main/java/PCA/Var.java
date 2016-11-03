@@ -29,42 +29,43 @@ import com.google.gson.GsonBuilder;
 public class Var 
 {
 	//A class that holds all the variables for PCcorrection and CreateGeneEigenvectorFile
-	public  String jsonFN = "config.json";
+	public  String jsonFN = "E:/Groningen/Data/Juha/Genes31995/Healthy/PCA/config.json";
 	public  String expFile = "/Volumes/Promise_RAID/GeneNetwork/Sipko/TestExpression2/TESTexpression.txt";//expression file
 	public  String chromLocationsFile = "/Volumes/Promise_RAID/GeneNetwork/Sipko/GenePositionInfo_23X_24Y_25MT.txt";//File that contains the chromosome locations
-	public  String writeFolder = "/Volumes/Promise_RAID/GeneNetwork/Sipko/TestExpression2/";//Folder where to write
+	public  String writeFolder = "E:/Groningen/Data/Juha/Genes31995/31.07.pc1.illumina.genes.expressed.DEseqnorm/PCcorrection/";//Folder where to write
 	public  String xmlFN= "config.xml";//don't touch this
-	public  String GCgenes = null;//DIT NOT TEST THIS PROPERLY YET! If a file is supplied with the GC content per gene it will correct for this 
+	public  String GCgenes = null;//Not tested, don't use. If a file is supplied with the GC content per gene it will correct for this 
 	public  String removeGene = null;//if there is a particular gene you want to remove from the matrix for any reason
+	public  String genesToInclude = null;//List of genes. This list is selected prior to any other steps. Other genes are discarded
 	
-	public  boolean correlation = true; //if false uses covariance
+	public  boolean correlation = false; //if false uses covariance
 	public  boolean setLowestToAverage = false;// sets all the lowest values in a sample to the average, effectively this means any gene that has an expression of does not contribute to the covariance or correlation
-	public  boolean centerSamples = false;// addjusts the expression of genes so that the average expression of a sample become 0 (centering over the samples)
-	public  boolean centerGenes = true;// addjusts the expression of genes so that the average expression of a sample become 0 (centering over the samples)
+	public  boolean centerSamples = false;// adjusts the expression of genes so that the average expression of a sample become 0 (centering over the samples)
+	public  boolean centerGenes = true;// adjusts the expression of genes so that the average expression of a sample become 0 (centering over the samples)
 	public  boolean writeAll = true; //write all intermediate files, is slower but helps finding understanding what happens in each step
 	public  boolean correctInputForSTdevs = false;//corrects the input for the standard deviation, can be done over genes or samples (look at the function itself it has a true/false argument)
 	public  boolean correctInputForSTdevsAfterCenter = false;//same as previous, but this time after centering the data
 	public  boolean log2 = true;
 	public  boolean skipQuantileNorm = true;	
-	public  boolean STdevCutoff = false;//calculates teh standard deviation of all genes and throws out the <highestExpressed> percent genes with the lowest standard deviation (instead of using average expression for cutoff)
+	public  boolean STdevCutoff = false;//calculates the standard deviation of all genes and throws out the <highestExpressed> percent genes with the lowest standard deviation (instead of using average expression for cutoff)
 	public  boolean zScores = false;
 	public  boolean directPCA = true;//PCA over genes rather than samples.
 	public  boolean rLog = true;//If true uses DEseq normalization
 	
-	public  int minSamplesExpressed = -1;// if left -1, this will become all samples
-	public  int minExpression = -1; //if left -1 does nothing
-//	public  int ignoreLowestValues = -1;//Sets lowest values to the average so it does not contribute toward possitive correlation.
+	public  int minSamplesExpressed = -1;// if -1, this will include all samples. Otherwise will exclude any gene that is expressed in less then this number of samples (and those that have no variance)
+										 // any gene that has an expression lower then "minExpression" is considered as "not expressed"
+	public  int minExpression = -1; //if -1 does nothing. Otherwise sets the cutoff for minSamplesExpressed; see "minSamplesExpressed"
+//	public  int ignoreLowestValues = -1;//Sets lowest values to the average so it does not contribute toward positive correlation.
 	
 	public  double addLogVal = 0.5; //Value to add before taking the logarithm
 	public  double correctTotalReadCount = 0;//log((gene+0.5)/total*value)
 
-	public  double randomValue = 0;//adds a random value that is below this value, to values below this value.
-	public  double duplicateCutoff = 1; //Samples with a correlation above this value are removed (only samples next to each other are removed, as this is usually the case for replicates, which we aim to remove like this, but not others)
+	public  double randomValue = 0;//if 0 does nothing. Otherwise adds a random value that is below this value, to values below this value.
+	public  double duplicateCutoff = 1; //if 1 does nothing. Samples with a correlation above this value are removed (only samples next to each other are removed, as this is usually the case for replicates, which we aim to remove like this, but not others)
 	public  double highestExpressed = 1;//1 = all genes, 0.5 = 50% highest expressed genes only (removes 50% lowest expressed genes after quantile normalization (then re-normalizes)).
 	public  double spearman = -1;//if 0, does spearman, if >0, it sets all values below this value to 0.
 	
-	
-	public  String correlationScript = "/Volumes/Promise_RAID/GeneNetwork/Sipko/CorrelationLargeGenes.jar";
+	public  String correlationScript = "/Volumes/Promise_RAID/GeneNetwork/Sipko/CorrelationLargeGenes.jar"; //script used to calculate correlation.
 	
 	//Prediction script
 	public  String geneNameFile = "/Volumes/Promise_RAID/GeneNetwork/ENSGToGeneNameHGNCBiotypeChromosomeStartStopStrandAndDescriptionV75.txt.filtered.txt";
@@ -75,7 +76,7 @@ public class Var
 	public  String limitToItemsInGenesetFile = "false";//Data/OldSchoolExpression/GeneAnnotation/Genes.txt
 	public  String maxItems = "10000";//Maximum number of items allowed in Tessa script
 	public  String minItems = "10";//Not really sure how this is different from absMinItems
-	public  String absMinItems = "5";//absoulte minimun number of items in geneterm
+	public  String absMinItems = "5";//absolute minimum number of items in geneterm
 	public  String useTtest = "true";//if false Wilcoxon will be used
 	public  String runRealAnalysis = "true";
 	public  String nrPermutations = "0";
@@ -98,13 +99,13 @@ public class Var
 	public  String chr21FN = "";
 	public 	String PCs = "";
 	public  String writeFolderCorrected = "";
+	public  String avgStdevFolder = null;
 	public  double zScoresCutoff = Double.parseDouble("0");
 	public  boolean correctResultsForSTdevs = true;
-	public  boolean reUseEigen2 = false;	//reuses the partial eigenVectorFile created, which is created after running it the first time
-										//this partial eigenvectorFile only contains 1000 eigenvectors and has them on the rows making it much quicker to load
-
+	
 	public int optimalPCremoval = -1;
 	public String tempName;
+	
 	
 	public void writeVars()
 	{
