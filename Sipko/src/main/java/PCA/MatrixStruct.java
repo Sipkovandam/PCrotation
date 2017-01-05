@@ -97,13 +97,6 @@ public class MatrixStruct
 		readFile(fileName, -1, -1);
 	}
 	private void readFile(String fileName, int nRows, int nCols) {
-		if(!new File(fileName).exists())
-		{
-			PCA.log("File does not exist: " + fileName);
-			PCA.log("Exiting");
-			System.exit(1);
-		}
-		
 		Path path = Paths.get(fileName);
 		try 
 		{	
@@ -113,7 +106,14 @@ public class MatrixStruct
 			nCols = this.getColHeaders().length;
 			matrix = new DenseMatrix(nRows, nCols);
 			FileUtil.readMatrix(path, matrix, false,nRows,nCols);
-		} catch (IOException e) {e.printStackTrace();}
+		} catch (IOException e) {
+			if(!new File(fileName).exists())
+			{
+				PCA.log("File does not exist: " + fileName);
+				PCA.log("Exiting");
+				e.printStackTrace();
+			}
+		}
 	}
 	public static Hashtable<String, Integer> makeHash(String[] headers) 
 	{

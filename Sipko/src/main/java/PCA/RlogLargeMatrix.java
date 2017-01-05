@@ -1,52 +1,121 @@
 package PCA;
 
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
+import java.text.SimpleDateFormat;
 import java.util.Arrays;
+import java.util.Date;
 
-public class RlogLargeMatrix 
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+
+import Tools.JSONutil;
+import Tools.Script;
+
+public class RlogLargeMatrix extends Script<RlogLargeMatrix>
 {
 	//This is doing the DESeq normalization, which does not use replicate information.
 	//Also works for matrixes of larger then MAXint sizes
 	
 	//static String expressionFN = "E:/Groningen/Data/Annique/LLD_and_BIOS_Kallisto_EstimatedTranscriptCounts.ProbesWithZeroVarianceRemoved_removedBadSamples.txt.gz";
-	static String expressionFN = "E:/Groningen/Scripts/Tests/Rlog.java/Samples.txt";//"E:/Groningen/Data/RNAseq_clinic/5GPM/GRCh38/counts_GENES_ScaffoldGenesRemovedcounts_DiscardedRemoved.txt.gz";//"/groups/umcg-wijmenga/tmp04/umcg-jkarjalainen/31.txt";
-	static String writeFolder = null;//if null becomes new File(expressionFN).getParent()+"/";
-	static String geoFN = "E:/Groningen/Scripts/Tests/Rlog.java/DESeqNorm2/geoMean.txt";//"E:/Groningen/Data/Juha/Genes31995/DuplicatesRemoved/geoMean.txt";//if null calculates geometric means based on this dataset
-	static boolean writeAll = true;	//write all intemediary files too
-	static double logAdd = 0.5;//previously used to multiply the results by this number, but seems pointless since it does not have any effect, so does not do anything anymore
-	static boolean roundValues = true;//rounds expression values to whole counts
+	String expressionFN = null;//"E:/Groningen/Data/RNAseq_clinic/5GPM/GRCh38/counts_GENES_ScaffoldGenesRemovedcounts_DiscardedRemoved.txt.gz";//"/groups/umcg-wijmenga/tmp04/umcg-jkarjalainen/31.txt";
+	String writeFolder = null;//if null becomes new File(expressionFN).getParent()+"/";
+	String geoFN = null;//"E:/Groningen/Scripts/Tests/Rlog.java/DESeqNorm2/geoMean.txt";//"E:/Groningen/Data/Juha/Genes31995/DuplicatesRemoved/geoMean.txt";//if null calculates geometric means based on this dataset
+	boolean writeAll = true;	//write all intemediary files too
+	double logAdd = 0.5;//previously used to multiply the results by this number, but seems pointless since it does not have any effect, so does not do anything anymore
+	boolean roundValues = true;//rounds expression values to whole counts
 	
-	public static void main(String[] args) throws IOException 
+	public RlogLargeMatrix()
+	{
+		
+	}
+	
+	RlogLargeMatrix(String[] args)
 	{
 		checkArgs(args);
+		try {
+			run();
+		} catch (IOException e) {e.printStackTrace();}
+	}
+	
+	public void run() throws IOException 
+	{		
+		p("Input filename =" + expressionFN);
 		if(writeFolder == null)
 			writeFolder = new File(expressionFN).getParent()+"/DESeqNorm/";
+		
 		if(!new File(writeFolder).exists())
-		{
 			new File(writeFolder).mkdir();
-		}
 		
 		Matrix expression = new Matrix(expressionFN);
 		if(roundValues)
 			expression.roundValues();
-		double start = System.nanoTime();
 		rLog(writeFolder, expression, writeAll, geoFN);
+		p(" 7. Log transforming");
 		expression.logTransform(2,logAdd);//adds +0.5 before log
-		double end = System.nanoTime();
-		System.out.println((end-start)/1000/1000 + " ms");
 		expression.write(writeFolder + new File(expressionFN).getName().replace(".txt", "").replace(".gz","")+".DESeqNorm.Log2.txt.gz");
+		end();
 	}
-
-	public static void rLog(String writeFolder, Matrix expression, boolean writeAll, String geoFN) throws IOException 
+	
+	private void writeVars()
+	{
+		//JSONutil<RlogLargeMatrix> writer = new JSONutil<RlogLargeMatrix>();
+		//writer.
+		write(jsonFN, this);
+	}
+	public String getWritePath(String name)
+	{
+		if(!name.contains("\\") && !name.contains("/"))
+			return getFolderName(this.writeFolder)+name;
+		return name;
+	}
+	public String getFolderName(String fn) 
+	{
+		if(!fn.endsWith("/") && !fn.endsWith("\\"))
+			fn = fn+"/";
+		return fn;
+	}
+	public Var readVars(String jsonFN)
+	{
+		String jsonString = "";
+		
+		try
+		{
+			File file = new File(jsonFN);
+			BufferedReader reader = new BufferedReader(new FileReader(file));
+			String line = null;
+			while((line=reader.readLine())!=null)
+			{
+				jsonString+=line;
+			}
+			reader.close();
+		}catch(Exception e)
+		{
+			File file = new File(jsonFN);
+			if(!file.exists())
+				p("Json file does not exist:" + jsonFN);
+			e.printStackTrace();
+		}
+		
+		Gson gson = new GsonBuilder().setPrettyPrinting().create();
+		Var var = gson.fromJson(jsonString, Var.class);
+		p(gson.toJson(var));
+		return var;
+	}
+	
+	public void rLog(String writeFolder, Matrix expression, boolean writeAll, String geoFN) throws IOException 
 	{
 		MatrixStruct geoMean = null;
 		if(geoFN!= null)
-			new MatrixStruct(geoFN);
+			geoMean = new MatrixStruct(geoFN);
 		expression.putGenesOnRows();
 		String swapFN = writeFolder + "swapFile.txt";
 		expression.write(swapFN);
-		JuhaPCA.PCA.log(" 6. Rlog without log");
+		p(" 6. Rlog without log");
 		String correctedNotLogged =  writeFolder + new File(expressionFN).getName().replace(".txt", "").replace(".gz","") + ".DESeqNorm.txt.gz";
 		rLog(expression, writeFolder, swapFN, geoMean, null);
 		
@@ -54,11 +123,11 @@ public class RlogLargeMatrix
 			expression.write(correctedNotLogged);
 	}
 	
-	public static void rLog(Matrix expression, String writeFolder, String fileName, String writeGeoFN) throws IOException 
+	public void rLog(Matrix expression, String writeFolder, String fileName, String writeGeoFN) throws IOException 
 	{
 		rLog(expression, writeFolder, fileName, null, writeGeoFN);
 	}
-	public static void rLog(Matrix expression, String writeFolder, String fileName, MatrixStruct geoMean, String writeGeoFN) throws IOException 
+	public void rLog(Matrix expression, String writeFolder, String fileName, MatrixStruct geoMean, String writeGeoFN) throws IOException 
 	{
 		if(geoMean == null)
 		{
@@ -102,7 +171,7 @@ public class RlogLargeMatrix
 		}
 	}
 	
-	private static MatrixStruct getGeoMeans(Matrix expression ,String writeFolder, String writeGeoFN) throws IOException {
+	private MatrixStruct getGeoMeans(Matrix expression ,String writeFolder, String writeGeoFN) throws IOException {
 		expression.logTransform(10,0);
 		MatrixStruct geoMean = new MatrixStruct(expression.rows(),1);
 		geoMean.setRowHeaders(expression.getRowHeaders());
@@ -118,27 +187,25 @@ public class RlogLargeMatrix
 			}
 		}
 		
-		if(writeFolder != null)
-		{
-			geoMean.keepRows(keepGenes);
-			if(writeGeoFN == null)
-				writeGeoFN = writeFolder+ "geoMean.txt";
-			System.out.println("geofilename=" + writeGeoFN);
-			geoMean.write(writeGeoFN);
-		}
+		geoMean.keepRows(keepGenes);
+		if(writeGeoFN == null)
+			writeGeoFN = writeFolder+ "geoMean.txt";
+		p("geofilename=" + writeGeoFN);
+		this.geoFN=writeGeoFN;
+		geoMean.write(writeGeoFN);
+		
 		return geoMean;
 	}
 	
-	static void checkArgs(String[] args) 
+	RlogLargeMatrix checkArgs(String[] args) 
 	{
-		if(System.getProperty("user.dir").contains("C:\\Users\\Sipko\\git\\PCrotation\\Sipko") && args.length < 1)
-			return;
 		if(args.length < 1)
 		{
-			System.out.println("Script requires the following argumetns:\n"
+			p("Script requires the following arguments:\n"
 					+ "1. filename=<expressionFN.txt> - Expression file with genes on rows samples on columns\n"
 					+ "2. writeFolder=<writeFolderFN.txt> - Folder where the files will be written (default=parentFolder(input.txt))\n"
 					+ "3. geoFN=<geoFn.txt> - Optional file with geometric mean per gene to use (default=null)\n");
+			writeVars();
 			System.exit(1);
 		}
 		
@@ -148,6 +215,9 @@ public class RlogLargeMatrix
 			String value = args[a].split("=")[1];
 			switch (arg.toLowerCase())
 			{
+				case "json":
+					;
+				break;
 				case "filename":
 					expressionFN =value;
 					break;
@@ -167,9 +237,11 @@ public class RlogLargeMatrix
 					roundValues = Boolean.parseBoolean(value);
 				break;
 				default:
-					System.out.println("Incorrect argument supplied:\n"+ args[a] +"\nexiting");
+					p("Incorrect argument supplied:\n"+ args[a] +"\nexiting");
 					System.exit(1);
 			}
 		}
+		writeVars();
+		return this;
 	}
 }

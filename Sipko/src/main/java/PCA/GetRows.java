@@ -17,10 +17,10 @@ public class GetRows
 
 	public static void main(String args[]) throws IOException
 	{
-		String fileName = "E:/Groningen/Data/Juha/Genes31995/Healthy/PCA/31.07.pc1.illumina.genes.expressed_DownSamples/PC_1-229_DevidedBySTdevs.txt";
+		String fileName = "E:/Groningen/Data/Juha/Genes31995/Healthy/PCA/31.07.pc1.illumina.genes.expressed_DownSamples/PC_1-0__zScores.txt";
 		String getGenesFN = "E:/Groningen/Data/Juha/Genes31995/Old/31.07.pc1.illumina.genes.expressed.DEseqnorm_notRounded/18DownSyndrome26Normal2Cancer_counts_transposed/PC_1-300_DevidedBySTdevsTop12000Expressed.txt";
 		//String fileName2 = "ENSG00000268903,ENSG00000269981,ENSG00000225630";
-		String writeName = "E:/Groningen/Data/Juha/Genes31995/Healthy/PCA/31.07.pc1.illumina.genes.expressed_DownSamples/PC_1-229_DevidedBySTdevs_12000highest.txt";
+		String writeName = "E:/Groningen/Data/Juha/Genes31995/Healthy/PCA/31.07.pc1.illumina.genes.expressed_DownSamples/PC_1-0_zScores_12000highest.txt";
 		String replace = null;
 		
 		checkArgs(args);

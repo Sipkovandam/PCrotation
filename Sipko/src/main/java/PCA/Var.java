@@ -31,7 +31,7 @@ public class Var
 	//A class that holds all the variables for PCcorrection and CreateGeneEigenvectorFile
 	public  String jsonFN = "E:/Groningen/Data/Juha/Genes31995/Healthy/PCA/config.json";
 	public  String expFile = "/Volumes/Promise_RAID/GeneNetwork/Sipko/TestExpression2/TESTexpression.txt";//expression file
-	public  String chromLocationsFile = "/Volumes/Promise_RAID/GeneNetwork/Sipko/GenePositionInfo_23X_24Y_25MT.txt";//File that contains the chromosome locations
+	public  String chromLocationsFile = null;//File that contains the chromosome locations
 	public  String writeFolder = "E:/Groningen/Data/Juha/Genes31995/31.07.pc1.illumina.genes.expressed.DEseqnorm/PCcorrection/";//Folder where to write
 	public  String xmlFN= "config.xml";//don't touch this
 	public  String GCgenes = null;//Not tested, don't use. If a file is supplied with the GC content per gene it will correct for this 
@@ -99,7 +99,8 @@ public class Var
 	public  String chr21FN = "";
 	public 	String PCs = "";
 	public  String writeFolderCorrected = "";
-	public  String avgStdevFolder = null;
+	public  String avgStdevFolder = null;//this is the folder with the files for the z-score calculations containing the averages and standard deviations to be used for this.
+										 //allows z-scores to be calculated using the BBMRI averages and stdevs
 	public  double zScoresCutoff = Double.parseDouble("0");
 	public  boolean correctResultsForSTdevs = true;
 	

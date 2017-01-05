@@ -9,6 +9,7 @@ import org.junit.rules.TemporaryFolder;
 import PCA.MatrixStruct;
 import PCA.RLog;
 import PCA.RlogLargeMatrix;
+import PCA.RlogLargeMatrix_Main;
 
 public class RlogLargeMatrix_testcase {
 
@@ -24,7 +25,7 @@ public class RlogLargeMatrix_testcase {
 		String writeFolder = folder.getRoot().getAbsolutePath()+"/";
 		String[] args = new String[]{"filename="+fileName,"writeFolder="+writeFolder};
 		System.out.println("Test folder: " + writeFolder);
-		RlogLargeMatrix.main(args);
+		RlogLargeMatrix_Main.main(args);
 		
 		String rlogFN= writeFolder+"Samples.DESeqNorm.txt.gz";
 		String geoFN= writeFolder+"/geoMean.txt";

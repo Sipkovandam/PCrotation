@@ -75,7 +75,7 @@ public class FastQtoExpression
 	}
 
 	private static void kallistoSlurm(String fastQFiles) throws Exception {
-		KallistoSlurm.main(new String[]{"fastQFiles="+fastQFiles,
+		new Slurm().run(new String[]{"fastQFiles="+fastQFiles,
 										"kallistoIndexFile="+var.kallistoIndexFile,
 										"writefolder="+var.kallistoOutputRoot,
 										"kallistoVersion="+var.kallistoVersion,

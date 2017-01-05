@@ -13,9 +13,17 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
+
+import java.net.URL;
+import java.net.URLDecoder;
+
+import org.apache.commons.io.IOUtils;
+
+import PCA.RlogLargeMatrix;
 
 public class FileUtils
 {
@@ -118,5 +126,142 @@ public class FileUtils
 			index.put(cells[c], c);
 		}
 		return index;
+	}
+	public static Hashtable<String, String> readStringStringHash(String ensgToGeneSymbolFN) 
+	{
+		Hashtable<String, String> conversionHash = new Hashtable<String, String>();
+		try 
+		{
+			BufferedReader reader = createReader(ensgToGeneSymbolFN);
+			reader.lines().forEach(line -> 
+			{
+				String[] cells = line.split("\t");
+				if(cells.length>1)
+					conversionHash.put(cells[0], cells[1]);
+			});
+		} catch (FileNotFoundException e) {	e.printStackTrace();
+		} catch (IOException e) {e.printStackTrace();}
+		return conversionHash;
+	}
+	public static HashMap<String, Double> makeHash(String readCountFile, int i) {
+		HashMap<String, Double> keyToValue = new HashMap<String, Double>();		
+		try {
+			BufferedReader reader = createReader(readCountFile);
+			reader.lines().forEach(line -> 
+			{
+				String[] eles = line.split("\t");
+				keyToValue.put(eles[0], Double.parseDouble(eles[i]));
+			});
+			reader.close();
+		} catch (IOException e) {e.printStackTrace();}
+		return keyToValue;
+	}
+	
+	public static InputStream getResourceFile(String file) throws IOException
+	  {
+	    return Util.class.getResourceAsStream("/" + file);
+	  }
+	  
+	  public static String getResourcePath(String file) throws IOException
+	  {
+	  	URL url =  Util.class.getResource("/" + file);
+	  	if(url == null)
+	  		throw new IOException("resource file not found: " + file);
+	  	return url.toString().replaceAll("file:/","file:///");
+	  }
+	  
+	  public static String readFile(String file) throws IOException
+	  {
+	    return IOUtils.toString(Util.getResourceFile(file));
+	  }
+	  
+	  public static String prepareFileFromJar(String file) throws IOException
+	  {
+	    return FileUtils.prepareFileIntFromJar(file,false,true);
+	  }
+	  
+	  public static String prepareBinaryFromJar(String file) throws IOException
+	  {
+	    return FileUtils.prepareFileIntFromJar(file,true,true);
+	  }
+	  
+	  public static String getTempFile(String file) throws IOException
+	  {
+	    return FileUtils.prepareFileIntFromJar(file,false,false);
+	  }
+	  
+	  public static void cleanTemp() throws IOException
+	  {
+	    String tempPath = FileUtils.getTempPath();
+	    (new File(tempPath)).delete();
+	  }
+	  
+	  private static String prepareFileIntFromJar(String file, boolean isBinary, boolean doCreate) throws IOException
+	  {
+	    // Copies to location next to JAR file
+	    String tempPath = FileUtils.getTempPath();
+	    (new File(tempPath)).mkdir();
+	    File outBinFileName = new File(tempPath + file.substring(Math.max(0,file.lastIndexOf("/"))));
+	    if (doCreate)
+	    {
+	      String fn = file.replaceAll("\\{OS\\}",getOs());
+	      System.out.println(fn+"\t"+ new File(fn).exists() + "\t" + outBinFileName);
+	      
+	      InputStream stream = Util.getResourceFile(fn);
+	      FileOutputStream output = new FileOutputStream(outBinFileName);
+	      IOUtils.copy(stream, output);
+	      output.close();
+	      if (isBinary)
+	        outBinFileName.setExecutable(true);
+	      System.out.println("Creating file: " + outBinFileName.toString());
+	    }
+	    return outBinFileName.toString();
+	  }
+	  
+	  private static String getTempPath() throws IOException
+	  {
+	    String path = Util.class.getProtectionDomain().getCodeSource().getLocation().getPath();
+	    String jarPath = URLDecoder.decode(path,"UTF-8").toString();
+	    return jarPath.substring(0,jarPath.lastIndexOf("/")) + "/temp/";
+	  }
+
+	  public static String getBigResource(Class clazz,String basePathName,String resourse) throws IOException
+	  {
+	    String path = clazz.getProtectionDomain().getCodeSource().getLocation().getPath();
+	    String jarPath = URLDecoder.decode(path,"UTF-8").toString();
+	    return jarPath.replaceAll(basePathName + ".*" ,basePathName + "/" + resourse);
+	  }
+	  
+	  public static String getOs()
+	  {
+	    String os = System.getProperty("os.name").toLowerCase();
+	    if (os.indexOf("win") >= 0)
+	    {
+	      return ("windows");
+	    }
+	    else if (os.indexOf("mac") >= 0)
+	    {
+	      return ("mac");
+	    }
+	    else if (os.indexOf("nix") >= 0 || os.indexOf("nux") >= 0 || os.indexOf("aix") > 0)
+	    {
+	      return ("linux");
+	    }
+	    else
+	    {
+	      throw new RuntimeException("Could not determine operating system");
+	    }
+	  }
+	public static String getLine(String fileName, String searchString) 
+	{
+		try {
+			BufferedReader reader = FileUtils.createReader(searchString);
+			String line = null;
+			while((line=reader.readLine())!=null)
+				if(line.contains(searchString))
+					return line;
+			reader.close();
+		}catch (FileNotFoundException e) {e.printStackTrace();} catch (IOException e) {e.printStackTrace();}
+		return null;
 	}
 }

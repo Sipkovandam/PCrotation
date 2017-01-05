@@ -96,6 +96,38 @@ public class Zscore
 		if(stDev == 0) return 0;
 		return (value-mean)/stDev;
 	}
+	static MatrixStruct zScores(String writeFolder, String zscoreFN, MatrixStruct sampleStruct, String inputAvgStdevFolder, String statsFN, boolean addStatColumns) throws IOException 
+	{
+		JuhaPCA.PCA.log("Calculating zScores");
+		MatrixStruct zScoreMatrix = sampleStruct.copy();
+		MatrixStruct avgStdev = null;
+		if(inputAvgStdevFolder == null)//use input stats if supplied
+			avgStdev = Zscore.changeToZscores(zScoreMatrix, null);
+		else
+			avgStdev = Zscore.changeToZscores(zScoreMatrix, inputAvgStdevFolder+statsFN);
+				
+		JuhaPCA.PCA.log("Writing zScores");
+		zScoreMatrix=avgStdev.mergeColumns(zScoreMatrix);
+		if(inputAvgStdevFolder !=null)
+		{
+			zScoreMatrix.setColHeader(0, "average_" + inputAvgStdevFolder);
+			zScoreMatrix.setColHeader(1, "stDev_" + inputAvgStdevFolder);
+		}
+		zScoreMatrix.write(writeFolder+zscoreFN);
+		if(inputAvgStdevFolder == null)
+			avgStdev.write(writeFolder+statsFN);
+		
+		if(addStatColumns)
+		{
+			sampleStruct = avgStdev.mergeColumns(sampleStruct);
+			if(inputAvgStdevFolder !=null)
+			{
+				sampleStruct.setColHeader(0, "average_" + inputAvgStdevFolder);
+				sampleStruct.setColHeader(1, "stDev_" + inputAvgStdevFolder);
+			}
+		}
+		return sampleStruct;
+	}
 	
 	static void checkArgs(String[] args) 
 	{

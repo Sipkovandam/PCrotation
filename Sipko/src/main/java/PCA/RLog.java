@@ -4,7 +4,9 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Arrays;
 
-public class RLog 
+import Tools.Script;
+
+public class RLog
 {
 	//This is doing the DESeq normalization, which does not use replicate information.
 	
@@ -56,7 +58,7 @@ public class RLog
 		if(geoFN!= null && new File(geoFN).exists())
 			rLog(expressionStruct, writeFolder, swapFN, new MatrixStruct(geoFN), null);
 		else
-			rLog(expressionStruct, writeFolder, swapFN, null, null);
+			rLog(expressionStruct, writeFolder, swapFN, null, geoFN);
 		if(writeAll)
 			expressionStruct.write(correctedNotLogged);
 	}
@@ -86,14 +88,12 @@ public class RLog
 			}
 		}
 		
-		if(writeFolder != null)
-		{
-			geoMean.keepRows(keepGenes);
-			if(writeGeoFN==null)
-				writeGeoFN = writeFolder+"geoMean.txt";
-			System.out.println("geofilename=" + writeGeoFN);
-			geoMean.write(writeGeoFN);
-		}
+		geoMean.keepRows(keepGenes);
+		if(writeGeoFN==null)
+			writeGeoFN = writeFolder+"geoMean.txt";
+		System.out.println("geofilename=" + writeGeoFN);
+		geoMean.write(writeGeoFN);
+		
 		return geoMean;
 	}
 	

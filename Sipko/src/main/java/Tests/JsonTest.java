@@ -4,12 +4,14 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonObject;
 
+import PCA.RlogLargeMatrix;
 import PCA.Var;
+import Tools.JSONutil;
 
-public class JasonTest 
+public class JsonTest 
 {
 	
-	static Var var = null;
+	static JsonVar var = null;
 	public static void main(String[] args)
 	{
 //	      JsonObject obj = new JsonObject();
@@ -24,10 +26,13 @@ public class JasonTest
 //	      System.out.print(obj);
 //	      System.out.print(obj.get("num").getAsInt());
 //	      gson.fromJson(obj, null);
-	      
-	      var = new Var();
-	      var.jsonFN = "E:/Groningen/Data/Test/test.txt";
-	      var.writeVars();
-	      var.readVars("E:/Groningen/Data/Test/test.txt");
+		  JsonVar rlogLargeMatrix = new JSONutil<JsonVar>().read("E:/Groningen/Data/Test/testJson.txt", new JsonVar());
+
+//	      var = new JsonVar();
+//	      var.write("E:/Groningen/Data/Test/testJson.txt", var);
+	      System.out.println("done");
+//	      var.jsonFN = "E:/Groningen/Data/Test/test.txt";
+//	      var.writeVars();
+//	      var.readVars("E:/Groningen/Data/Test/test.txt");
 	 }
 }

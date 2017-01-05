@@ -45,7 +45,7 @@ public class RotateSample {
 		String geneAveragesFN = var.writeFolder+"SAMPLE_Norm_GeneAverages.txt";
 		MatrixStruct geneAverages = new MatrixStruct(geneAveragesFN);
 		geneAverages.keepRows(singleSample);
-		
+			
 		//rotate the sample to the same sample space
 		singleSample = center(	singleSample, 
 								geneAverages, 
@@ -154,7 +154,9 @@ public class RotateSample {
 			MatrixStruct gcPerGene = new MatrixStruct(var.GCgenes);
 			singleSample = GCcontent.calculateAndCorrect(singleSample,gcPerGene, var.writeFolderCorrected+"gCperSampleWriteFN.txt", var.writeFolderCorrected + "GCcorrected.txt.gz");
 		}
-		
+		//calculate z-scores for the input matrix based on avgStdevFolder+"avgStdev_uncorrected.txt" file. If avgStdevFolder==null, calculates avgs and stdevs per gene based on current matrix.
+		Zscore.zScores(var.writeFolderCorrected,"input_zScores", singleSample, var.avgStdevFolder, "avgStdev_normLog2.txt",false);
+
 		if(var.centerSamples)
 		{
 			JuhaPCA.PCA.log(" 8. Adjusting for row averages (centering to target PC space)");

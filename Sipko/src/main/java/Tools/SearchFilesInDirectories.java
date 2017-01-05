@@ -1,10 +1,15 @@
 package Tools;
 
+import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import PCA.MatrixStruct;
 
@@ -15,10 +20,11 @@ public class SearchFilesInDirectories
 	//same can be achieved with shell command : find . | grep "whateverYouAreSearchingFor" | grep -v "whateverYouWantToExclude"
 	
 	public static void main (String[] args) throws IOException
-	{
-		String folderName = "/groups/umcg-wijmenga/prm02/data_projects/Celiac_Disease/gene_expression/RNASEQ/RNAseq_NG_data_08032016/HiSeq/stimulated gluten specific Tcell clones";
-		String writeName = "/local/groups/umcg-wijmenga/scr01/umcg-svandam/allSamples.txt";
-		String[] searchString = new String[]{".fq"};
+	{	
+		String folders = null;//"E:/Groningen/Test/STAR/STAR/,E:/Groningen/Test/PCA/Test2/";
+		String writeName = null;//"E:/Groningen/Test/STAR/STAR/textsearch.txt";
+		String[] searchString = new String[]{".txt"};
+		String requiredStringFN = null;//"E:/Groningen/Test/STAR/STAR/RequiredStrings.txt";
 		String[] forbiddenString = new String[]{".md5"};
 		
 		//java -jar -Xmx1g SearchFilesInDirectories.jar folderName=/groups/umcg-pub/tmp04/public-rna-seq/ searchString=.fastq.gz writefn=/local/groups/umcg-bios/scr01/Sipko/Juha/samples.txt
@@ -30,7 +36,10 @@ public class SearchFilesInDirectories
 			String value = args[a].split("=")[1];
 			switch (arg.toLowerCase()){
 				case "foldername":
-					folderName =value;
+					folders =parseString(value);
+					break;
+				case "folders":
+					folders =parseString(value);
 					break;
 				case "searchstrings":
 					searchString = value.split(",");
@@ -40,6 +49,9 @@ public class SearchFilesInDirectories
 					break;
 				case "forbiddenstrings":
 					forbiddenString = value.split(",");
+					break;
+				case "requiredstringfn":
+					requiredStringFN = parseString(value);
 					break;	
 				default:
 					System.out.println("Incorrect argument supplied: "+ args[a] + "\n"
@@ -48,65 +60,72 @@ public class SearchFilesInDirectories
 					System.exit(1);
 			}
 		}
-		if(args.length == 2)
-			writeName = folderName+ searchString +".txt";
+		if(args.length == 2 || writeName==null || writeName.length()<2)
+			writeName = folders.split(",")[0]+ searchString +".txt";
 			
 //		String folderName = "/groups/umcg-wijmenga/prm02/data_projects/Celiac_Disease/gene_expression/RNASEQ/RNAseq_NG_data_08032016/HiSeq/stimulated gluten specific Tcell clones";
 //		String writeName = "/groups/umcg-wijmenga/prm02/data_projects/Celiac_Disease/gene_expression/RNASEQ/RNAseq_NG_data_08032016/HiSeq/stimulated gluten specific Tcell clones/allSamples.txt";
 		
-		
-		File folder = new File(folderName);
+		String[] folderNames = folders.split(",");
 		BufferedWriter writer = new BufferedWriter(new FileWriter(new File(writeName)));
-		searchDirectory(folder, writer, searchString, forbiddenString);
+		final String[] searchStringFinal = searchString;
+		final String[] forbiddenStringFinal = forbiddenString;
+		final String[] requiredStringFinal = readRequiredStrings(requiredStringFN);
+		Stream.of(folderNames).forEach(folderName -> searchDirectory(new File(folderName), writer, searchStringFinal,requiredStringFinal, forbiddenStringFinal));
 		writer.close();
 		System.out.println("done, file writen to:" + writeName);
 	}
-	public static void searchDirectory(File directory, String writeName, String[] searchString, String[] forbiddenString) throws IOException
+	private static String[] readRequiredStrings(String requiredStringFN) throws FileNotFoundException, IOException 
 	{
-		BufferedWriter writer = new BufferedWriter(new FileWriter(new File(writeName)));
-		File[] files = directory.listFiles();
-		
-		for(File file : files)
+		if(requiredStringFN == null)
+			return null;
+		BufferedReader reader = FileUtils.createReader(requiredStringFN);
+		String[] requiredStrings = reader.lines().map(line -> 
 		{
-			if (file.isDirectory())
-				searchDirectory(file, writer, searchString, forbiddenString);
-			else 
-			{
-				boolean include = false;
-				for(int s = 0; s < searchString.length; s++)
-					if(file.getName().contains(searchString[s]))
-						include = true;
-				for(int s = 0; s < searchString.length; s++)
-					if(file.getName().contains(forbiddenString[s]))
-						include = false;
-				if(include)
-					writer.write(file.getAbsolutePath()+"\n");
-			}
-		}
-		writer.close();
+			return line;
+		}).collect(Collectors.toList()).toArray(new String[]{});
+
+		return requiredStrings;
 	}
-	public static void searchDirectory(File directory, BufferedWriter writer, String[] searchString, String[] forbiddenString) throws IOException
+	public static void searchDirectory(File directory, BufferedWriter writer, String[] searchString, String[] forbiddenString)
 	{
-		File[] files = directory.listFiles();
+		searchDirectory(directory, writer, searchString, null, forbiddenString);
+	}
+	public static void searchDirectory(File directory, BufferedWriter writer, String[] searchString, String[] requiredString, String[] forbiddenString)
+	{
 		
-		for(File file : files)
+		try 
 		{
-			if (file.isDirectory())
-				searchDirectory(file, writer, searchString, forbiddenString);
-			else 
+			File[] files = directory.listFiles();
+			for(File file : files)
 			{
-				boolean include = false;
-				for(int s = 0; s < searchString.length; s++)
-					if(file.getName().contains(searchString[s]))
-						include = true;
-				for(int s = 0; s < forbiddenString.length; s++)
-					if(file.getName().contains(forbiddenString[s]))
-						include = false;
-				
-				if(include)
-					writer.write(file.getAbsolutePath()+"\n");
+				if (file.isDirectory())
+					searchDirectory(file, writer, searchString,requiredString, forbiddenString);
+				else 
+				{
+					String fileName = file.getName();
+					boolean include = checkInclude(searchString, fileName, requiredString, forbiddenString);
+					
+					if(include)
+							writer.write(file.getAbsolutePath()+"\n");	
+				}
 			}
-		}
+		} catch (IOException e) {e.printStackTrace();}
+	}
+	private static boolean checkInclude(String[] searchString, String fileName, String[] requiredString, String[] forbiddenString) {
+		for(int s = 0; s < forbiddenString.length; s++)
+			if(fileName.contains(forbiddenString[s]))
+				return false;
+		
+		for(int s = 0; s < searchString.length; s++)
+			if(fileName.contains(searchString[s]))
+				if(requiredString == null)
+					return true;
+				else//check if the other required string (any of them) is also present in the filename
+					for(int r = 0; r < requiredString.length; r++)
+						if(fileName.contains(requiredString[r]))
+							return true;
+		return false;
 	}
 	public static ArrayList<String> searchDirectory(File directory, String searchString, String forbiddenString) throws IOException
 	{
@@ -125,6 +144,11 @@ public class SearchFilesInDirectories
 			}
 		}
 		return fastqFiles;
+	}
+	private static String parseString(String value) {
+		if(value.equals("null"))
+			return null;
+		return value;
 	}
 	static void checkArgs(String[] args) 
 	{

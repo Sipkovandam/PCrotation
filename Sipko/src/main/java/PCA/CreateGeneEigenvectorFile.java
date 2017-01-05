@@ -284,8 +284,8 @@ public class CreateGeneEigenvectorFile
 		
 		if(var.rLog)//Does not log the values, just does the DEseq based correction
 		{
-			String writeGeoFN = var.writeFolder+ "geoMean.txt";
-			RLog.rLog(var.writeFolder, expressionStruct, var.writeAll, writeGeoFN);
+			//String writeGeoFN = var.writeFolder+ "geoMean.txt";
+			RLog.rLog(var.writeFolder, expressionStruct, var.writeAll, null);
 		}
 		
 		if(var.log2)//log2 the data and add <var.addLogVal> before

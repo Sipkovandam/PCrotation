@@ -1,5 +1,6 @@
 package Tools;
 
+import java.io.BufferedReader;
 import java.io.IOException;
 import java.nio.file.Paths;
 import java.util.Arrays;
@@ -13,7 +14,7 @@ import Analyses.CorrelationVSexpressionPlots;
 import JuhaPCA.PCA;
 import Kallisto.CombineKallisto;
 import Kallisto.FastQtoExpression;
-import Kallisto.KallistoSlurm;
+import Kallisto.Slurm;
 import Kallisto.KeepThresholdSamples;
 import Kallisto.RemoveBadSamples;
 import Kallisto.SumTranscriptsToGenes;
@@ -27,9 +28,12 @@ import PCA.MergeFiles;
 import PCA.PCcorrection;
 import PCA.RLog;
 import PCA.RlogLargeMatrix;
+import PCA.RlogLargeMatrix_Main;
 import PCA.Transpose;
 import PCA.Zscore;
 import PrepData.GetSamplesWithEmptyCells;
+import STAR.FastqMappingSTAR;
+import STAR.SpliceSites;
 import no.uib.cipr.matrix.NotConvergedException;
 
 public class Toolkit 
@@ -46,6 +50,9 @@ public class Toolkit
 		String[] argsToPass = Arrays.copyOfRange(args,1,args.length);
 		switch (args[0].toLowerCase()) 
 		{
+			case "json":
+					runScript(argsToPass);
+				break;
 			case "pcasteps":
 				CreateGeneEigenvectorFile.main(argsToPass);
 				break;
@@ -56,7 +63,7 @@ public class Toolkit
 				RLog.main(argsToPass);
 				break;
 			case "rloglarge":
-				RlogLargeMatrix.main(argsToPass);
+				RlogLargeMatrix_Main.main(argsToPass);
 				break;
 			case "getrows":
 				GetRows.main(argsToPass);
@@ -92,7 +99,7 @@ public class Toolkit
 				CombineKallisto.main(argsToPass);
 				break;
 			case "kallistoslurm":
-				KallistoSlurm.main(argsToPass);
+				new Slurm().run(argsToPass);
 				break;
 			case "keepthresholdsamples":
 				KeepThresholdSamples.main(argsToPass);
@@ -121,6 +128,12 @@ public class Toolkit
 			case "log2":
 				LogTransform.main(argsToPass);
 				break;	
+			case "fastqmappingstar":
+				FastqMappingSTAR.main(argsToPass);
+				break;
+			case "splicesites":
+				SpliceSites.main(argsToPass);
+				break;
 			default:
 				printUsage();
 			    System.exit(1);
@@ -128,6 +141,21 @@ public class Toolkit
 		
 	}
 
+	private static void runScript(String[] argsToPass) throws IOException 
+	{
+		String jsonName = argsToPass[0];
+		String scriptName = FileUtils.getLine(jsonName,"\"className\": \"").split("\"")[3];
+		
+		switch(scriptName)
+		{
+			case "RlogLargeMatrix":
+				RlogLargeMatrix rlogLargeMatrix = new JSONutil<RlogLargeMatrix>().read(jsonName, new RlogLargeMatrix());
+				rlogLargeMatrix.run();
+				break;
+			
+		}
+	}
+	
 	private static void printUsage() 
 	{
 		System.out.println("This script can be called with the following arguments:\n"
@@ -149,6 +177,8 @@ public class Toolkit
 				+ "16. correlatefiles\n"
 				+ "17. correlationvsexpressionplots\n"
 				+ "18. log2\n"
+				+ "19. fastqmappingstar\n"
+				+ "20. SpliceSites\n"
 				+ "Supply one of these arguments for futher information\n"
 				+ "If you plan to use a large matrixes call this script like e.g.:"
 				+ "java -jar -Xmx50g PCA.jar geneEigenVectors expressionFile.txt");

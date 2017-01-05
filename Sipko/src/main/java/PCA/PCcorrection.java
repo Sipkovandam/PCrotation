@@ -22,12 +22,15 @@ public class PCcorrection
 	
 	public static void main (String[] args) throws IOException
 	{
+		//args=new String[]{"json=E:/Groningen/Data/Juha/Genes31995/Healthy/PCA/counts_GENES_ScaffoldGenesRemoved_DiscardedRemoved/PCcorrection_variables.json"};
+		//args=new String[]{"json=E:/Groningen/Data/Juha/Genes31995/Healthy/PCA/31.07.pc1.illumina.genes.expressed_DownSamples/Computer/config.json"};
 		//args=new String[]{"json=E:/Groningen/Data/Juha/Genes31995/Healthy/PCA/BBMRI/config.json"};
+		
 		checkArgs(args);
 		
 		//create output folder for PC corrected files
 		makeFolder(var.writeFolderCorrected);
-		var.writeVars(var.writeFolderCorrected+"variables.txt");
+		var.writeVars(var.writeFolderCorrected+ "PCcorrection_variables.json");
 		
 		//put the matrix in the same space and calculate the PC scores for the PCs defined based on the public data
 		MatrixStruct[] rotationMatrixes = RotateSample.rotate(var);
@@ -53,7 +56,7 @@ public class PCcorrection
 		JuhaPCA.PCA.log("16. Adjusting for PCs");
 		//for each of these numbers a file is created with that many PC's corrected
 		//second number is replaced by var.PCs
-		int[] PCAadjustments = new int[]{0,100,2,132,300,500,1000};//,5000,eigenVectors.rows()};
+		int[] PCAadjustments = new int[]{0,2,100};//,132,300,500,1000};//,5000,eigenVectors.rows()};(2nd one gets replace by user input
 		
 		//if chr21 file is defined this will be used to determine the ranking of genes in this file vs those that are not
 		//this is determined after each PC correction iteratively
@@ -104,27 +107,30 @@ public class PCcorrection
 		//first argument determins the number of principal components to calculate the variance explained for. In this case it is the maximum number of principal components that is corrected for. 
 		//varianceExplained(PCAadjustments[PCAadjustments.length-1], writeFolder, scores, inputMatrix);//this function only works if the gene standard deviation is set to 1 (and the average of course)
 		//JuhaPCA.PCA.log("Calculating variance explained done");
-
-		//calculate z-scores for the input matrix based on avgStdevFolder+"avgStdev_uncorrected.txt" file. If avgStdevFolder==null, calculates avgs and stdevs per gene based on current matrix.
-		//zScores(writeFolder,"input_zScores", inputMatrix, avgStdevFolder, "avgStdev_uncorrected.txt");
 		
-		for(int pcs = 0; pcs < PCAadjustments.length; pcs++)//for all the different numbers of PCs to correct for (e.g. int[] PCAadjustments = new int[]{0,100,2,25,300,500,1000};};)
-		{
-			
+		for(int pcs = -1; pcs < PCAadjustments.length; pcs++)//for all the different numbers of PCs to correct for (e.g. int[] PCAadjustments = new int[]{0,100,2,25,300,500,1000};};)
+		{			
 			MatrixStruct sampleStruct = inputMatrix.copy();//make a copy so you can use the original for when you want to correct for a different number of PCs
-			int adjustPCs = PCAadjustments[pcs];
-			System.out.println("Adjusting:" + adjustPCs + " PCs");
-			if(adjustPCs > eigenVectors.rows())//in case attempting to correct for more PCs than in the eigenvector file, just correct for allt he eigenvectors in the eigenvector files.
-				adjustPCs = eigenVectors.rows()+1;
-			String writePCName = Integer.toString(adjustPCs);
+			String writePCName = null;
 			
 			ArrayList<Integer> PCsToAdjust = new ArrayList<Integer>();
-			for(int p = 1; p < adjustPCs; p++) { PCsToAdjust.add(p);}
-			if(pcs == 1 && userList != null)//if the user has a specific list he wants to correct for use this instead of the 100 PC correction.
+			if(pcs == -1)//if the user has a specific list he wants to correct
 			{
+				if(userList == null)
+					continue;
 				PCsToAdjust = userList;
 				writePCName = PCs; 
 			}
+			else
+			{
+				int adjustPCs = PCAadjustments[pcs];
+				System.out.println("Adjusting:" + adjustPCs + " PCs");
+				if(adjustPCs > eigenVectors.rows())//in case attempting to correct for more PCs than in the eigenvector file, just correct for allt he eigenvectors in the eigenvector files.
+					adjustPCs = eigenVectors.rows()+1;
+				writePCName = Integer.toString(adjustPCs);
+				for(int p = 1; p < adjustPCs; p++) { PCsToAdjust.add(p);}
+			}
+			
 			String writeFileName = writeFolder+"PC_1-"+writePCName+"_.txt";
 			if(pcs != PCAadjustments.length-1 || chr21 == null)//if it is not the last batch of PC corrections
 			{
@@ -136,30 +142,15 @@ public class PCcorrection
 				
 				//zScores(writeFileName.replace(".txt", "_Zscores.txt"), sampleStruct);
 			}
-
+			
+			sampleStruct=createExtraFiles(sampleStruct,correctResultsForSTdevs,vectorFolder, writeFileName);
 			System.out.println("writeFileName =" + writeFileName);
-			System.out.println(sampleStruct.matrix.get(0, 0));
 			sampleStruct.write(writeFileName);
 			
-			createExtraFiles(sampleStruct,correctResultsForSTdevs,vectorFolder, writeFileName);
+			
 		}
 	}
-	private static void zScores(String writeFolder, String zscoreFN, MatrixStruct sampleStruct, String inputAvgStdevFolder, String statsFN) throws IOException 
-	{
-		JuhaPCA.PCA.log("Calculating zScores");
-		MatrixStruct zScoreMatrix = sampleStruct.copy();
-		if(inputAvgStdevFolder == null)
-			statsFN=null;
-		else
-			statsFN=inputAvgStdevFolder+statsFN;
-				
-		MatrixStruct avgStdev = Zscore.changeToZscores(zScoreMatrix, statsFN);
-		
-		JuhaPCA.PCA.log("Writing zScores");
-		zScoreMatrix.write(writeFolder+zscoreFN);
-		if(inputAvgStdevFolder == null)
-			avgStdev.write(writeFolder+statsFN);
-	}
+	
 	private static void correctPCsTrackChr21(	MatrixStruct sampleStruct, 
 												MatrixStruct scores, 
 												MatrixStruct eigenVectors,
@@ -353,11 +344,14 @@ public class PCcorrection
 		}
 		return new double[][]{onChr21,others};
 	}
-	private static void createExtraFiles(MatrixStruct sampleStruct, boolean correctResultsForSTdevs,
+	private static MatrixStruct createExtraFiles(MatrixStruct sampleStruct, boolean correctResultsForSTdevs,
 			String vectorFolder, String writeFileName) throws IOException {
-
+		//does not change the sampleStruct matrix
 		devideBySTdev(sampleStruct,correctResultsForSTdevs,vectorFolder, writeFileName);
 		
+		//adds averages and stdevs to matrix
+		String zscoreWriteFN = new File(writeFileName).getName().replace(".txt", "_zScores.txt");
+		return Zscore.zScores(var.writeFolderCorrected,zscoreWriteFN, sampleStruct, var.avgStdevFolder, zscoreWriteFN.replace("_zScores.txt", "stats.txt"),true);
 //		int smoothNgenes = 10;
 //		pca.PCA.log("18. Smooth "+smoothNgenes+" genes");
 //		smoothSignal(sampleStruct.copy(),smoothNgenes, writeFileName);
@@ -394,17 +388,18 @@ public class PCcorrection
 	private static void devideBySTdev(MatrixStruct sampleStruct, boolean correctResultsForSTdevs, String vectorFolder,
 			String writeFileName) throws IOException {
 
+		MatrixStruct copy = sampleStruct.copy();
 		if(correctResultsForSTdevs)
 		{
 			JuhaPCA.PCA.log("16. Divide by standard deviation");
 			MatrixStruct STdevs = new MatrixStruct(vectorFolder+"gene_STDevs.txt");
-			STdevs.keepRows(sampleStruct);
+			STdevs.keepRows(copy);
 			//if the standard deviation is smaller than 1, set it to 1 to avoid inflated values for genes that have a very small stdev
 			for(int s = 0; s < STdevs.rows(); s++)
 				if(STdevs.matrix.get(s, 0) < 1)
 					STdevs.matrix.set(s, 0,1);
-			sampleStruct.divideBy(STdevs, true);
-			sampleStruct.write(writeFileName.replace(".txt", "DevidedBySTdevs.txt"));
+			copy.divideBy(STdevs, true);
+			copy.write(writeFileName.replace(".txt", "DevidedBySTdevs.txt"));
 		}
 		
 	}
