@@ -31,7 +31,6 @@ public class FastqMappingSTAR
 	public static void main(String args[]) throws Exception
 	{
 		//args = new String[]{"json=E:/Groningen/Test/STAR/var.json"};
-		//args = new String[]{"json=E:/Groningen/Splicing/100BPcap_analysis/STAR_config_200Samples.json"};
 		Variables v = checkArgs(args);
 		v.writeVars();
 		
@@ -47,11 +46,11 @@ public class FastqMappingSTAR
 			//first pass
 			System.out.println("Running first pass STAR");
 			v_FirstPassMerge.setOutputRootSTAR(v_FirstPassMerge.getOutputFolder()+"Results_1stPass/");
-			v_FirstPassMerge.setInputFolder_Splice(new File(v_FirstPassMerge.getOutputRootSTAR())+"/Results/");
-			//STAR_Slurm(v_FirstPassMerge, fastQFiles, "None","false");		
+			v_FirstPassMerge.setInputFolder_Splice(new File(v_FirstPassMerge.getOutputRootSTAR())+"Results/");
+			STAR_Slurm(v_FirstPassMerge, fastQFiles, "None","false");		
 			System.out.println("merging splice files from 1st pass");
 			
-			mergeSpliceFiles(v_FirstPassMerge);
+			mergeSpliceFiles(v_FirstPassMerge, false);
 		}
 		
 		if(v.getPass() == 2 || v.getPass()==-2)
@@ -59,7 +58,7 @@ public class FastqMappingSTAR
 			//rebuild the genome.
 			Variables buildVars = v.clone();
 			buildVars.setOutputRootSTAR(buildVars.getOutputFolder()+"reBuild/");
-			buildVars.setSTAR_Arguments(buildVars.getSTAR_Arguments()+" --sjdbInsertSave All");
+			buildVars.setSTAR_Arguments(buildVars.getSTAR_Arguments()+" --sjdbInsertSave All --limitSjdbInsertNsj 10000000");
 			buildVars.setReadFN_Splice(v_FirstPassMerge.getWriteFN_Splice());
 			String genomeDirWithSplice=generateNewGenome(buildVars,fastQFiles);
 			
@@ -73,7 +72,7 @@ public class FastqMappingSTAR
 			v_SecondPassMerge.setInputFolder_Splice(new File(v_SecondPassMerge.getOutputRootSTAR())+"Results/");
 			STAR_Slurm(v_SecondPassMerge, fastQFiles, "BAM Unsorted","true");	//last argument indicates whether STAR should also determine expression per gene (this makes it quite a lot slower I think)
 			v_SecondPassMerge.setWriteFN_Splice(v_SecondPassMerge.getOutputFolder()+"SJ_Merged_2ndpass.out.tab");
-			mergeSpliceFiles(v_SecondPassMerge);
+			mergeSpliceFiles(v_SecondPassMerge, true);
 			System.out.println("Second pass output files written to:" + v_SecondPassMerge.getOutputRootSTAR());
 		}
 	}
@@ -82,8 +81,8 @@ public class FastqMappingSTAR
 		STAR_Slurm(v, fastQFiles, "None","true", v.getOutputRootSTAR());
 		return genomeDirWithSplice;
 	}
-	private static void mergeSpliceFiles(Variables v_FirstPassMerge) throws Exception {
-		SpliceSites.run(v_FirstPassMerge);
+	private static void mergeSpliceFiles(Variables v_FirstPassMerge, boolean writePerGene) throws Exception {
+		SpliceSites.run(v_FirstPassMerge, writePerGene);
 	}
 	
 	private static void addToHash(String file, Hashtable<String, int[]> spliceHash){

@@ -36,7 +36,7 @@ public final class Variables implements Cloneable //A class that holds all the v
 	private String slurmUserName = null;//"umcg-svandam";
 	private String finishedemailaddress = null;//"sipkovandam@gmail.com";
 	private String sjdbGTFfile = null;
-	private String STAR_Arguments = null;//--clip5pNbases 102 --outFilterMismatchNmax "999" --outFilterMismatchNoverLmax 0.04
+	private String STAR_Extra_Arguments = "";//--clip5pNbases 102 --outFilterMismatchNmax "999" --outFilterMismatchNoverLmax 0.04
 	private String keepBAMsContaining = "RNA14-00231_S1,RNA14-00254_S7,RNA14-00258_S4";//if a bam file contains any of these strings it is kept
 	private transient String readFN_Splice = null;//in the second pass this file is used to retrieve the splice sites from (if the first pass is also ran, this becomes the output file of the first pass)
 	
@@ -125,7 +125,7 @@ public final class Variables implements Cloneable //A class that holds all the v
 
 	public String getWriteFolder_Splice() {
 		setWriteFolder_Splice();
-		return writeFolder_Splice;
+		return getFolderName(writeFolder_Splice);
 	}
 	public String getJsonFN() {
 		return jsonFN;
@@ -133,7 +133,7 @@ public final class Variables implements Cloneable //A class that holds all the v
 
 
 	public String getOutputFolder() {
-		return outputFolder;
+		return getFolderName(outputFolder);
 	}
 
 
@@ -204,7 +204,7 @@ public final class Variables implements Cloneable //A class that holds all the v
 	public String getInputFolder_Splice() {
 		if(inputFolder_Splice == null)
 			inputFolder_Splice=outputRootSTAR;
-		return inputFolder_Splice;
+		return getFolderName(inputFolder_Splice);
 	}
 
 
@@ -237,7 +237,7 @@ public final class Variables implements Cloneable //A class that holds all the v
 	}
 
 	public String getInputFolder() {
-		return inputFolder;
+		return getFolderName(inputFolder);
 	}
 	
 	public Variables clone() throws CloneNotSupportedException {
@@ -291,12 +291,14 @@ public final class Variables implements Cloneable //A class that holds all the v
 
 
 	public String getSTAR_Arguments() {
-		return STAR_Arguments;
+		if(STAR_Extra_Arguments == null)
+			STAR_Extra_Arguments = "";
+		return STAR_Extra_Arguments;
 	}
 
 
 	public void setSTAR_Arguments(String sTAR_Arguments) {
-		STAR_Arguments = sTAR_Arguments;
+		STAR_Extra_Arguments = sTAR_Arguments;
 	}
 
 

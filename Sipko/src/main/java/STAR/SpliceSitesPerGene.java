@@ -36,15 +36,15 @@ public class SpliceSitesPerGene
 	public static void addGeneNamesAndCountReadsPerSplice(Variables v, 
 			  String spliceFN, 
 			  String readsPerGeneWriteFN, 
-			  HashMap<String, String[]> startEndToGene)
+			  HashMap<String, String[]> spliceSiteToGene)
 	{
-		addGeneNamesAndCountReadsPerSplice(v, spliceFN, readsPerGeneWriteFN, startEndToGene, null, true); 
+		addGeneNamesAndCountReadsPerSplice(v, spliceFN, readsPerGeneWriteFN, spliceSiteToGene, null, true); 
 	}
 	
 	public static void addGeneNamesAndCountReadsPerSplice(Variables v, 
 														  String spliceFN, 
 														  String readsPerGeneWriteFN, 
-														  HashMap<String, String[]> startEndToGene, 
+														  HashMap<String, String[]> spliceSiteToGene, 
 														  String writeFN, 
 														  boolean afterLine) 
 	{
@@ -81,9 +81,9 @@ public class SpliceSitesPerGene
 			spliceReader.lines().forEach(line -> 
 			{
 				String[] cells = line.split("\t");
-				String chromLoc = cells[0]+"\t"+cells[1]+"\t"+cells[2]+"\t"+cells[3]+"\t"+cells[4]+"\t"+cells[5];
+				String chromLoc = cells[0]+"\t"+cells[1]+"\t"+cells[2]+"\t"+cells[3]+"\t"+cells[4];
 				String chromosomeName = cells[0];
-				addGeneNames_And_CountReadsPerGene(v, line, cells, chromosomeName, chromLoc, genome,spliceWriter,readsPerGene, startEndToGene, afterLine);
+				addGeneNames_And_CountReadsPerGene(v, line, cells, chromosomeName, chromLoc, genome,spliceWriter,readsPerGene, spliceSiteToGene, afterLine);
 			});
 
 			BufferedWriter readsPerGeneWriter = FileUtils.createWriter(readsPerGeneWriteFN);
@@ -111,7 +111,7 @@ public class SpliceSitesPerGene
 														  Hashtable<String, ArrayList<Gene>> genome,
 														  BufferedWriter spliceWriter, 
 														  HashMap<String, Integer> readsPerGene, 
-														  HashMap<String,String[]> startEndToGene, 
+														  HashMap<String,String[]> spliceSiteToGene, 
 														  boolean afterLine) 
 	{
 		try 
@@ -122,7 +122,7 @@ public class SpliceSitesPerGene
 			if(genome.containsKey(chromosomeName))
 			{
 				ArrayList<Gene> chromosome = genome.get(chromosomeName);
-				String[] genesIDsToAdd = startEndToGene.get(chromLoc);
+				String[] genesIDsToAdd = spliceSiteToGene.get(chromLoc);
 				
 				if(genesIDsToAdd == null)
 				{
@@ -131,7 +131,7 @@ public class SpliceSitesPerGene
 					String[] getGenes= new String[2];
 					chromosome.forEach(gene -> addGeneString(gene,start,end, getGenes));//puts results into getGenes
 					genesIDsToAdd=getGenes;
-					startEndToGene.put(chromLoc, genesIDsToAdd);
+					spliceSiteToGene.put(chromLoc, genesIDsToAdd);
 				}
 
 				if(!afterLine)
@@ -163,7 +163,7 @@ public class SpliceSitesPerGene
 					spliceWriter.write("\t-\t-"+line+"\n");
 				else
 					spliceWriter.write(line+"\t-\t-"+"\n");
-				startEndToGene.put(chromLoc, new String[]{"-","-"});
+				spliceSiteToGene.put(chromLoc, new String[]{"-","-"});
 			}
 		} catch (Exception e) {e.printStackTrace();}
 	}

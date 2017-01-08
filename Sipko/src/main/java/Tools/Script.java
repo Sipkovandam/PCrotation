@@ -71,7 +71,7 @@ public abstract class Script <T>
 		return runTime;
 	}
 	
-	protected void p(String line)
+	static protected void p(String line)
 	{
 		String time = timeFormat.format(new Date());
         System.out.println(time + "\t" + line);

@@ -33,18 +33,18 @@ public class NormalizeForGeneExpression
 		run(v, spliceFile, startEndToGene, expressionFN);
 	}
 	
-	public static String run(Variables v, String spliceFile, HashMap<String,String[]> startEndToGene) throws FileNotFoundException, IOException
+	public static String run(Variables v, String spliceFile, HashMap<String,String[]> spliceSiteToGene) throws FileNotFoundException, IOException
 	{
-		return run(v, spliceFile, startEndToGene, null);
+		return run(v, spliceFile, spliceSiteToGene, null);
 	}
 	
-	public static String run(Variables v, String spliceFile, HashMap<String,String[]> startEndToGene, String geneExpressionFN) throws FileNotFoundException, IOException
+	public static String run(Variables v, String spliceFile, HashMap<String,String[]> spliceSiteToGene, String geneExpressionFN) throws FileNotFoundException, IOException
 	{
 		String writeFN = spliceFile.replace(".txt", "_GeneSymbols.txt").replace(".tab", "_GeneSymbols.tab");
 		if(geneExpressionFN == null)
 			geneExpressionFN = spliceFile.replace(".txt", "_spliceReadsPerGene.txt").replace(".tab", "_spliceReadsPerGene.tab");
 		
-		SpliceSitesPerGene.addGeneNamesAndCountReadsPerSplice(v, spliceFile,geneExpressionFN, startEndToGene);
+		SpliceSitesPerGene.addGeneNamesAndCountReadsPerSplice(v, spliceFile,geneExpressionFN, spliceSiteToGene);
 		
 //		SpliceSitesPerGene.main(new String[]{ "splicefn="+spliceFile
 //				, "annotationfn="+v.annotationFN 
@@ -57,10 +57,8 @@ public class NormalizeForGeneExpression
 		String correctedWriteFN = writeFN.replace(".tab", "_Normalized.tab");
 		BufferedWriter spliceCorrectedWriter = FileUtils.createWriter(correctedWriteFN);
 		//make hash that contains the number of reads per gene
-		System.out.println(geneExpressionFN);
 		HashMap<String, Double> geneToReads = FileUtils.makeHash(geneExpressionFN,1);
 		
-		System.out.println("Normalizing: " + writeFN);
 		spliceReader.lines().forEach(line -> normalize(line, spliceCorrectedWriter, geneToReads));
 		spliceReader.close();
 		spliceCorrectedWriter.close();

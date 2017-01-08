@@ -472,7 +472,6 @@ public class Slurm {
 				break;	
 			case "star_arguments":
 				STARguments = parseString(value);
-				System.out.println("STARguments=" + STARguments);
 				break;		
 			case "starguments":
 				STARguments = parseString(value);

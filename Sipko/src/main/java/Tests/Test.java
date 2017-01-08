@@ -26,18 +26,45 @@ import PCA.MatrixStruct;
 import PCA.RLog;
 import PCA.RlogLargeMatrix;
 import PCA_testcases.CompareFiles;
+import STAR.SpliceSitesCount;
+import Tools.FileUtils;
 import Tools.Script;
 import umcg.genetica.containers.Pair;
 import umcg.genetica.math.matrix.DoubleMatrixDataset;
 
 
-public class Test {
+public class Test extends Script<Test> {
 
-	public static void main(String[] args) throws IOException, CloneNotSupportedException, ClassNotFoundException
+	public static void main(String[] args)  throws IOException, CloneNotSupportedException, ClassNotFoundException
 	{	
+	
+		String test = "a,123,asdf,n,niet,asfdasdf,1234,0,1,f,appel,kaas,123,1234\t999";
+		String[] split =  test.split("(?<=\\G.*,.*,.*,.*,.*,.*),");
+		Stream.of(split).forEach(Script::p);
+		p(" ");
+		String data = "a,123,asdf,n,niet,asfdasdf,1234,0,1,f,appel,kaas,123,1234,999,123";
+		
+		String[] split2 = data.split("(?<=\\G.*,.*,.*,.*,.*),"); //
+		
+		Stream.of(split2).forEach(Script::p);
+		
+		/* Creating 100K readers is pretty fast. Yay!
+		int nReaders=100000;
+		BufferedReader[] reader = new BufferedReader[nReaders];
+		
+		for(int r = 0;r < nReaders; r++)
+		{
+			if(r%10000==0)
+				p(r+"/"+nReaders);
+			reader[r] = FileUtils.createReader("E:/Groningen/Test/STAR/STAR/Results/StartEndToGene.txt");
+		}
+		for(int r = 0;r < nReaders; r++)
+		{
+			System.out.println(reader[r].readLine());
+			reader[r].close();
+		}
 		
 		
-		/*
 		String s = "TestObject";
 
 	    Object o = null;
@@ -171,6 +198,7 @@ public class Test {
 //		CompareFiles.compare(geoFN,"TestCaseFiles/Result_Samples.txt",true);
 //		
 */
+		System.out.println("Test done!");
 	}
 	private static <T> T getValue(Class<T> desiredType, Object o) 
 	{
