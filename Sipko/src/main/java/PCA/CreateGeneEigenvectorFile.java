@@ -41,11 +41,16 @@ import org.w3c.dom.Text;
 
 import JuhaPCA.PCA;
 import Tools.ExecCommand;
+import Tools.Script;
 import eqtlmappingpipeline.normalization.Normalizer;
 import no.uib.cipr.matrix.NotConvergedException;
 
-public class CreateGeneEigenvectorFile 
+public class CreateGeneEigenvectorFile extends Script<CreateGeneEigenvectorFile>
 {
+	/**
+	 * 
+	 */
+	
 	/*
 	1. load expression matrix
 	//2. removeDuplicates (any samples with correlation above <removeDuplicates> threshold)
@@ -248,7 +253,8 @@ public class CreateGeneEigenvectorFile
 		JuhaPCA.PCA.log(" 1. Reading expression file");
 		MatrixStruct expressionStruct = new MatrixStruct(var.expFile);
 		//transposes matrix if genes/transcripts are not on rows
-		expressionStruct.putGenesOnRows();
+		
+		expressionStruct.putGenesOnCorrectAxis(var.isPcaOverGenes);
 				
 		//keep only a subset of genes
 		selectGenes(expressionStruct, var.genesToInclude);

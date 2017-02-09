@@ -39,7 +39,7 @@ public class RotateSample {
 		/**6. Calculate PCscores for single sample**/
 		JuhaPCA.PCA.log(" 1. Loading sample matrix");
 		MatrixStruct singleSample = new MatrixStruct(var.sampleFile);//expressionMatrix.getRow(0);
-		singleSample.putGenesOnRows();
+		singleSample.putGenesOnCorrectAxis(var.isPcaOverGenes);
 		
 		//keep only the genes/rows that were used in the public samples as well
 		String geneAveragesFN = var.writeFolder+"SAMPLE_Norm_GeneAverages.txt";
@@ -60,11 +60,12 @@ public class RotateSample {
 			eigenFile = new File(var.writeFolder+"GENE.eigenvectors.txt");
 
 		//read in matrix (genes are on the rows, PCs are on the columns in the eigenFile)
-		MatrixStruct geneEigenVectors = new MatrixStruct(eigenFile.getAbsolutePath(), -1, 5001);//maximum 5001 PCs 
-		geneEigenVectors.putGenesOnRows();
+		MatrixStruct geneEigenVectors = new MatrixStruct(eigenFile.getAbsolutePath(), -1, 5001);//maximum 5001 PCs
+		if(geneEigenVectors.getRowHeaders()[0].contentEquals("PC1"))
+			geneEigenVectors.transpose();
 
 		geneAverages.keepRows(geneEigenVectors);//also changes the rows of geneEigenvectors to have the same positions as columnAverages
-		singleSample.putGenesOnRows();
+		singleSample.putGenesOnCorrectAxis(var.isPcaOverGenes);;
 		singleSample.keepRows1Matrix(geneEigenVectors);//necessary with some normalizations (quantile norm can introduce more 0 values into your matrix after the normalization creating a need for these to be removed afterward again)
 		
 		geneEigenVectors.putGenesOnCols();
@@ -129,7 +130,7 @@ public class RotateSample {
 		if(var.spearman >= 0)
 		{
 			JuhaPCA.PCA.log("Changing expression data into rank data");
-			expressionToPublicRank(singleSample, var.spearman, var.writeFolder+ "beforeRanks.txt", var.writeFolder+ "ranks.txt");
+			expressionToPublicRank(var, singleSample, var.spearman, var.writeFolder+ "beforeRanks.txt", var.writeFolder+ "ranks.txt");
 			singleSample.write(var.writeFolderCorrected+"RankValues.txt");
 		}
 		
@@ -174,12 +175,12 @@ public class RotateSample {
 		singleSample.write(centeredFN);
 		return singleSample;
 	}
-	private static void expressionToPublicRank(MatrixStruct singleSample, double spearman, String beforeFN,
+	private static void expressionToPublicRank(Var var, MatrixStruct singleSample, double spearman, String beforeFN,
 			String afterFN) {
 		//
 		MatrixStruct expression = new MatrixStruct(beforeFN);
 		MatrixStruct rank = new MatrixStruct(afterFN);
-		expression.transpose();//Put gene names on the rows
+		expression.putGenesOnCorrectAxis(var.isPcaOverGenes);//Put gene names on the rows
 		expression.keepRows(singleSample);
 		rank.transpose();
 		rank.keepRows(singleSample);

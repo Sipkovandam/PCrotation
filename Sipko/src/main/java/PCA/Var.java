@@ -38,6 +38,7 @@ public class Var
 	public  String removeGene = null;//if there is a particular gene you want to remove from the matrix for any reason
 	public  String genesToInclude = null;//List of genes. This list is selected prior to any other steps. Other genes are discarded
 	
+	public  boolean isPcaOverGenes = true;//if false it does the PCA over the samples rather than the genes
 	public  boolean correlation = false; //if false uses covariance
 	public  boolean setLowestToAverage = false;// sets all the lowest values in a sample to the average, effectively this means any gene that has an expression of does not contribute to the covariance or correlation
 	public  boolean centerSamples = false;// adjusts the expression of genes so that the average expression of a sample become 0 (centering over the samples)

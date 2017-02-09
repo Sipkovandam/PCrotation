@@ -56,11 +56,7 @@ public class IdentifySimilarSamples
 		System.out.println("WriteFN = " + writeFN);
 		String folderName = samplesFN.substring(0, samplesFN.lastIndexOf("/")+1);
 		MatrixStruct samples = new MatrixStruct(samplesFN);
-		if(samples.getColHeaders()[0].contains("ENSG000") || samples.getColHeaders()[0].contains("ENST000"))
-		{
-			System.out.println("Genes should be on rows, Transposing");
-			samples.transpose();
-		}
+		samples.putGenesOnRows();
 			
 		MatrixStruct genes = new MatrixStruct(genesFN);
 		MatrixStruct removeGenes = new MatrixStruct(removeGenesFN);

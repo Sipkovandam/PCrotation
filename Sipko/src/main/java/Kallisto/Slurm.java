@@ -8,106 +8,143 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.stream.Stream;
 
 import org.junit.Rule;
 import org.junit.rules.TemporaryFolder;
 
 import Kallisto.FastQtoExpression.Vars;
+import STAR.STAR_Variables;
 import Tools.ExecCommand;
 import Tools.FileUtils;
 import Tools.JSONutil;
+import Tools.Script;
 import Tools.Util;
 
-public class Slurm {
+public class Slurm <M> extends Script<Slurm<M>> implements Cloneable{
 
-	@Rule
-	public TemporaryFolder tempFolder = new TemporaryFolder();
+	//@Rule
+	//public TemporaryFolder tempFolder = new TemporaryFolder();
 
-	String fastQFiles = "E:/Groningen/Test/JSON/fastQfiles.txt";
-	String writeFolder = null;
-	String scriptsFolderName = null;
-	String logsFolder = null;
-	String errorsFolder = null;
-	String mapper = "Kallisto/0.42.2.1-goolf-1.7.20";// "STAR/2.5.1b-foss-2015b";
-	int batchSize = 1;
-	// kallisto specific arguments
-	String kallistoIndexFile = "/groups/umcg-wijmenga/tmp04/umcg-svandam/Data/RNAseq/Annotation/hg19.v75.cdna.all.42.2.idx";
-	// STAR specific arguments
-	String genomeDir = "";
-	String buildDir = null;
-	String maxMemoryGenomeBuild = "180gb";
-	String gTFfile = null;
-	String sjdbFileChrStartEnd = null;
-	String outMode = "BAM Unsorted";
-	String[] keepBAMsContaining = new String[]{"RNA14-00231_S1","RNA14-00254_S7","RNA14-00258_S4"};//if a bam file contains any of these strings it is kept
-	String STARguments = null;
-	boolean countExpression= true;
-	//featureCounts arguments
-	private String featureCounts = null;
-	private String featureCountsOptions = null;
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
+	private String fastQFiles = null;//semitransient
+	private String outputRoot = null;//semitransient
+	private transient String scriptsFolderName = null;
+	private transient String logsFolder = null;
+	private transient String errorsFolder = null;
+	private transient String sTAR_Folder = null;
+	private String mapperComment = "STAR/2.5.1b-foss-2015b or Kallisto/0.42.2.1-goolf-1.7.20;MANDATORY // The executeable of the STAR version to be used";
+	private String mapper = "STAR/2.5.1b-foss-2015b";// "STAR/2.5.1b-foss-2015b";
+	private String batchSizeComment = "MANDATORY //number of files to run in 1 batch. Each batch only loads the genome once to save runtime. However if the number is to large the walltime may be hit and some files will not/partly be included in the analysis; no warnings are generated when this happens but if the walltime has been hit can be checked in the /error folder";
+	private int batchSize = 1;
+	//mapper variables
+	public M mapperVars = null;
+	//Slurm Variables
+	private String threadsComment = "24; MANDATORY // Number of threads each node will use";
+	private int threads = 24;
+	private String walltimeComment = "23:59:00; MANDATORY // Maximum time each job has to complete the batch defined in (batchSize)";
+	private String walltime = "23:59:00";
+	private String maxMemoryComment = "45gb; MANDATORY // Maximum amount of memory the node can use when analysing the samples";
+	private String maxMemory = "45gb";
 
-	int threads = 4;
-	String walltime = "05:59:00";
-	String maxMemory = "8gb";
-	String outputRoot = null;
-	String mappingPercentagesFN = null;
-
-	String slurmUserName = "umcg-svandam";
-	String finishedemailaddress = "sipkovandam@gmail.com";
-	String tsvFilesToShScriptFN = null;
+	private String slurmUserNameComment = "umcg-svandam; MANDATORY // your slurm username";
+	private String slurmUserName = "umcg-svandam";
+	private String finishedemailaddressComment = "sipkovandam@gmail.com; OPTIONAL // best left empty, but sends a message whenever the mapping is completed. Both after first and second pass.";
+	private String finishedemailaddress = "sipkovandam@gmail.com";
 
 	// pairStrings to be in pairs. String in uneven index is replaced with that
 	// in the even index to get the paired end partner.
 	// All file names containing a string in one of the uneven indexes is
 	// skipped)
-	String[] pairStrings = new String[] { "_R1_", "_R2_", "_1.fq", "_2.fq" };
+	private String pairStringsComment = "[\"_R1_\",\"_R2_\",\"_1.fq\",\"_2.fq\"]; MANDATORY for paired end data // comma separated list of string pairs defining the difference between forward read and backward read files.  For example, immagine a file name fastqFile_1.fq - to obtain the complementary file in this file name _R1_ is replaced iwth _R2_ and _1.fq is replaced with _2.fq. Since _R1_ is not present in the file name but _1.fq is, the complementary file becomes fastqFile_2.fq and these 2 files then are used by STAR. If you files do not contain any of these strings STAR will map the data as if it was single end data";
+	private String[] pairStrings = new String[] { "_R1_", "_R2_", "_1.fq", "_2.fq" };
 
-	public void run(String[] args) throws Exception {
-		checkArgs(args);
-		if (writeFolder == null)
-			writeFolder = new File(fastQFiles).getParent() + "/";
-		System.out.println("writeFolder=" +writeFolder);
-		System.out.println("scriptsFolderName=" + scriptsFolderName);
-		scriptsFolderName = writeFolder + "Scripts/";
-		logsFolder = writeFolder + "Logs/";
-		errorsFolder = writeFolder + "Errors/";
-		outputRoot = writeFolder + "Results/";
-		mappingPercentagesFN = new File(outputRoot).getParent() + "/mappingPerSample.txt";
-		if (tsvFilesToShScriptFN == null)
-			tsvFilesToShScriptFN = new File(scriptsFolderName).getParent() + "/scriptNumberToFiles.txt";
-		System.out.println("scriptsFolderName2=" + scriptsFolderName);
+	public void run() {
+		try
+		{
+			//checkArgs(args);
+			init();
+	
+			ArrayList<String> fastQ_Files = FileUtils.readArrayList(fastQFiles);
+			createSlurmFiles(fastQ_Files);
+	
+			runSlurmScripts();
+		}catch(Exception e){e.printStackTrace();}
+	}
+	
+	private void init() {
+		if (outputRoot == null)
+			outputRoot = new File(fastQFiles).getParent() + "/";
+		p("WriteFolder=" +outputRoot);
+		
+		scriptsFolderName = outputRoot + "Scripts/";
+		logsFolder = outputRoot + "Logs/";
+		errorsFolder = outputRoot + "Errors/";
+		if(sTAR_Folder==null)
+			sTAR_Folder = outputRoot + "Results/";
+		
+		if(mapperVars== null)
+		{
+			if(isSTAR())
+				mapperVars = (M) new STAR_Variables();
+			if(isKallisto())
+				mapperVars = (M) new Kallisto_Variables();
+			else
+			{
+				p("Please select an appropriate mapper containing either \"STAR\" of \"kallisto\" in the mapper name");
+			}
+		}
 
-		ArrayList<String> fastQ_Files = FileUtils.readArrayList(fastQFiles);
+		
 		FileUtils.makeDir(scriptsFolderName);
 		FileUtils.makeDir(logsFolder);
 		FileUtils.makeDir(errorsFolder);
-		FileUtils.makeDir(outputRoot);
-		System.out.println("scriptsFolderName=" + scriptsFolderName);
-		System.out.println("countExpression=" + countExpression);
-		createSlurmFiles(fastQ_Files);
-
-		runSlurmScripts();
-		sjdbFileChrStartEnd=null;
+		FileUtils.makeDir(sTAR_Folder);
+		this.writeConfig();
 	}
 
+	private boolean isSTAR() {
+		return mapper.toLowerCase().contains("star");
+	}
+	private boolean isKallisto() {
+		return mapper.toLowerCase().contains("kallisto");
+	}
+
+	public void writeConfig(String jsonFN)
+	{
+		String kallistoFN = FileUtils.addBeforeExtention(jsonFN, "_kallisto");
+		this.mapperVars= (M) new Kallisto_Variables();
+		super.writeConfig(kallistoFN, this);
+		String STAR_FN = FileUtils.addBeforeExtention(jsonFN, "_STAR");
+		this.mapperVars= (M) new STAR_Variables();
+		super.writeConfig(STAR_FN, this);
+	}
+	
 	private void runSlurmScripts() throws FileNotFoundException, IOException {
 		// carefull with this. Kallisto200sh script does not update! You need to
 		// delete and reimport project of that!
-		tempFolder.create();
+		//tempFolder.create();
 		
 		String kallistoShellFN = "Kallisto200.sh";//FileUtils.prepareBinaryFromJar("Kallisto200.sh");
 		
-		System.out.println("exists = " + new File(kallistoShellFN).exists()+ "\t" + kallistoShellFN);
-		String command = "bash " + kallistoShellFN + " " + scriptsFolderName + "*.sh " + outputRoot + " "
+		if(!new File(kallistoShellFN).exists())
+			p("Slurmscript does not exist, please copy to:\t" + kallistoShellFN);
+		
+		String mappingPercentagesFN = new File(sTAR_Folder).getParent() + "/mappingPerSample.txt";
+		String command = "bash " + kallistoShellFN + " " + scriptsFolderName + "*.sh " + sTAR_Folder + " "
 				+ slurmUserName + " " + mappingPercentagesFN + " " + finishedemailaddress;
-		System.out.println("Shellcommand = " + command);
+		p("Output folder of slurm scripts:\t" + this.getOutputRoot());
+		p("Running SLURM scripts using:\t" + command);
 		ExecCommand exec = new ExecCommand(command);
-		// System.out.println("execute output: \n"+exec.getOutput());
+		// p("execute output: \n"+exec.getOutput());
 		if(exec.getError().length()>1)
-			System.out.println("execute error: \n" + exec.getError());
+			p("execute error: \n" + exec.getError());
 		else
-			System.out.println("No errors occurred running the slurm scripts");
+			p("No errors occurred running the slurm scripts");
 	}
 	// Redundant, Jesse heeft hier voor een paar classes gegeven
 	// private void runShell(String command) {
@@ -120,9 +157,9 @@ public class Slurm {
 	// BufferedReader br = new BufferedReader(isr);
 	// String line = null;
 	// while ( (line = br.readLine()) != null)
-	// System.out.println(line);
+	// p(line);
 	// int exitVal = proc.waitFor();
-	// System.out.println("Process exitValue: " + exitVal);
+	// p("Process exitValue: " + exitVal);
 	// } catch (Throwable t)
 	// {
 	// t.printStackTrace();
@@ -130,25 +167,27 @@ public class Slurm {
 	// }
 
 	private void createSlurmFiles(ArrayList<String> fastQ_Files) throws Exception {
-		int scriptNumber = 1;
+		p("Creating slurm files in:\n"+ scriptsFolderName);
+		int scriptNumber = 0;
 		int fileNumber = 0;
+		String tsvFilesToShScriptFN = new File(scriptsFolderName).getParent() + "/scriptNumberToFiles.txt";
 		BufferedWriter tsvFilenameWriter = FileUtils.createWriter(tsvFilesToShScriptFN);
 		BufferedWriter writer = null;
 		out: for (int f = 0; f < fastQ_Files.size(); f++) {
 			if(f==0 || fileNumber>=batchSize)
 			{
+				scriptNumber++;
 				String shellFN = scriptsFolderName + scriptNumber + ".sh";
 				if(writer !=null)
 					closeWriter(writer);
 				writer = FileUtils.createWriter(shellFN);
 				writeSlurmCommands(writer, scriptNumber);
-				scriptNumber++;
+				
 				fileNumber = 0;
 			}
 			String fastqFN = fastQ_Files.get(f);
 
-			// continue if it is the second file of a paired end sequenced
-			// sample
+			// continue if it is the second file of a paired end sequenced sample
 			String pairedStringForward = null;
 			String pairedStringReverse = null;
 			for (int p = 1; p < pairStrings.length; p += 2)
@@ -161,37 +200,62 @@ public class Slurm {
 					pairedStringReverse = pairStrings[p + 1];
 				}
 
-			String outputFolder=writeCommandsMapper(writer, fastqFN, pairedStringForward, pairedStringReverse, scriptNumber, tsvFilenameWriter);
-			if(!outMode.toLowerCase().equals("none"))
-				writeCommandsFeatureCounts(writer, outputFolder);
-			
-			fileNumber++;
-			if(buildDir!=null)
+			String writeFolder = writeCommandsMapper(writer, fastqFN, pairedStringForward, pairedStringReverse, scriptNumber, tsvFilenameWriter);
+
+			if(isGenomeBuildRun())
 				break;
+			writer.write("gzip " + writeFolder+"*\n");
+			fileNumber++;
 		}
 		if(writer !=null)
 			closeWriter(writer);
 		tsvFilenameWriter.close();
 	}
 
-	private void writeCommandsFeatureCounts(BufferedWriter writer, String outputFolder) throws IOException {
-		String alingedName = outputFolder+"Aligned.out."+outMode.toLowerCase().replace(" unsorted", "").replace(" sortedbycoordinate", "");
-		String featureCountsLine = featureCounts+ " "+featureCountsOptions + " -a "+ gTFfile + " -o "+ outputFolder +"featureCounts.out "+alingedName;
-		writer.write(featureCountsLine+"\n");
-		if(checkKeep(alingedName))
-			writer.write("rm "+alingedName+"\n");
+	private boolean isGenomeBuildRun() {
+		if(isSTAR())
+		{			
+			if(this.getSTAR_V().isSaveGenome())
+			return true;
+		}
+		return false;
 	}
 
-	private boolean checkKeep(String alingedName) {
-		for(String keepString : keepBAMsContaining)
-			if(alingedName.contains(keepString))
+	private STAR_Variables getSTAR_V() {
+		return (STAR_Variables) mapperVars;
+	}
+	public String getOutputRoot() {
+		return FileUtils.makeFolderNameEndWithSlash(outputRoot);
+	}
+
+	public void setOutputRoot(String outputRoot) {
+		this.outputRoot = outputRoot;
+	}
+
+	private Kallisto_Variables getKallistoV() {
+		return (Kallisto_Variables) mapperVars;
+	}
+
+	private void writeCommandsFeatureCounts(BufferedWriter writer, String outputFolder, STAR_Variables sTARv) throws IOException {
+		String alingedName = outputFolder+"Aligned.out."+sTARv.getOutMode().toLowerCase().replace(" unsorted", "").replace(" sortedbycoordinate", "");
+		String featureCountsLine = sTARv.getFeatureCounts()+ " "+sTARv.getFeatureCountsOptions() + " -a "+ sTARv.getGTFfile() + " -o "+ outputFolder +"featureCounts.out "+alingedName;
+		writer.write(featureCountsLine+"\n");
+		if(checkKeep(alingedName, sTARv))
+			writer.write("rm "+alingedName+"\n");
+	}
+	
+	private boolean checkKeep(String alingedName, STAR_Variables sTARv) {
+		if(sTARv.getKeepBAMsContaining()==null)
+			return true;
+		for(String keepString : sTARv.getKeepBAMsContaining())
+			if(alingedName!= null && alingedName.contains(keepString))
 				return false;
 		return true;
 	}
 
 	private void closeWriter(BufferedWriter writer) throws IOException {
-		if(mapper.toLowerCase().contains("star"))
-			writer.write("STAR --genomeLoad Remove --genomeDir " + genomeDir +"\n");
+		if(isSTAR())
+			writer.write("STAR --genomeLoad Remove --genomeDir " + getSTAR_V().getGenomeDir() +"\n");
 		writer.close();
 	}
 
@@ -203,8 +267,8 @@ public class Slurm {
 		// writer.write("#SBATCH --partition=medium\n");
 		writer.write("#SBATCH --time=" + walltime + "\n");
 		writer.write("#SBATCH --cpus-per-task " + threads + "\n");
-		if(buildDir!=null)
-			writer.write("#SBATCH --mem " + maxMemoryGenomeBuild + "\n");
+		if(isGenomeBuildRun())
+			writer.write("#SBATCH --mem " + getSTAR_V().getMaxMemoryGenomeBuild() + "\n");
 		else
 			writer.write("#SBATCH --mem " + maxMemory + "\n");
 		writer.write("#SBATCH --nodes 1\n");
@@ -213,9 +277,9 @@ public class Slurm {
 		// writer.write("#SBATCH --open-mode=append\n");
 		
 		writer.write("module load " + mapper + "\n");
-		if(mapper.toLowerCase().contains("star"))
+		if(isSTAR())
 			writer.write("STAR --version\n");
-		if (mapper.toLowerCase().contains("kallisto"))
+		if (isKallisto())
 			writer.write("kallisto version\n");
 	}
 
@@ -224,16 +288,16 @@ public class Slurm {
 
 		File file = new File(fn);
 		boolean iris = false;
-		String outputFolder = null;
+		String writeFolderName = null;
 		if (fn.contains("Iris"))// does not do anything atm (Iris changed the
 								// structure of her folders)
 			iris = true;
 		if (pairedStringForward != null && file.getName().contains(pairedStringForward))
-			outputFolder=writePairedEndCommand(file, pairedStringForward, pairedStringReverse, iris, writer, fileNumber,
+			writeFolderName=writePairedEndCommand(file, pairedStringForward, pairedStringReverse, iris, writer, fileNumber,
 					tsvFilenameWriter);
 		else if (file.getName().contains(".fq")) // single end
-			outputFolder=writeSingleEndCommand(file, iris, writer, fileNumber, tsvFilenameWriter);
-		return outputFolder;
+			writeFolderName=writeSingleEndCommand(file, iris, writer, fileNumber, tsvFilenameWriter);
+		return writeFolderName;
 	}
 
 	private String writePairedEndCommand(File file, String pairedStringForward, String pairedStringReverse,
@@ -247,36 +311,44 @@ public class Slurm {
 		// String[] parentFolders = file.getParent().split("\\\\");
 		// outputFolder = file.getName().replace("_1.fq.gz", "")+"/";
 		// }
-		writer.write("mkdir " + outputRoot + outputFolder + "\n");
+		writer.write("mkdir " + sTAR_Folder + outputFolder + "\n");
 		String fileName = "\"" + file.getName() + "\"";
 		fileName = fileName.replace("\\", "/");
 		String fastqWithPath = file.getPath().replace("\\", "/");
-		if (mapper.toLowerCase().contains("kallisto"))
+		if (isKallisto())
 			writeKallistoLinesPaired(fastqWithPath, pairedStringForward, pairedStringReverse, outputFolder, writer,
 					tsvFilenameWriter, fileNumber);
-		if (mapper.toLowerCase().contains("star"))
+		if (isSTAR())
+		{
+			STAR_Variables STARv = getSTAR_V();
 			writeSTAR_Lines(fastqWithPath, pairedStringForward, pairedStringReverse, outputFolder, writer,
-					tsvFilenameWriter, fileNumber);
-		return outputRoot+outputFolder;
+					tsvFilenameWriter, fileNumber, STARv);
+			
+		}
+		return sTAR_Folder+outputFolder;
 	}
 
-	private void writeKallistoLinesPaired(String fastqWithPath, String pairedStringForward,
-			String pairedStringReverse, String outputFolder, BufferedWriter writer, BufferedWriter tsvFilenameWriter,
-			int fileNumber) throws IOException {
-		String line = "kallisto quant --bias -t " + threads + " -i " + kallistoIndexFile + " -o " + outputRoot
+	private void writeKallistoLinesPaired(String fastqWithPath, 
+										  String pairedStringForward,
+										  String pairedStringReverse, 
+										  String outputFolder, 
+										  BufferedWriter writer, 
+										  BufferedWriter tsvFilenameWriter,
+										  int fileNumber) throws IOException {
+		String line = "kallisto quant --bias -t " + threads + " -i " + getKallistoV().getKallistoIndexFile() + " -o " + sTAR_Folder
 				+ outputFolder + " \"" + fastqWithPath + "\" \""
-				+ fastqWithPath.replace(pairedStringForward, pairedStringReverse) + "\" &> " + outputRoot + outputFolder
+				+ fastqWithPath.replace(pairedStringForward, pairedStringReverse) + "\" &> " + sTAR_Folder + outputFolder
 				+ outputFolder.replace("/", "") + ".err" + "\n";
 		writer.write(line);
 		tsvFilenameWriter.write(
-				outputRoot + outputFolder + "abundance.tsv" + "\t" + fileNumber + ".sh" + "\t" + fastqWithPath + "\n");
+				sTAR_Folder + outputFolder + "abundance.tsv" + "\t" + fileNumber + ".sh" + "\t" + fastqWithPath + "\n");
 	}
 
 	private void writeSTAR_Lines(String fastqWithPath, 
 										  String outputFolder,
 										  BufferedWriter writer,
 										  BufferedWriter tsvFilenameWriter,
-										  int fileNumber) throws IOException 
+										  int fileNumber, STAR_Variables sTARv) throws IOException 
 	{
 		writeSTAR_Lines(fastqWithPath, 
 						null,
@@ -284,7 +356,7 @@ public class Slurm {
 						outputFolder,
 						writer,
 						tsvFilenameWriter,
-						fileNumber);
+						fileNumber, sTARv);
 	}
 	
 	private void writeSTAR_Lines(String fastqWithPath, 
@@ -293,30 +365,32 @@ public class Slurm {
 											  String outputFolder,
 											  BufferedWriter writer,
 											  BufferedWriter tsvFilenameWriter,
-											  int fileNumber) throws IOException {
+											  int fileNumber, STAR_Variables sTARv) throws IOException {
 		String line = "STAR ";
-		if(sjdbFileChrStartEnd ==null)
+		if(sTARv.getSjdbFileChrStartEnd() ==null)
 			line = line + "--genomeLoad LoadAndKeep ";//The --genomeLoad LoadAndKeep option loads the genome if it's not already loaded, and then starts mapping
-			line = line	+ "--genomeDir " + genomeDir +
+			line = line	+ "--genomeDir " + sTARv.getGenomeDir() +
 					  " --readFilesIn " + fastqWithPath;
 		if(pairedStringForward!=null)		
 			line = line + " " + fastqWithPath.replace(pairedStringForward, pairedStringReverse);
-		line = line	+ " --outFilterMultimapNmax 1 ";
-		if(gTFfile != null && sjdbFileChrStartEnd!=null)//genome should be build with the GTF file included (See STAR manual for how)
-			line = line	+ "--sjdbGTFfile " + gTFfile;
-		line = line	+ " --outSAMtype " + outMode
+		if(sTARv.getGTFfile() != null && isGenomeBuildRun())//genome should be build with the GTF file included (See STAR manual for how)
+			line = line	+ " --sjdbGTFfile " + sTARv.getGTFfile();
+		line = line	+ " --outSAMtype " + sTARv.getOutMode()
 				    + " --runThreadN " + threads 
 				    + " --readFilesCommand zcat" 
-				    + " --outFileNamePrefix "+ outputRoot + outputFolder;
-		if(sjdbFileChrStartEnd!=null && sjdbFileChrStartEnd.length()>0 && !sjdbFileChrStartEnd.contentEquals("null"))
-			line+=" --sjdbFileChrStartEnd "+sjdbFileChrStartEnd;
-		if(STARguments!=null)
-			line+=" "+STARguments;
-		if(countExpression)
+				    + " --outFileNamePrefix "+ sTAR_Folder + outputFolder;
+		if(sTARv.getSjdbFileChrStartEnd() !=null && sTARv.getSjdbFileChrStartEnd().length()>0 && !sTARv.getSjdbFileChrStartEnd().contentEquals("null"))
+			line+=" --sjdbFileChrStartEnd "+sTARv.getSjdbFileChrStartEnd();
+		if(sTARv.getSTAR_Extra_Arguments()!=null)
+			line+=" "+sTARv.getSTAR_Extra_Arguments();
+		if(sTARv.getCountExpression())
 			line+=" --quantMode GeneCounts";
 		writer.write(line+"\n");
-		tsvFilenameWriter.write(outputRoot + outputFolder + "Aligned.out.bam" + "\t" + fileNumber + ".sh" + "\t"
+		tsvFilenameWriter.write(sTAR_Folder + outputFolder + "Aligned.out.bam" + "\t" + fileNumber + ".sh" + "\t"
 				+ fastqWithPath + "\n");
+		
+		if(sTARv.getOutMode() != null && !sTARv.getOutMode().toLowerCase().equals("none"))
+			writeCommandsFeatureCounts(writer, outputFolder, sTARv);
 	}
 
 	private String writeSingleEndCommand(File file, boolean iris, BufferedWriter writer, int fileNumber,
@@ -330,27 +404,29 @@ public class Slurm {
 		// String[] parentFolders = file.getParent().split("\\\\");
 		// outputFolder = parentFolders[parentFolders.length-1]+"/";
 		// }
-		writer.write("mkdir " + outputRoot + outputFolder + "\n");
+		writer.write("mkdir " + sTAR_Folder + outputFolder + "\n");
 		String fileName = "\"" + file.getName() + "\"";
 		fileName = fileName.replace("\\", "/");
 		String fastqWithPath = file.getPath().replace("\\", "/");
 
-		if (mapper.toLowerCase().contains("kallisto")) {
+		if (isKallisto()) {
 			String line = "kallisto quant --bias -t " + threads + " --single --fragment-length=200 --sd=20 -i "
-					+ kallistoIndexFile + " -o " + outputRoot + outputFolder + " \"" + fastqWithPath + "\" &> "
-					+ outputRoot + outputFolder + "kallisto_" + outputFolder.replace("/", "") + ".err" + "\n";
+					+ getKallistoV().getKallistoIndexFile() + " -o " + sTAR_Folder + outputFolder + " \"" + fastqWithPath + "\" &> "
+					+ sTAR_Folder + outputFolder + "kallisto_" + outputFolder.replace("/", "") + ".err" + "\n";
 			writer.write(line);
-			tsvFilenameWriter.write(outputRoot + outputFolder + "abundance.tsv" + "\t" + fileNumber + ".sh" + "\t"
+			tsvFilenameWriter.write(sTAR_Folder + outputFolder + "abundance.tsv" + "\t" + fileNumber + ".sh" + "\t"
 					+ fastqWithPath + "\n");
 		}
-		if (mapper.toLowerCase().contains("star")) {
-			writeSTAR_Lines(fastqWithPath, outputFolder, writer, tsvFilenameWriter, fileNumber);
+		if (isSTAR()) 
+		{
+			STAR_Variables STARv = getSTAR_V();
+			writeSTAR_Lines(fastqWithPath, outputFolder, writer, tsvFilenameWriter, fileNumber,STARv);
 		}
 		return outputFolder;
 	}
 
 	private String checkBuild(String outputFolder) {
-		if(buildDir != null)
+		if(isGenomeBuildRun())
 			return "";
 		return outputFolder;
 	}
@@ -359,7 +435,7 @@ public class Slurm {
 		if (System.getProperty("user.dir").contains("C:\\Users\\Sipko\\git\\PCrotation\\Sipko") && args.length < 1)
 			return;
 		if (args.length < 1) {
-			System.out.println("Script requires the following argumetns:\n"
+			p("Script requires the following argumetns:\n"
 					+ "1.  fastQFiles=<fastQFiles.txt> - File containing all the fastQfileNames preferably including their directories\n"
 					+ "2.  kallistoIndexFile=<kallistoIndexFile.idx> - Kallist index file that should be used\n"
 					+ "3.  writefolder=<writefolder> - Folder where the output will be written (default=<fastQFilesRoot>/Kallisto/Scripts/)\n"
@@ -377,12 +453,12 @@ public class Slurm {
 		}
 
 		for (int a = 0; a < args.length; a++) {
-			System.out.println("arg=" + args[a]);
+			p("arg=" + args[a]);
 			String[] split =args[a].split("=");
 			String arg = split[0];
 			if(split.length <2)
 			{
-				System.out.println("Argument missing, skipping:" + args[a]);
+				p("Argument missing, skipping:" + args[a]);
 				continue;
 			}
 			String value = split[1];
@@ -395,9 +471,6 @@ public class Slurm {
 			case "fastqfiles":
 				fastQFiles = parseString(value);
 				break;
-			case "kallistoindexfile":
-				kallistoIndexFile = parseString(value);
-				break;
 //			case "logsfolder":
 //				logsFolder = parseString(value);
 //				break;
@@ -405,7 +478,7 @@ public class Slurm {
 //				errorsFolder = parseString(value);
 //				break;
 			case "kallistooutputroot":
-				outputRoot = parseString(value);
+				sTAR_Folder = parseString(value);
 				break;
 			case "kallistoversion":
 				mapper = parseString(value);
@@ -416,9 +489,9 @@ public class Slurm {
 			case "kallistowalltime":
 				walltime = parseString(value);
 				break;
-//			case "outputroot":
-//				outputRoot = parseString(value);
-//				break;
+			case "outputroot":
+				sTAR_Folder = parseString(value);
+				break;
 			case "mapper":
 				mapper = parseString(value);
 				break;
@@ -444,57 +517,13 @@ public class Slurm {
 				finishedemailaddress = parseString(value);
 				break;
 			case "writefolder":
-				writeFolder = parseString(value);
-				break;
-//			case "mappingpercentagesfn":
-//				mappingPercentagesFN = parseString(value);
-//				break;
-			case "tsvfilestoshscriptfn":
-				tsvFilesToShScriptFN = parseString(value);
-				break;
-			case "genomedir":
-				genomeDir = parseString(value);
-				break;
-			case "gtffile":
-				gTFfile = parseString(value);
-				break;
-			case "sjdbfilechrstartend":
-				sjdbFileChrStartEnd = parseString(value);
-				break;
-			case "outmode":
-				outMode = parseString(value);
-				break;
-			case "countexpression":
-				countExpression = Boolean.parseBoolean(value);
+				outputRoot = parseString(value);
 				break;
 			case "batchsize":
 				batchSize = Integer.parseInt(value);
 				break;	
-			case "star_arguments":
-				STARguments = parseString(value);
-				break;		
-			case "starguments":
-				STARguments = parseString(value);
-				break;
-			case "builddir":
-				buildDir = parseString(value);
-				break;
-			case "featurecounts":
-				featureCounts = parseString(value);
-				break;
-			case "featurecountsoptions":
-				featureCountsOptions = parseString(value);
-				break;
-			case "keepbamscontaining":
-				if(parseString(value) !=null)
-					keepBAMsContaining = parseString(value).split(",");
-				break;
-			case "maxmemorygenomebuild":
-				if(parseString(value) !=null)
-					maxMemoryGenomeBuild = parseString(value);
-				break;
 			default:
-				System.out.println("Incorrect argument supplied:\n" + args[a] + "\nexiting");
+				p("Incorrect argument supplied:\n" + args[a] + "\nexiting");
 				System.exit(1);
 			}
 		}
@@ -504,5 +533,191 @@ public class Slurm {
 		if(value.equals("null"))
 			return null;
 		return value;
+	}
+
+	public String get_STAR_Folder() {
+		return sTAR_Folder;
+	}
+
+	public void set_STAR_Folder(String sTAR_Folder) {
+		this.sTAR_Folder = sTAR_Folder;
+	}
+
+	public String getFastQFiles() {
+		return fastQFiles;
+	}
+
+	public void setFastQFiles(String fastQFiles) {
+		this.fastQFiles = fastQFiles;
+	}
+
+	public String getScriptsFolderName() {
+		return scriptsFolderName;
+	}
+
+	public void setScriptsFolderName(String scriptsFolderName) {
+		this.scriptsFolderName = scriptsFolderName;
+	}
+
+	public String getLogsFolder() {
+		return logsFolder;
+	}
+
+	public void setLogsFolder(String logsFolder) {
+		this.logsFolder = logsFolder;
+	}
+
+	public String getErrorsFolder() {
+		return errorsFolder;
+	}
+
+	public void setErrorsFolder(String errorsFolder) {
+		this.errorsFolder = errorsFolder;
+	}
+
+	public String getMapperComment() {
+		return mapperComment;
+	}
+
+	public void setMapperComment(String mapperComment) {
+		this.mapperComment = mapperComment;
+	}
+
+	public String getMapper() {
+		return mapper;
+	}
+
+	public void setMapper(String mapper) {
+		this.mapper = mapper;
+	}
+
+	public String getBatchSizeComment() {
+		return batchSizeComment;
+	}
+
+	public void setBatchSizeComment(String batchSizeComment) {
+		this.batchSizeComment = batchSizeComment;
+	}
+
+	public int getBatchSize() {
+		return batchSize;
+	}
+
+	public void setBatchSize(int batchSize) {
+		this.batchSize = batchSize;
+	}
+
+	public M getMapperVars() {
+		return mapperVars;
+	}
+
+	public void setMapperVars(M mapperVars) {
+		this.mapperVars = mapperVars;
+	}
+
+	public String getThreadsComment() {
+		return threadsComment;
+	}
+
+	public void setThreadsComment(String threadsComment) {
+		this.threadsComment = threadsComment;
+	}
+
+	public int getThreads() {
+		return threads;
+	}
+
+	public void setThreads(int threads) {
+		this.threads = threads;
+	}
+
+	public String getWalltimeComment() {
+		return walltimeComment;
+	}
+
+	public void setWalltimeComment(String walltimeComment) {
+		this.walltimeComment = walltimeComment;
+	}
+
+	public String getWalltime() {
+		return walltime;
+	}
+
+	public void setWalltime(String walltime) {
+		this.walltime = walltime;
+	}
+
+	public String getMaxMemoryComment() {
+		return maxMemoryComment;
+	}
+
+	public void setMaxMemoryComment(String maxMemoryComment) {
+		this.maxMemoryComment = maxMemoryComment;
+	}
+
+	public String getMaxMemory() {
+		return maxMemory;
+	}
+
+	public void setMaxMemory(String maxMemory) {
+		this.maxMemory = maxMemory;
+	}
+
+	public String getSlurmUserNameComment() {
+		return slurmUserNameComment;
+	}
+
+	public void setSlurmUserNameComment(String slurmUserNameComment) {
+		this.slurmUserNameComment = slurmUserNameComment;
+	}
+
+	public String getSlurmUserName() {
+		return slurmUserName;
+	}
+
+	public void setSlurmUserName(String slurmUserName) {
+		this.slurmUserName = slurmUserName;
+	}
+
+	public String getFinishedemailaddressComment() {
+		return finishedemailaddressComment;
+	}
+
+	public void setFinishedemailaddressComment(String finishedemailaddressComment) {
+		this.finishedemailaddressComment = finishedemailaddressComment;
+	}
+
+	public String getFinishedemailaddress() {
+		return finishedemailaddress;
+	}
+
+	public void setFinishedemailaddress(String finishedemailaddress) {
+		this.finishedemailaddress = finishedemailaddress;
+	}
+
+	public String getPairStringsComment() {
+		return pairStringsComment;
+	}
+
+	public void setPairStringsComment(String pairStringsComment) {
+		this.pairStringsComment = pairStringsComment;
+	}
+
+	public String[] getPairStrings() {
+		return pairStrings;
+	}
+
+	public void setPairStrings(String[] pairStrings) {
+		this.pairStrings = pairStrings;
+	}
+	@Override
+	public HashMap<String, Integer> getStringAllowence() {//function to be overwritten by child classes
+		HashMap<String, Integer> stringAllowence = super.getStringAllowence();
+		stringAllowence.put("outModeComment", 0);
+		stringAllowence.put("outMode", 0);
+		stringAllowence.put("saveGenomeComment", 0);
+		stringAllowence.put("saveGenome", 0);
+			
+		return stringAllowence;
 	}
 }

@@ -37,35 +37,35 @@ public class RlogLargeMatrix extends Script<RlogLargeMatrix>
 	RlogLargeMatrix(String[] args)
 	{
 		checkArgs(args);
-		try {
 			run();
-		} catch (IOException e) {e.printStackTrace();}
 	}
 	
-	public void run() throws IOException 
-	{		
-		p("Input filename =" + expressionFN);
-		if(writeFolder == null)
-			writeFolder = new File(expressionFN).getParent()+"/DESeqNorm/";
-		
-		if(!new File(writeFolder).exists())
-			new File(writeFolder).mkdir();
-		
-		Matrix expression = new Matrix(expressionFN);
-		if(roundValues)
-			expression.roundValues();
-		rLog(writeFolder, expression, writeAll, geoFN);
-		p(" 7. Log transforming");
-		expression.logTransform(2,logAdd);//adds +0.5 before log
-		expression.write(writeFolder + new File(expressionFN).getName().replace(".txt", "").replace(".gz","")+".DESeqNorm.Log2.txt.gz");
-		end();
+	public void run()
+	{	try 
+	{	
+			p("Input filename =" + expressionFN);
+			if(writeFolder == null)
+				writeFolder = new File(expressionFN).getParent()+"/DESeqNorm/";
+			
+			if(!new File(writeFolder).exists())
+				new File(writeFolder).mkdir();
+			
+			Matrix expression = new Matrix(expressionFN);
+			if(roundValues)
+				expression.roundValues();
+				rLog(writeFolder, expression, writeAll, geoFN);
+			p(" 7. Log transforming");
+			expression.logTransform(2,logAdd);//adds +0.5 before log
+			expression.write(writeFolder + new File(expressionFN).getName().replace(".txt", "").replace(".gz","")+".DESeqNorm.Log2.txt.gz");
+			end();
+		}catch(Exception e){e.printStackTrace();}
 	}
 	
 	private void writeVars()
 	{
 		//JSONutil<RlogLargeMatrix> writer = new JSONutil<RlogLargeMatrix>();
 		//writer.
-		write(jsonFN, this);
+		writeConfig(jsonFN, this);
 	}
 	public String getWritePath(String name)
 	{
@@ -78,33 +78,6 @@ public class RlogLargeMatrix extends Script<RlogLargeMatrix>
 		if(!fn.endsWith("/") && !fn.endsWith("\\"))
 			fn = fn+"/";
 		return fn;
-	}
-	public Var readVars(String jsonFN)
-	{
-		String jsonString = "";
-		
-		try
-		{
-			File file = new File(jsonFN);
-			BufferedReader reader = new BufferedReader(new FileReader(file));
-			String line = null;
-			while((line=reader.readLine())!=null)
-			{
-				jsonString+=line;
-			}
-			reader.close();
-		}catch(Exception e)
-		{
-			File file = new File(jsonFN);
-			if(!file.exists())
-				p("Json file does not exist:" + jsonFN);
-			e.printStackTrace();
-		}
-		
-		Gson gson = new GsonBuilder().setPrettyPrinting().create();
-		Var var = gson.fromJson(jsonString, Var.class);
-		p(gson.toJson(var));
-		return var;
 	}
 	
 	public void rLog(String writeFolder, Matrix expression, boolean writeAll, String geoFN) throws IOException 

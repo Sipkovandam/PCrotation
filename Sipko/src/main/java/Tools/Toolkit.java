@@ -32,8 +32,8 @@ import PCA.RlogLargeMatrix_Main;
 import PCA.Transpose;
 import PCA.Zscore;
 import PrepData.GetSamplesWithEmptyCells;
-import STAR.FastqMappingSTAR;
-import STAR.SpliceSites;
+import STAR.SpliceMerger;
+import STAR._STAR_Pipeline;
 import no.uib.cipr.matrix.NotConvergedException;
 
 public class Toolkit 
@@ -52,6 +52,9 @@ public class Toolkit
 		{
 			case "json":
 					runScript(argsToPass);
+				break;
+			case "run":
+					Run.run(argsToPass);
 				break;
 			case "pcasteps":
 				CreateGeneEigenvectorFile.main(argsToPass);
@@ -128,12 +131,6 @@ public class Toolkit
 			case "log2":
 				LogTransform.main(argsToPass);
 				break;	
-			case "fastqmappingstar":
-				FastqMappingSTAR.main(argsToPass);
-				break;
-			case "splicesites":
-				SpliceSites.main(argsToPass);
-				break;
 			default:
 				printUsage();
 			    System.exit(1);

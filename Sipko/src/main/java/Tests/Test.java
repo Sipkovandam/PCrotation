@@ -6,6 +6,8 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -18,6 +20,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
+import java.lang.reflect.*;
 
 import org.junit.rules.TemporaryFolder;
 
@@ -27,6 +30,7 @@ import PCA.RLog;
 import PCA.RlogLargeMatrix;
 import PCA_testcases.CompareFiles;
 import STAR.SpliceSitesCount;
+import STAR._STAR_Pipeline;
 import Tools.FileUtils;
 import Tools.Script;
 import umcg.genetica.containers.Pair;
@@ -35,10 +39,94 @@ import umcg.genetica.math.matrix.DoubleMatrixDataset;
 
 public class Test extends Script<Test> {
 
-	public static void main(String[] args)  throws IOException, CloneNotSupportedException, ClassNotFoundException
-	{	
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
+
+	public void run()
+	{
+		String test = "bla";
+		String test2 = "bla";
+		
+		if(test.equals(test2))
+			System.out.println("ja");
+		/*
+		TestObject3<TestObject> test = new TestObject3<>();
+		try {
+			Thread.sleep(4123);
+		} catch (InterruptedException e) {e.printStackTrace();}
+		p("runtime = \t" + test.getRunTime());
+		p(test.toString());
+		*/
+	}
 	
-		String test = "a,123,asdf,n,niet,asfdasdf,1234,0,1,f,appel,kaas,123,1234\t999";
+	public static void main(String[] args)  throws IOException, CloneNotSupportedException, ClassNotFoundException, InstantiationException, IllegalAccessException, NoSuchMethodException, SecurityException, IllegalArgumentException, InvocationTargetException, InterruptedException
+	{	
+		new Test().run();
+		
+/*		String test = "a,123,asdf,n,niet,asfdasdf,1234,0,1,f,appel,kaas,123,1234\t999";
+		String[] split =  test.split("(?<=\\G.*,.*,.*,.*,.*,.*),");
+		Stream.of(split).forEach(Script::p);
+		p(" ");
+
+		String[] split2 = test.split("(?<=\\G.*,.*,.*,.*,.*),"); // 
+		
+		Stream.of(split2).forEach(Script::p);
+		
+		//TestObject3<TestObject> testObject3_2 = 
+
+		String param1= "appel";
+		Double param2= new Double(12);
+		String className = "Tests.TestObject2";
+		Class<?> cl = (Class<?>) Class.forName(className);
+		Constructor con = cl.getDeclaredConstructor(String.class, Double.class);
+		Object xyz = (Object) con.newInstance(param1, param2);
+		
+//		p(xyz.getClass().getName());
+//		p(xyz.getClassName());
+//		p(xyz.getExecuteClass());
+		
+//		TestObject2 x = (TestObject2) xyz;
+//		
+//		p(x.name);
+//		
+		for(int m = 0; m < cl.getMethods().length; m++)
+		{
+			p("" + cl.getMethods()[m].getName());
+			if( cl.getMethods()[m].getAnnotatedParameterTypes().length>0)
+			{
+				p("" + cl.getMethods()[m].getAnnotatedParameterTypes()[0]);
+				p("" + cl.getMethods()[m].getAnnotatedParameterTypes()[0]);
+			}
+		}
+		
+		Method method = cl.getMethod("setExecuteClass", String.class);
+//
+		method.invoke(xyz, "ja");
+//
+		Method method2 = cl.getMethod("getExecuteClass");
+		p(""+method2.invoke(xyz));
+		
+		
+		
+		
+//		String cn = "java.io.File";
+//		Class myClass = Class.forName(cn);
+//		
+//		File testFile = new File("aap");
+//		
+//		Class[] types = {testFile.getClass()};
+//		
+//		Constructor constructor = myClass.getConstructor(types);
+//		
+//		Object[] parameters = {File.class};
+//		Object instanceOfMyClass = constructor.newInstance(parameters);
+//		
+//		p(instanceOfMyClass.getClass().getName());
+		
+		
+		/*String test = "a,123,asdf,n,niet,asfdasdf,1234,0,1,f,appel,kaas,123,1234\t999";
 		String[] split =  test.split("(?<=\\G.*,.*,.*,.*,.*,.*),");
 		Stream.of(split).forEach(Script::p);
 		p(" ");
@@ -48,7 +136,7 @@ public class Test extends Script<Test> {
 		
 		Stream.of(split2).forEach(Script::p);
 		
-		/* Creating 100K readers is pretty fast. Yay!
+		 Creating 100K readers is pretty fast. Yay!
 		int nReaders=100000;
 		BufferedReader[] reader = new BufferedReader[nReaders];
 		
@@ -223,10 +311,13 @@ public class Test extends Script<Test> {
 				if(tab.get()==6)
 					System.out.println("bla");
 	}
-	public void print()
+	
+	private static Test t(Test a)
 	{
+		a.p(a.jsonFN);
 		
-		
+		return a;
 	}
+
 }
 

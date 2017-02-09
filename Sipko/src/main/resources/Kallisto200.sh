@@ -12,7 +12,7 @@ do
 	waiting=true
 	while "$waiting" -eq "true"
 	do
-		squeue -u $user -o %j_%i_%n | grep kallisto &> currentJobs.txt 
+		squeue -u $user -o %j_%i_%n | egrep 'kallisto|STAR'  &> currentJobs.txt 
 		nodeJobs=$(grep "$nodeName" currentJobs.txt | grep "kallisto" | wc -l)
 		if [[ "$nodeJobs" -lt 200 ]] # queue a maximum of 200 jobs
 		then
@@ -25,11 +25,13 @@ do
 	done
 done
 
+sleep 10
+
 waiting=true
 while "$waiting" -eq "true"
 do
-	squeue -u $user -o %j_%i_%n | grep kallisto &> currentJobs.txt 
-	nodeJobs=$(grep "$nodeName" currentJobs.txt | grep "kallisto" | wc -l)
+	squeue -u $user -o %j_%i_%n | egrep 'kallisto|STAR' &> currentJobs.txt 
+	nodeJobs=$(grep "$nodeName" currentJobs.txt | egrep 'kallisto|STAR' | wc -l)
 	if [[ "$nodeJobs" -lt 1 ]] # as long as there are jobs keep waiting
 	then
 		waiting="false";

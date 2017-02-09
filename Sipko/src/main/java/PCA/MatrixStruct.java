@@ -1057,7 +1057,7 @@ public class MatrixStruct
 	{
 		if(this.colHeaders[0].contains("ENSG0") || this.colHeaders[0].contains("ENST0"))
 		{
-			System.out.println("Ensemble IDs are on columns and should be on Rows, transposing");
+			System.out.println("Ensemble IDs are on columns and should be on rows, transposing");
 			this.transpose();
 		}
 	}
@@ -1157,5 +1157,11 @@ public class MatrixStruct
 			for(int y = 0; y < this.cols(); y++)
 				this.matrix.set(x,y,(double)(int)this.matrix.get(x,y));
 		}
+	}
+	public void putGenesOnCorrectAxis(boolean isGenesOnRows) {
+		if(isGenesOnRows)
+			putGenesOnRows();
+		else
+			putGenesOnCols();
 	}
 }

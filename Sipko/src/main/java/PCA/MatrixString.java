@@ -767,4 +767,15 @@ public class MatrixString
 			for(int c = 0; c < row.length; c++)
 				row[c]="0";
 	}
+	public String getAsLine(String[] row, String rowName) {
+		StringBuilder stringLineBuilder = new StringBuilder();
+		stringLineBuilder.append(rowName);
+		for(String ele : row)
+		{
+			stringLineBuilder.append("\t");
+			stringLineBuilder.append(ele);
+		}
+		stringLineBuilder.append("\n");
+		return stringLineBuilder.toString();
+	}
 }

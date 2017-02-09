@@ -50,7 +50,10 @@ public class FileUtils
 	}
 	public static ArrayList<String> readArrayList(String fileName, boolean firstColumnOnly) throws FileNotFoundException, IOException
 	{
-		
+		if(fileName == null || !new File(fileName).exists())
+		{
+			throw new FileNotFoundException("File does not exist: "+fileName);
+		}
 		ArrayList<String> lines = new ArrayList<String>();
 	
 		BufferedReader reader = null;
@@ -93,7 +96,7 @@ public class FileUtils
 			folder.mkdirs();
 	}
 	public static String replaceEnd(String string, String addition) {
-		String result = string.replace(".txt", "").replace(".gz", "")+addition;
+		String result = removeExtention(string)+addition;
 		return result;
 	}
 	public static void copy(String kallistoShellFN, String tempKallistoFN) throws FileNotFoundException, IOException {
@@ -127,9 +130,9 @@ public class FileUtils
 		}
 		return index;
 	}
-	public static Hashtable<String, String> readStringStringHash(String ensgToGeneSymbolFN) 
+	public static HashMap<String, String> readStringStringHash(String ensgToGeneSymbolFN) 
 	{
-		Hashtable<String, String> conversionHash = new Hashtable<String, String>();
+		HashMap<String, String> conversionHash = new HashMap<String, String>();
 		try 
 		{
 			BufferedReader reader = createReader(ensgToGeneSymbolFN);
@@ -263,5 +266,39 @@ public class FileUtils
 			reader.close();
 		}catch (FileNotFoundException e) {e.printStackTrace();} catch (IOException e) {e.printStackTrace();}
 		return null;
+	}
+	public static String removeExtention(String jsonFN)
+	{
+		String[] eles = jsonFN.split("\\."); 
+		String extention = "."+eles[eles.length-1];
+		String withoutExtention = jsonFN.replace(extention, "");
+		return withoutExtention;
+	}
+	
+	public static String addBeforeExtention(String jsonFN, String addString) 
+	{
+		String newString = null;
+		if(jsonFN.contains("."))
+		{
+			String[] eles = jsonFN.split("\\.");
+			String extention = "."+eles[eles.length-1];
+			String withoutExtention = jsonFN.replace(extention, "");
+			newString = withoutExtention+addString+extention;
+		}
+		else
+		{
+			System.out.println("Warning, extension is missing on file:\t" + jsonFN);
+			newString=jsonFN+addString;
+		}
+		return newString;
+	}
+	public static String makeFolderNameEndWithSlash(String fn) 
+	{
+		if(fn == null)
+			return null;
+		if(!fn.endsWith("/") && !fn.endsWith("\\"))
+			fn = fn+"/";
+		
+		return fn;
 	}
 }
