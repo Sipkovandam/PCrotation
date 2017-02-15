@@ -199,10 +199,6 @@ public class ExonExpressionMerger extends Script<ExonExpressionMerger> {
 		geneToExons.forEach((gene, exons) -> {
 			writerPerGene.put(gene, writeHeader(gene, exons, writeFolderExpression, geneExpressionFns ));
 			});
-
-		// Pair<HashMap<String, BufferedWriter>,HashMap<String,
-		// ArrayList<String>>> writerPerGene_ExonsPerGene = new
-		// Pair(writerPerGene,exonsPerGene);
 		return r(writerPerGene, geneToExons, exonToLength);
 	}
 

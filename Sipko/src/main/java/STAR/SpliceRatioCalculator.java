@@ -117,7 +117,7 @@ public class SpliceRatioCalculator extends Script<SpliceRatioCalculator>
 			//add genes to the spliceFile
 			System.out.println("Adding genes to the spliceFile");
 			if(writeFN == null)
-				writeFN = spliceFN.replace(".txt", "_GeneSymbols.txt").replace(".tab", "_GeneSymbols.tab");
+				writeFN = FileUtils.addBeforeExtention(spliceFN,"_GeneSymbols");
 			if(readsPerGeneWriteFN == null)
 				readsPerGeneWriteFN = spliceFN.replace(".txt", "_SpliceReadsPerGene.txt").replace(".tab", "_SpliceReadsPerGene.tab");
 			

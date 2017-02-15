@@ -33,7 +33,7 @@ public class STAR_Variables implements Cloneable, Serializable {
 	private String featureCountsComment = "/root/featurecounts/bin/featureCounts; MANDATORY // The executeable of the featurecounts version to be used";
 	private String featureCounts = null;
 	private String featureCountsOptionsComment = "-T 25 --largestOverlap -f -t exon -O; MANDATORY // options used by featurecounts. -f -t exon maps to exons -O makes sure reads overlapping multiple exons are also counted toward each exon they overlap";
-	private String featureCountsOptions = "-T 25 --largestOverlap -f -t exon -O";//"-T 25 --largestOverlap -f -t exon -O"-f -t exon options make sure it counts and reports reads per exon instead of gene ,-O (capital o) option makes sure reads are counted whenever it overlaps multiple genes
+	private String featureCountsOptions = "-p -T 25 --largestOverlap -f -t exon -O";//"-T 25 --largestOverlap -f -t exon -O"-f -t exon options make sure it counts and reports reads per exon instead of gene ,-O (capital o) option makes sure reads are counted whenever it overlaps multiple genes
 	
 	public String getGenomeDir() {
 		return genomeDir;

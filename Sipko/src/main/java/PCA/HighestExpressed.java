@@ -73,10 +73,10 @@ public class HighestExpressed
 			MatrixStruct stDevs = expressionStruct.stDevRows();
 			String stdevFN = writeFolder + "gene_STDevsForCutoff.txt";
 			stDevs.write(stdevFN);
-			PCcorrection.keepTopPercentage(expressionStruct,stdevFN, highestExpressed, averagesFN.replace(".txt", "top_" + highestExpressed+ ".txt"), true, writeAll);
+			new PCApipeline().keepTopPercentage(expressionStruct,stdevFN, highestExpressed, averagesFN.replace(".txt", "top_" + highestExpressed+ ".txt"), true, writeAll);
 		}
 		else
-			PCcorrection.keepTopPercentage(expressionStruct,averagesFN, highestExpressed, averagesFN.replace(".txt", "top_" + highestExpressed+ ".txt"), false, writeAll);
+			new PCApipeline().keepTopPercentage(expressionStruct,averagesFN, highestExpressed, averagesFN.replace(".txt", "top_" + highestExpressed+ ".txt"), false, writeAll);
 	}
 	static void checkArgs(String[] args) 
 	{

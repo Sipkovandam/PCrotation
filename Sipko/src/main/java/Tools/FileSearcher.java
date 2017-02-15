@@ -359,4 +359,14 @@ public class FileSearcher extends Script<FileSearcher> {
 				+ "4. writeFN=<writeFN>, name of the file to write (defaul=<searchString>.txt)\n");
 		System.exit(1);
 	}
+
+	public String getForbiddenStringsComment()
+	{
+		return forbiddenStringsComment;
+	}
+
+	public void setForbiddenStringsComment(String forbiddenStringsComment)
+	{
+		this.forbiddenStringsComment = forbiddenStringsComment;
+	}
 }

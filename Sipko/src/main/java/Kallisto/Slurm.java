@@ -261,7 +261,7 @@ public class Slurm <M> extends Script<Slurm<M>> implements Cloneable{
 
 	private void writeSlurmCommands(BufferedWriter writer, int fileNumber) throws Exception {
 		writer.write("#!/bin/bash" + "\n");
-		writer.write("#SBATCH --job-name="+mapper + fileNumber + "\n");
+		writer.write("#SBATCH --job-name=" + fileNumber+".sh_"+mapper + "\n");
 		writer.write("#SBATCH --output=" + logsFolder + fileNumber + ".out\n");
 		writer.write("#SBATCH --error=" + errorsFolder + fileNumber + ".err\n");
 		// writer.write("#SBATCH --partition=medium\n");
@@ -390,7 +390,7 @@ public class Slurm <M> extends Script<Slurm<M>> implements Cloneable{
 				+ fastqWithPath + "\n");
 		
 		if(sTARv.getOutMode() != null && !sTARv.getOutMode().toLowerCase().equals("none"))
-			writeCommandsFeatureCounts(writer, outputFolder, sTARv);
+			writeCommandsFeatureCounts(writer, sTAR_Folder+outputFolder, sTARv);
 	}
 
 	private String writeSingleEndCommand(File file, boolean iris, BufferedWriter writer, int fileNumber,

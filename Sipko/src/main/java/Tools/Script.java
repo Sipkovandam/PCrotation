@@ -172,10 +172,8 @@ public class Script <T> implements Tools.Runnable, Serializable
 		this.executor = Script.class.getProtectionDomain().getCodeSource().getLocation().toString();
 		
 		GsonBuilder gsonBuilder = new GsonBuilder().setPrettyPrinting();
-
 		if(serializeNulls)
 			gsonBuilder = gsonBuilder.serializeNulls();
-		
 		
 		Gson gson = gsonBuilder.create();
 		//p(gson.toJson(this));
@@ -247,16 +245,25 @@ public class Script <T> implements Tools.Runnable, Serializable
 		}
 		return strippedJsonLines;
 	}
-
 	public void start()
+	{
+		start(null);
+	}
+	public void start(String jsonFN)
 	{
 		startTime = timeFormat.format(new Date());
 		start = System.nanoTime();
+		if(jsonFN != null)
+		{//sometimes this is incorrect
+			this.jsonFN=jsonFN;
+			writeConfig(this.jsonFN, true,true);
+		}
+		
 		if(this.jsonFN!=null)
 		{
 			this.setJsonFN(FileUtils.addBeforeExtention(this.jsonFN, "_usedConfigs"));
 			writeConfig(this.jsonFN, true,true);
-		}
+		}		
 		else
 			p("jsonFN not set, config file not written");
 	}

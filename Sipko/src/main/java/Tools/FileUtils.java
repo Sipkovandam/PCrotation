@@ -275,20 +275,34 @@ public class FileUtils
 		return withoutExtention;
 	}
 	
-	public static String addBeforeExtention(String jsonFN, String addString) 
+	public static String addBeforeExtention(String fileName, String addString) 
 	{
 		String newString = null;
-		if(jsonFN.contains("."))
+		if(fileName.contains("."))
 		{
-			String[] eles = jsonFN.split("\\.");
+			boolean isZipped = false;
+			if(fileName.endsWith(".gz"))
+			{
+				String[] eles = fileName.split("\\.");
+				String extention = "."+eles[eles.length-1];
+				String withoutExtention = fileName.replace(extention, "");
+				fileName = withoutExtention;
+			}
+			
+			String[] eles = fileName.split("\\.");
 			String extention = "."+eles[eles.length-1];
-			String withoutExtention = jsonFN.replace(extention, "");
+			String withoutExtention = fileName.replace(extention, "");
 			newString = withoutExtention+addString+extention;
+			
+			if(isZipped)
+			{
+				newString+=".gz";
+			}
 		}
 		else
 		{
-			System.out.println("Warning, extension is missing on file:\t" + jsonFN);
-			newString=jsonFN+addString;
+			System.out.println("Warning, extension is missing on file:\t" + fileName);
+			newString=fileName+addString;
 		}
 		return newString;
 	}
