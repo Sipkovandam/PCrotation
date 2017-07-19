@@ -4,6 +4,9 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 
+import MatrixScripts.MatrixStruct;
+import MatrixScripts.MyMatrix;
+
 public class CorrectSampleForPCsLudeApproach 
 {
 	public static void main(String[] args) throws IOException
@@ -36,11 +39,11 @@ public class CorrectSampleForPCsLudeApproach
 		/**6. Calculate PCscores for single sample**/
 		makeFolder(writeFolder);
 		JuhaPCA.PCA.log(" 1. Loading sample matrix");
-		Matrix singleSample = new Matrix(sampleFile);//expressionMatrix.getRow(0);
+		MyMatrix singleSample = new MyMatrix(sampleFile);//expressionMatrix.getRow(0);
 		
 		JuhaPCA.PCA.log(" 2. Transposing");
 		singleSample.transpose();
-		Matrix quantVector = new Matrix(vectorFolder+"SAMPLE_QuantileVector.txt");
+		MyMatrix quantVector = new MyMatrix(vectorFolder+"SAMPLE_QuantileVector.txt");
 		JuhaPCA.PCA.log(" 3. Removing rows that do not exist in the quantile normalization vector");
 		singleSample.keepRows(quantVector);
 		String rowsRemovedFileName = writeFolder+"_rowsNotInQuantVectorRemoved.txt";
@@ -55,11 +58,11 @@ public class CorrectSampleForPCsLudeApproach
 		singleSample.write(quantileAdjustedFN);
 		singleSample.transpose();
 		JuhaPCA.PCA.log(" 6. Adjusting for column averages (centering to target PC space)");
-		singleSample.adjustForAverageAllCols(new Matrix(vectorFolder+"SAMPLE_QuantNorm_columnAverages.txt"));
+		singleSample.adjustForAverageAllCols(new MyMatrix(vectorFolder+"SAMPLE_QuantNorm_columnAverages.txt"));
 		String writeColsCentered = writeFolder+"ColsCentered.txt";
 		singleSample.write(writeColsCentered);
 		//pca.PCA.log(" 7. Adjusting for row averages (centering to target PC space)");
-		Matrix averages = singleSample.calcAvgRows();
+		MyMatrix averages = singleSample.calcAvgRows();
 		String rowAveragesFileName = writeFolder+"rowAverages.txt";
 		averages.write(rowAveragesFileName);
 		//singleSample.adjustForAverageAllrows(averages);<-- I tested both with and without, it makes no difference (biggest value change was 10-7).

@@ -8,11 +8,12 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 
+import Tools.Run;
 import Tools.Toolkit;
 
 public class PCcorrection_testcase
 {
-
+//no longer works because I changed the PCcorrection script ;)
 	@Rule
 	public TemporaryFolder folder = new TemporaryFolder();
 
@@ -20,8 +21,8 @@ public class PCcorrection_testcase
 	public void test() throws Exception
 	{
 		String jsonFile = "TestCaseFiles/PCcorrection/eigenvectors/config.json";
-		String[] args = new String[] { "PCcorrection", "json=" + jsonFile };
-		Toolkit.main(args);
+		String[] args = new String[] { jsonFile };
+		Run.main(args);
 
 		File correctFolder = new File("TestCaseFiles/PCcorrection/correctResults/");
 		File[] correctFiles = correctFolder.listFiles();

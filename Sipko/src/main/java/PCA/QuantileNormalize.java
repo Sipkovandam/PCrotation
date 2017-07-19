@@ -2,6 +2,8 @@ package PCA;
 
 import java.io.IOException;
 
+import MatrixScripts.MyMatrix;
+
 public class QuantileNormalize 
 {
 	//Quantile normalizes a dataset
@@ -33,13 +35,13 @@ public class QuantileNormalize
 			}
 		}
 		
-		MatrixStruct expressionStruct = new MatrixStruct(expressionFN);
+		MyMatrix expressionStruct = new MyMatrix(expressionFN);
 		quantileNormalize(expressionStruct, writeFolder, writeAll);
 	}
 
-	public static void quantileNormalize(MatrixStruct expressionStruct, String writeFolder, boolean writeAll) throws IOException {
+	public static void quantileNormalize(MyMatrix expressionStruct, String writeFolder, boolean writeAll) throws IOException {
 		JuhaPCA.PCA.log(" 6. Calculating quantile normalization vector");
-		MatrixStruct qNormVector = expressionStruct.quantileNormVector();
+		MyMatrix qNormVector = expressionStruct.quantileNormVector();
 		qNormVector.write(writeFolder+ "SAMPLE_QuantileVector.txt");
 	
 		JuhaPCA.PCA.log(" 7. Quantile normalization");

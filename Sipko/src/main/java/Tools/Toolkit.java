@@ -8,30 +8,27 @@ import java.util.Arrays;
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.transform.TransformerException;
 
-import Analyses.AveragesPerRow;
 import Analyses.CorrelateFiles;
 import JuhaPCA.PCA;
 import Kallisto.CombineKallisto;
-import Kallisto.FastQtoExpression;
-import Kallisto.Slurm;
+import Kallisto._Kallisto_Pipeline;
+import MatrixScripts.RowStatisticsGetter;
+import MatrixScripts.GetCols;
+import MatrixScripts.GetRows;
+import MatrixScripts.LogTransform;
+import MatrixScripts.Transpose;
 import Kallisto.KeepThresholdSamples;
 import Kallisto.RemoveBadSamples;
-import Kallisto.SumTranscriptsToGenes;
-import PCA.PCApipeline;
-import PCA.GetCols;
-import PCA.GetRows;
 import PCA.IdentifyDiseaseGenes;
 import PCA.IdentifySimilarSamples;
-import PCA.LogTransform;
-import PCA.MergeFiles;
-import PCA.RLog;
+import PCA.DeSeqNorm;
 import PCA.RlogLargeMatrix;
 import PCA.RlogLargeMatrix_Main;
-import PCA.Transpose;
-import PCA.Zscore;
 import PrepData.GetSamplesWithEmptyCells;
-import STAR.SpliceMerger;
-import STAR._STAR_Pipeline;
+import STAR.SpliceMerger_InfiniteFileSizes;
+import STAR.STAR_Pipeline;
+import Slurm.Slurm;
+import Slurm.SumTranscriptsToGenes;
 import no.uib.cipr.matrix.NotConvergedException;
 
 public class Toolkit
@@ -60,25 +57,10 @@ public class Toolkit
 			GetSamplesWithEmptyCells.main(argsToPass);
 			break;
 		case "rlog":
-			RLog.main(argsToPass);
+			DeSeqNorm.main(argsToPass);
 			break;
 		case "rloglarge":
 			RlogLargeMatrix_Main.main(argsToPass);
-			break;
-		case "getrows":
-			GetRows.main(argsToPass);
-			break;
-		case "getcolumns":
-			GetCols.main(argsToPass);
-			break;
-		case "getcols":
-			GetCols.main(argsToPass);
-			break;
-		case "mergefiles":
-			MergeFiles.main(argsToPass);
-			break;
-		case "transpose":
-			Transpose.main(argsToPass);
 			break;
 		case "getoutliers":
 			IdentifyDiseaseGenes.main(argsToPass);
@@ -92,29 +74,8 @@ public class Toolkit
 		case "removebadsamples":
 			RemoveBadSamples.main(argsToPass);
 			break;
-		case "combinekallisto":
-			CombineKallisto.main(argsToPass);
-			break;
-		case "kallistoslurm":
-			new Slurm().run(argsToPass);
-			break;
 		case "keepthresholdsamples":
 			KeepThresholdSamples.main(argsToPass);
-			break;
-		case "fastqtoexpression":
-			FastQtoExpression.main(argsToPass);
-			break;
-		case "matrixstats":
-			MatrixStats.main(argsToPass);
-			break;
-		case "sumtranscriptstogenes":
-			SumTranscriptsToGenes.main(argsToPass);
-			break;
-		case "averagesperrow":
-			AveragesPerRow.main(argsToPass);
-			break;
-		case "zscores":
-			Zscore.main(argsToPass);
 			break;
 		case "correlatefiles":
 			CorrelateFiles.main(argsToPass);
@@ -133,8 +94,7 @@ public class Toolkit
 	{
 		String jsonName = argsToPass[0];
 		String scriptName = FileUtils.getLine(	jsonName,
-												"\"className\": \"")
-				.split("\"")[3];
+												"\"className\": \"").split("\"")[3];
 
 		switch (scriptName)
 		{

@@ -7,7 +7,7 @@ import java.util.Enumeration;
 import java.util.HashSet;
 import java.util.Hashtable;
 
-import PCA.Matrix;
+import MatrixScripts.MyMatrix;
 import Tools.FileUtils;
 
 public class findAllGeneSymbols 
@@ -15,7 +15,7 @@ public class findAllGeneSymbols
 
 	public static void main (String[] args) throws FileNotFoundException, IOException
 	{
-		Matrix humanSymbols = new Matrix("D:/Sipko/06-10-2016/GeneNamesOnly.txt"); 
+		MyMatrix humanSymbols = new MyMatrix("D:/Sipko/06-10-2016/GeneNamesOnly.txt"); 
 		
 		BufferedReader reader = FileUtils.createReader("D:/Sipko/06-10-2016/ThesisText.txt");
 		
@@ -48,7 +48,7 @@ public class findAllGeneSymbols
 	
 	
 
-	private static void addSymbols(Matrix humanSymbols, Hashtable<String, Integer> symbols) {
+	private static void addSymbols(MyMatrix humanSymbols, Hashtable<String, Integer> symbols) {
 		for(int r = 0; r < humanSymbols.rows(); r++)
 		{
 			symbols.put(humanSymbols.rowNames[r].toLowerCase(), 1);

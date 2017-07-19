@@ -13,6 +13,8 @@ import java.util.Date;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
+import MatrixScripts.MatrixStruct;
+import MatrixScripts.MyMatrix;
 import Tools.JSONutil;
 import Tools.Script;
 
@@ -50,7 +52,7 @@ public class RlogLargeMatrix extends Script<RlogLargeMatrix>
 			if(!new File(writeFolder).exists())
 				new File(writeFolder).mkdir();
 			
-			Matrix expression = new Matrix(expressionFN);
+			MyMatrix expression = new MyMatrix(expressionFN);
 			if(roundValues)
 				expression.roundValues();
 				rLog(writeFolder, expression, writeAll, geoFN);
@@ -80,7 +82,7 @@ public class RlogLargeMatrix extends Script<RlogLargeMatrix>
 		return fn;
 	}
 	
-	public void rLog(String writeFolder, Matrix expression, boolean writeAll, String geoFN) throws IOException 
+	public void rLog(String writeFolder, MyMatrix expression, boolean writeAll, String geoFN) throws IOException 
 	{
 		MatrixStruct geoMean = null;
 		if(geoFN!= null)
@@ -96,11 +98,11 @@ public class RlogLargeMatrix extends Script<RlogLargeMatrix>
 			expression.write(correctedNotLogged);
 	}
 	
-	public void rLog(Matrix expression, String writeFolder, String fileName, String writeGeoFN) throws IOException 
+	public void rLog(MyMatrix expression, String writeFolder, String fileName, String writeGeoFN) throws IOException 
 	{
 		rLog(expression, writeFolder, fileName, null, writeGeoFN);
 	}
-	public void rLog(Matrix expression, String writeFolder, String fileName, MatrixStruct geoMean, String writeGeoFN) throws IOException 
+	public void rLog(MyMatrix expression, String writeFolder, String fileName, MatrixStruct geoMean, String writeGeoFN) throws IOException 
 	{
 		if(geoMean == null)
 		{
@@ -109,7 +111,7 @@ public class RlogLargeMatrix extends Script<RlogLargeMatrix>
 			expression.readFile(fileName);
 		}
 
-		Matrix geoMeanMat = new Matrix(geoMean);
+		MyMatrix geoMeanMat = new MyMatrix(geoMean);
 		geoMeanMat.keepRows(expression);//keep only the rows that are also in the geomean file
 		
 		expression.write(fileName.replace(".txt", "geoRowsOnly.txt"));
@@ -144,7 +146,7 @@ public class RlogLargeMatrix extends Script<RlogLargeMatrix>
 		}
 	}
 	
-	private MatrixStruct getGeoMeans(Matrix expression ,String writeFolder, String writeGeoFN) throws IOException {
+	private MatrixStruct getGeoMeans(MyMatrix expression ,String writeFolder, String writeGeoFN) throws IOException {
 		expression.logTransform(10,0);
 		MatrixStruct geoMean = new MatrixStruct(expression.rows(),1);
 		geoMean.setRowHeaders(expression.getRowHeaders());

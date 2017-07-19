@@ -12,20 +12,8 @@ public class Run
 		run(args);
 	}
 
-	static void run(String[] args) throws Exception
+	public static void run(String[] args) throws Exception
 	{
-		//args = new String[]{"getjson","Tests.Test","E:/Groningen/Test/Run/"};
-		//args = new String[]{"E:/Groningen/Test/Run/config_Tests.Test_2017-01-18.json"};
-		//args = new String[]{"E:/Groningen/Test/JSON/STAR._STAR_Pipeline_config_2017-01-16_initiated.json"};
-		//args = new String[]{"getjson","STAR._STAR_Pipeline","E:/Groningen/Splicing/"};
-		//args = new String[] { "getjson", "PCA.PCApipeline", "E:/Groningen/Test/JSON/" };
-		//args = new String[] { "E:/Groningen/Test/JSON/PCApipeline/config_PCA.PCApipeline_2017-02-10.json" };
-		//args = new String[]{"getjson","STAR.ExonExpressionMerger","E:/Groningen/Splicing/AllBBMRI_analysis/"};
-		//args = new String[]{"E:/Groningen/Test/JSON/config_STAR.ExonExpressionMerger_2017-01-18.json"};
-
-		//args = new String[]{"E:/Groningen/Splicing/100BPcap_analysis/Results/PerGene/config_STAR.FilePerGeneMerger_2017-01-25.json"};
-		//args = new String[]{"E:/Groningen/Test/config_Tools.FileSearcher_2017-01-20.json"};
-
 		if (args.length != 1 && args.length != 3)
 		{
 			System.out.println("This splice site pipeline requires a json input file. Options:\n" + "1. Supply the pathname to the json input file, for example:\n" + "</root/directory/config.json>\n" + "2. Request for an empty configuration file for a certian script:\n " + "getjson package.classname </root/directory/config.json> \n");
@@ -87,15 +75,22 @@ public class Run
 
 	public static void createConfigFile(String[] args) throws Exception
 	{
-		File file = new File(args[2]);
-		File dir = new File(file.getParent());
-		if (!dir.exists())
+		File dir = new File(args[2]);
+		File parentDir = new File(dir.getParent());
+		System.out.println(parentDir.getAbsolutePath());
+		if (!parentDir.exists())
 		{
-			System.out.println("Directory does not exist: " + dir.getAbsolutePath() + "\n" + "Exiting");
+			System.out.println("Parent directory does not exist: " + parentDir.getAbsolutePath() + "\n" + "Exiting");
 			System.exit(1);
 		}
+		if (!dir.exists())
+		{
+			System.out.println("Directory does not exist: " + dir.getAbsolutePath() + "\n" + "Creating directory");
+			dir.mkdir();
+		}
+		
+		
 		System.out.println("Creating config file");
-
 		String classToRun = args[1];
 		System.out.println("ExecutorClass=" + classToRun);
 		//get the class
@@ -110,6 +105,6 @@ public class Run
 													String.class);
 		//invoke the method
 		writeConfig.invoke(	configWriter,
-							file.getAbsolutePath());
+							dir.getAbsolutePath());
 	}
 }

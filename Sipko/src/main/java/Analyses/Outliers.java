@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.Hashtable;
 
-import PCA.MatrixStruct;
+import MatrixScripts.MatrixStruct;
 import umcg.genetica.containers.Pair;
 
 public class Outliers {

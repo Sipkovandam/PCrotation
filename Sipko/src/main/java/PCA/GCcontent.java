@@ -2,6 +2,7 @@ package PCA;
 
 import java.io.IOException;
 
+import MatrixScripts.MatrixStruct;
 import eqtlmappingpipeline.normalization.Normalizer;
 import umcg.genetica.math.matrix.DoubleMatrixDataset;
 
@@ -57,6 +58,7 @@ public class GCcontent
 	}
 	public static MatrixStruct calculateAndCorrect(MatrixStruct expressionStruct, MatrixStruct geneGC, String gCperSampleWriteFN, String gcCorrectedWriteFN)
 	{
+		//I never tested this function as the GC content measurements were inaccurate
 		GCcontent.calculateGCperSample(expressionStruct, geneGC,gCperSampleWriteFN);
 		
 		Normalizer normalizer = new Normalizer();

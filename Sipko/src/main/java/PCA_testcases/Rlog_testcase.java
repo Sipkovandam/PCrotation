@@ -6,8 +6,9 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 
-import PCA.MatrixStruct;
-import PCA.RLog;
+import MatrixScripts.MatrixStruct;
+import MatrixScripts.MyMatrix;
+import PCA.DeSeqNorm;
 
 public class Rlog_testcase {
 
@@ -23,8 +24,8 @@ public class Rlog_testcase {
 		String writeFolder = folder.getRoot().getAbsolutePath()+"/";
 		System.out.println(folder.getRoot().exists());
 		
-		MatrixStruct testFile = new MatrixStruct(fileName);
-		RLog.rLog(testFile, writeFolder, fileName, null);
+		MyMatrix testFile = new MyMatrix(fileName);
+		DeSeqNorm.rLog(testFile, writeFolder, fileName, null);
 		String rlogFN= writeFolder+"Samples.DESeqNorm.txt.gz";
 		testFile.write(rlogFN);
 		

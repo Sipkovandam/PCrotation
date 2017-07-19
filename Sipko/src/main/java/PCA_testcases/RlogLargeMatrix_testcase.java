@@ -6,8 +6,8 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 
-import PCA.MatrixStruct;
-import PCA.RLog;
+import MatrixScripts.MatrixStruct;
+import PCA.DeSeqNorm;
 import PCA.RlogLargeMatrix;
 import PCA.RlogLargeMatrix_Main;
 

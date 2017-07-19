@@ -5,7 +5,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Hashtable;
 
-import PCA.Matrix;
+import MatrixScripts.MyMatrix;
 import Tools.FileUtils;
 
 import java.io.FileWriter;
@@ -23,7 +23,7 @@ public class RemoveBadSamples {
 		checkArgs(args);
 		if(writeFolder == null)
 			writeFolder = expressionFN.replace(".txt", "").replace(".gz", "");
-		Matrix expression = new Matrix(expressionFN);
+		MyMatrix expression = new MyMatrix(expressionFN);
 		
 		Hashtable<String,Integer> genesExpressed = new Hashtable<String,Integer>();
 		expression.putGenesOnRows();
@@ -59,12 +59,12 @@ public class RemoveBadSamples {
 		System.out.println("Done, file written to: " + writeFolder);
 	}
 	
-	private static Matrix writeLeftOverMatrix(Matrix expression, int nGood, Hashtable<String, Integer> genesExpressed) throws IOException {
-		Matrix result = new Matrix(expression.rows(),nGood);
+	private static MyMatrix writeLeftOverMatrix(MyMatrix expression, int nGood, Hashtable<String, Integer> genesExpressed) throws IOException {
+		MyMatrix result = new MyMatrix(expression.rows(),nGood);
 		result.setRowHeaders(expression.getRowHeaders());
 		
 		int outCol = 0;
-		Matrix nExpressed = new Matrix(expression.rows(),2);
+		MyMatrix nExpressed = new MyMatrix(expression.rows(),2);
 		nExpressed.rowNames=expression.getRowHeaders();
 		nExpressed.colNames=new String[]{"expressedN","total"};
 		for(int c = 0; c < expression.cols(); c++)

@@ -8,7 +8,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Hashtable;
 
-import PCA.MatrixStruct;
+import MatrixScripts.MatrixStruct;
 
 public class GeneToTranscript 
 {

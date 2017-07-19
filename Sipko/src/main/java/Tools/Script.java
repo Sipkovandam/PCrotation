@@ -22,8 +22,8 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
 import PCA.RlogLargeMatrix;
-import STAR.SpliceMerger;
-import STAR._STAR_Pipeline;
+import STAR.SpliceMerger_InfiniteFileSizes;
+import STAR.STAR_Pipeline;
 import Tests.TestObject;
 import Tests.TestObject3;
 
@@ -37,7 +37,7 @@ public class Script <T> implements Tools.Runnable, Serializable
 	static transient final Format timeFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 	
 	
-	private final String className = this.getClass().getName();//handy in the json file to see which script generated it
+	private String className = this.getClass().getName();
 	private String startTime = timeFormat.format(new Date());
 	private String executor = Script.class.getProtectionDomain().getCodeSource().getLocation().toString();
 	private transient double start = System.nanoTime();
@@ -95,7 +95,7 @@ public class Script <T> implements Tools.Runnable, Serializable
 		var.jsonFN=jsonFilename;
 		return var;
 	}
-	
+		
 	public List<Object> r(Object ... objects)//retuns a list of objects... Handy for passing objects from a function
 	{
 		List<Object> objectList = new ArrayList<>();
@@ -167,6 +167,8 @@ public class Script <T> implements Tools.Runnable, Serializable
 	{
 //		if(jsonFN.startsWith("null"))
 //			return;
+		if(this.jsonFN.contains("No need to initiate this variable, but used in pipelines to identify the scripts that where used in all substeps"))
+			this.jsonFN=getNewJsonFN();
 		this.setJsonFN(jsonFN);
 		
 		this.executor = Script.class.getProtectionDomain().getCodeSource().getLocation().toString();
@@ -253,19 +255,19 @@ public class Script <T> implements Tools.Runnable, Serializable
 	{
 		startTime = timeFormat.format(new Date());
 		start = System.nanoTime();
-		if(jsonFN != null)
-		{//sometimes this is incorrect
+		if(!jsonFN.contains("No need to initiate this variable, but used in pipelines to identify the scripts that where used in all substeps"))
+		{
 			this.jsonFN=jsonFN;
 			writeConfig(this.jsonFN, true,true);
 		}
 		
-		if(this.jsonFN!=null)
-		{
-			this.setJsonFN(FileUtils.addBeforeExtention(this.jsonFN, "_usedConfigs"));
-			writeConfig(this.jsonFN, true,true);
-		}		
-		else
-			p("jsonFN not set, config file not written");
+//		if(this.jsonFN!=null)
+//		{
+//			this.setJsonFN(FileUtils.addBeforeExtention(this.jsonFN, "_usedConfigs"));
+//			writeConfig(this.jsonFN, true,true);
+//		}		
+//		else
+//			p("jsonFN not set, config file not written");
 	}
 	public void end()
 	{
@@ -296,13 +298,15 @@ public class Script <T> implements Tools.Runnable, Serializable
 		return runTime;
 	}
 	
-	public void p(String line)
+	public void p(Object line)
 	{
 		String time = timeFormat.format(new Date());
         System.out.println(time + " (" + this.getClassName() + "):\t" + line);
 	}
 
 	public String getClassName() {
+		if(this.className == null)
+			this.className=this.getClass().getName();
 		return className;
 	}
 

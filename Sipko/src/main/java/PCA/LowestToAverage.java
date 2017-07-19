@@ -1,5 +1,7 @@
 package PCA;
 
+import MatrixScripts.MyMatrix;
+
 public class LowestToAverage {
 	//sets the lowest value in a dataset to the average
 	
@@ -30,11 +32,11 @@ public class LowestToAverage {
 			}
 		}
 		
-		MatrixStruct expressionStruct = new MatrixStruct(expressionFN);
+		MyMatrix expressionStruct = new MyMatrix(expressionFN);
 		lowestToAverage(expressionStruct);
 	}
 
-	public static void lowestToAverage(MatrixStruct expressionStruct) 
+	public static void lowestToAverage(MyMatrix expressionStruct) 
 	{
 		for(int r = 0; r < expressionStruct.rows(); r++)
 		{

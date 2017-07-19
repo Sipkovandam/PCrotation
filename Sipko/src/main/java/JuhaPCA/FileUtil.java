@@ -143,32 +143,39 @@ public class FileUtil {
         }
         ++rowsInserted;
     }
-
+    
     public static void writeMatrix(FileWriter fw, DenseMatrix matrix, String[] rowHeaders, String[] colHeaders) throws IOException {
-        writeMatrix(fw, matrix, rowHeaders, colHeaders, false);
+        writeMatrix(fw, matrix, rowHeaders, colHeaders, false, false);
     }
-    public static void writeMatrix(BufferedWriter fw, DenseMatrix matrix, String[] rowHeaders, String[] colHeaders) throws IOException {
-        writeMatrix(fw, matrix, rowHeaders, colHeaders, false);
+    
+    public static void writeMatrix(FileWriter fw, DenseMatrix matrix, String[] rowHeaders, String[] colHeaders, boolean append) throws IOException {
+        writeMatrix(fw, matrix, rowHeaders, colHeaders, false, append);
     }
-    public static void writeMatrix(FileWriter fw, DenseMatrix matrix, String[] rowHeaders, String[] colHeaders, boolean transpose) throws IOException {
-    	writeMatrix(new BufferedWriter(fw), matrix, rowHeaders, colHeaders, transpose);
+    public static void writeMatrix(BufferedWriter fw, DenseMatrix matrix, String[] rowHeaders, String[] colHeaders, boolean append) throws IOException {
+        writeMatrix(fw, matrix, rowHeaders, colHeaders, false, append);
+    }
+    public static void writeMatrix(FileWriter fw, DenseMatrix matrix, String[] rowHeaders, String[] colHeaders, boolean transpose, boolean append) throws IOException {
+    	writeMatrix(new BufferedWriter(fw), matrix, rowHeaders, colHeaders, transpose, append);
     }
 
-    public static void writeMatrix(BufferedWriter fw, DenseMatrix matrix, String[] rowHeaders, String[] colHeaders, boolean transpose) throws IOException {
+    public static void writeMatrix(BufferedWriter fw, DenseMatrix matrix, String[] rowHeaders, String[] colHeaders, boolean transpose, boolean append) throws IOException {
         String date = PCA.dateFormat.format(new Date());
 
         // write date and column headers to first line
-        fw.write(date);
-        if (transpose) {
-            for (int c = 0, cols = matrix.numRows(); c < cols; c++) {
-                fw.write("\t" + colHeaders[c]);
-            }
-        } else {
-            for (int c = 0, cols = matrix.numColumns(); c < cols; c++) {
-                fw.write("\t" + colHeaders[c]);
-            }
+        if(!append)
+        {
+	        fw.write(date);
+	        if (transpose) {
+	            for (int c = 0, cols = matrix.numRows(); c < cols; c++) {
+	                fw.write("\t" + colHeaders[c]);
+	            }
+	        } else {
+	            for (int c = 0, cols = matrix.numColumns(); c < cols; c++) {
+	                fw.write("\t" + colHeaders[c]);
+	            }
+	        }
+	        fw.write("\n");
         }
-        fw.write("\n");
 
         // write data with row headers
         if (transpose) {
@@ -190,10 +197,13 @@ public class FileUtil {
         }
         fw.close();
     }
-
     public static void writeArray(FileWriter fw, String name, double[] array) throws IOException {
+    	 writeArray(fw, name, array, false);
+    }
 
-        fw.write(name + "\n");
+    public static void writeArray(FileWriter fw, String name, double[] array, boolean append) throws IOException {
+    	if(!append)
+    		fw.write(name + "\n");
         for (int i = 0, len = array.length; i < len; i++) {
             fw.write(array[i] + "\n");
         }

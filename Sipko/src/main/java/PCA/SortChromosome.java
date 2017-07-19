@@ -8,6 +8,8 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.Hashtable;
 
+import MatrixScripts.MyMatrix;
+
 public class SortChromosome 
 {
 	//Sorts genes in a file by chromosome location.
@@ -44,9 +46,9 @@ public class SortChromosome
 			System.exit(1);
 		}
 	}
-	public static MatrixStruct sortChromosome(String sampleFile, String chromLocationsFile, boolean writeAll, String writeFolder) throws IOException
+	public static MyMatrix sortChromosome(String sampleFile, String chromLocationsFile, boolean writeAll, String writeFolder) throws IOException
 	{
-		MatrixStruct sampleStruct = new MatrixStruct(sampleFile);
+		MyMatrix sampleStruct = new MyMatrix(sampleFile);
 		sampleStruct.putGenesOnRows();
 		sampleStruct = SortChromosome.sort(sampleStruct , chromLocationsFile);
 		sampleFile = writeFolder+"chromSorted.txt";
@@ -57,7 +59,7 @@ public class SortChromosome
 		}
 		return sampleStruct;
 	}
-	public static MatrixStruct sort(MatrixStruct samples, String chromLocationsFile)
+	public static MyMatrix sort(MyMatrix samples, String chromLocationsFile)
 	{
 		if(chromLocationsFile==null)
 			return samples;
@@ -70,15 +72,15 @@ public class SortChromosome
 		}
 	
 		JuhaPCA.PCA.log("Sorting IDs based on chromosome locations");
-		MatrixStruct chromLocs = new MatrixStruct(chromLocationsFile);
+		MyMatrix chromLocs = new MyMatrix(chromLocationsFile);
 		//only sorts those that are in the sample
 		samples.keepRows(chromLocs);
 		samples.rows();
 		System.out.println("IDs present in both files = " + chromLocs.rows());
 		//first sort the chromosome location file
 		String[] sortedNames = sortChromMatrix(chromLocs);
-		Hashtable<String, Integer> geneIndex = MatrixStruct.makeHash(sortedNames);
-		MatrixStruct sortedSample = new MatrixStruct(samples.rows(),samples.cols());
+		Hashtable<String, Integer> geneIndex = MyMatrix.makeHash(sortedNames);
+		MyMatrix sortedSample = new MyMatrix(samples.rows(),samples.cols());
 		sortedSample.setColHeaders(samples.getColHeaders());
 		int unsorted = 0;
 		for(int r = 0; r < samples.rows(); r++)
@@ -103,7 +105,7 @@ public class SortChromosome
 		
 		return sortedSample;
 	}
-	private static String[] sortChromMatrix(MatrixStruct chromLocs) 
+	private static String[] sortChromMatrix(MyMatrix chromLocs) 
 	{
 		class Row
 		{

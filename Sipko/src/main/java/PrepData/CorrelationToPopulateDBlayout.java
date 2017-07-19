@@ -2,7 +2,7 @@ package PrepData;
 
 import java.io.IOException;
 
-import PCA.MatrixStruct;
+import MatrixScripts.MatrixStruct;
 
 public class CorrelationToPopulateDBlayout 
 {

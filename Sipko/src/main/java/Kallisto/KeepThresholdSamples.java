@@ -5,9 +5,11 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.Enumeration;
+import java.util.HashMap;
 import java.util.Hashtable;
+import java.util.Set;
 
-import PCA.Matrix;
+import MatrixScripts.MyMatrix;
 import Tools.FileUtils;
 
 public class KeepThresholdSamples 
@@ -23,7 +25,7 @@ public class KeepThresholdSamples
 		if(writeFN==null)
 			writeFN=FileUtils.replaceEnd(countsFN, "0.7.txt.gz");
 		
-		Hashtable<String, Double> mappingPercentage = FileUtils.readDoublehash(mappingPercentageFN);
+		HashMap<String, Double> mappingPercentage = FileUtils.readDoublehash(mappingPercentageFN);
 		BufferedReader reader = FileUtils.createReader(mappingPercentageFN);
 		String line = null;
 		while((line=reader.readLine())!=null)
@@ -35,17 +37,17 @@ public class KeepThresholdSamples
 			double percentage = mapping/total;
 			mappingPercentage.put(fn, percentage);
 		}
-		Matrix counts = new Matrix(countsFN);
-		Hashtable<String, Double> mappingAboveCutoff = getN_AboveCutoff(mappingPercentage,counts);
+		MyMatrix counts = new MyMatrix(countsFN);
+		HashMap<String, Double> mappingAboveCutoff = getN_AboveCutoff(mappingPercentage,counts);
 		
-		Matrix output = getMappingAboveCutoff(mappingAboveCutoff,counts);
+		MyMatrix output = getMappingAboveCutoff(mappingAboveCutoff,counts);
 		
 		output.write(writeFN);
 		System.out.println("mappingPercentageFile file written to: " + writeFN );
 	}
-	private static Matrix getMappingAboveCutoff(Hashtable<String, Double> mappingAboveCutoff, Matrix counts) {
+	private static MyMatrix getMappingAboveCutoff(HashMap<String, Double> mappingAboveCutoff, MyMatrix counts) {
 		
-		Matrix output = new Matrix(counts.rows(),mappingAboveCutoff.size());
+		MyMatrix output = new MyMatrix(counts.rows(),mappingAboveCutoff.size());
 		output.rowNames=counts.getRowHeaders();
 
 		int outCol = 0;
@@ -63,12 +65,11 @@ public class KeepThresholdSamples
 		}
 		return output;
 	}
-	private static Hashtable<String, Double> getN_AboveCutoff(Hashtable<String, Double> mappingPercentage, Matrix counts) {
-		Enumeration<String> fileNames = mappingPercentage.keys();
-		Hashtable<String, Double> mappingAboveCutoff = new Hashtable<String, Double>();
-		while(fileNames.hasMoreElements())
+	private static HashMap<String, Double> getN_AboveCutoff(HashMap<String, Double> mappingPercentage, MyMatrix counts) {
+		Set<String> fileNames = mappingPercentage.keySet();
+		HashMap<String, Double> mappingAboveCutoff = new HashMap<String, Double>();
+		for(String errorFN : fileNames)
 		{
-			String errorFN = fileNames.nextElement();
 			File errorFile = new File(errorFN);
 			File path = new File(errorFile.getParent());
 			String colName =  path.getName();

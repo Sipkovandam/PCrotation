@@ -7,6 +7,8 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.stream.IntStream;
 
+import MatrixScripts.MatrixStruct;
+
 public class IdentifyDiseaseGenes 
 {
 	//identifies outlier genes per sample (those that are <cutoffs> standard deviations away from the average expression of all genes) 

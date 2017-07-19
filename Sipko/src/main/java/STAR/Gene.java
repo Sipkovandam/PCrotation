@@ -3,13 +3,35 @@ package STAR;
 public class Gene 
 {
 
-	public String ensemblID;
-	public String geneSymbol;
+	private String ensemblID;
+	private String geneSymbol;
 	
 	public String chromosome;
 	public int start;
 	public int end;
 	
+	public String getEnsemblID()
+	{
+		return ensemblID;
+	}
+
+	public void setEnsemblID(String ensemblID)
+	{
+		this.ensemblID = ensemblID;
+	}
+
+	public String getGeneSymbol(boolean upperCase)
+	{
+		if(upperCase == true && this.geneSymbol!=null)
+			return geneSymbol.toUpperCase();	
+		return geneSymbol;
+	}
+
+	public void setGeneSymbol(String geneSymbol)
+	{
+		this.geneSymbol = geneSymbol;
+	}
+
 	Gene(String ensemblID, String geneSymbol, String chromosome, int start, int end)
 	{
 		this.ensemblID = ensemblID;
@@ -24,5 +46,6 @@ public class Gene
 			return true;
 		return false;
 	}
+	
 	
 }

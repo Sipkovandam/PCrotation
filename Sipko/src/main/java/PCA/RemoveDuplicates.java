@@ -3,6 +3,7 @@ package PCA;
 import java.io.IOException;
 import java.util.ArrayList;
 
+import MatrixScripts.MyMatrix;
 import umcg.genetica.math.stats.Correlation;
 
 public class RemoveDuplicates {
@@ -40,11 +41,11 @@ public class RemoveDuplicates {
 			}
 		}
 		
-		MatrixStruct expressionStruct = new MatrixStruct(expressionFN);
+		MyMatrix expressionStruct = new MyMatrix(expressionFN);
 		removeDuplicates(expressionStruct, removeDuplicates, writeFolder,writeAll);
 	}
 
-	public static void removeDuplicates(MatrixStruct expression, double duplicateCutoff, String writeFolder, boolean write) throws IOException {
+	public static void removeDuplicates(MyMatrix expression, double duplicateCutoff, String writeFolder, boolean write) throws IOException {
 		//this function assumes duplicate rows are always next to each other (as is usually the case)
 		//This saves some computational time
 		if(duplicateCutoff >= 1)
@@ -58,7 +59,7 @@ public class RemoveDuplicates {
 				rowsToRemove.add(r+1);
 		}
 		System.out.println("Removing  " + rowsToRemove.size() + " duplicates");
-		MatrixStruct adjustedMatrix = new MatrixStruct(expression.rows()-rowsToRemove.size(),expression.cols());
+		MyMatrix adjustedMatrix = new MyMatrix(expression.rows()-rowsToRemove.size(),expression.cols());
 		adjustedMatrix.setColHeaders(expression.getColHeaders());
 		int a = 0;
 		int outRow = 0;

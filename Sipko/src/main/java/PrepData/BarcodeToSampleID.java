@@ -5,7 +5,7 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.Hashtable;
 
-import PCA.Matrix;
+import MatrixScripts.MyMatrix;
 import Tools.FileUtils;
 
 public class BarcodeToSampleID {
@@ -21,7 +21,7 @@ public class BarcodeToSampleID {
 		checkArgs(args);
 		Hashtable<String, String> conversion = getConversionHash();
 		
-		Matrix counts = new Matrix(countFN);
+		MyMatrix counts = new MyMatrix(countFN);
 		for(int c = 0; c < counts.cols(); c++)
 		{//160120_SN163_0694_AC8N1LACXX_L5_ATTCCT
 			String[] eles = counts.colNames[c].split("_");

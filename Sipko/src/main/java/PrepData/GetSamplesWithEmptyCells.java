@@ -8,7 +8,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
 
-import PCA.MatrixStruct;
+import MatrixScripts.MatrixStruct;
 
 public class GetSamplesWithEmptyCells 
 {

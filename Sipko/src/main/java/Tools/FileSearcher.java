@@ -14,8 +14,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import PCA.MatrixStruct;
-import STAR.StringFilter;
+import MatrixScripts.MatrixStruct;
 
 /**
  * @author Sipko
@@ -43,89 +42,10 @@ public class FileSearcher extends Script<FileSearcher> {
 	String requiredStringFN = null;// "E:/Groningen/Test/STAR/STAR/RequiredStrings.txt";
 	private String sampleNamesFNComment = "/root/directory/sampleNames.txt; OPTIONAL //filename of a file containing enter separated strings. This needs to be the name of the file (excluding root) after removing (removeBits)";
 	String sampleNamesFN = null;// "E:/Groningen/Test/STAR/STAR/RequiredStrings.txt";
-	private String sampleCheckRemoveAfterStringsComment = "[\"_R1_\",\".fq\"]; OPTIONAL //bits to remove from filename before checking if the sample should be included";
-	private String[] sampleCheckRemoveAfterStrings = new String[]{"_R1.fq","_R2.fq","_1.fq","_2.fq"};
+	private String sampleCheckRemoveAfterStringsComment = "[\"_R1_\",\".fq\"]; OPTIONAL //bits to remove from filename before checking if the sample should be included. Only used if sampleNamesFN is defined.";
+	private String[] sampleCheckRemoveAfterStrings = new String[]{"_R1.fq","_R2.fq","_1.*","_2.*"};
 	private String forbiddenStringsComment = "[\"md5\",\"DISCARDED\"]; OPTIONAL //Comma separated list of strings. Any fastq file, defined by fastQSearchStringsComment, containing this string is not included in the analysis";
 	String[] forbiddenStrings = new String[]{".md5","DISCARDED"};
-
-	private class RequiredStringChecker implements StringFilter {
-		private String[] requiredString = null;
-		
-		RequiredStringChecker(String[] requiredString)
-		{
-			this.requiredString=requiredString;
-		}
-		
-		/**
-		 * @param fileName
-		 * @return True, if filter is pass, false if not
-		 */
-		@Override
-		public boolean isPass(String fileName) {
-			if (requiredString == null)
-				return true;
-			else// check if the other required string (any of them) is also present
-				// in the filename
-				for (int r = 0; r < requiredString.length; r++)
-					if (requiredString[r] != null && fileName.contains(requiredString[r]))
-						return true;
-			return false;
-		}
-	}
-	
-	private class ForbiddenStringChecker implements StringFilter {
-		private String[] forbiddenString = null;
-		
-		ForbiddenStringChecker(String[] forbiddenString)
-		{
-			this.forbiddenString=forbiddenString;
-		}
-		/**
-		 * @param fileName
-		 * @return True, if filter is pass, false if not
-		 */
-		@Override
-		public boolean isPass(String fileName) {
-			if (forbiddenString != null)
-				for (int s = 0; s < forbiddenString.length; s++)
-				{
-					if (forbiddenString[s] != null && fileName.contains(forbiddenString[s]))
-						return false;
-				}
-			return true;
-		}
-	}
-	
-	private class SampleNameChecker implements StringFilter {
-		private Set<String> includeList = null;
-		private String[] replaceElements = null;
-		
-		SampleNameChecker(Set<String> includeList,String[] replaceElements)
-		{
-			this.includeList=includeList;
-			this.replaceElements=replaceElements;
-		}
-		/**
-		 * @param fileName
-		 * @return True, if filter is pass, false if not
-		 */
-		@Override
-		public boolean isPass(String fileName) {
-			
-			if(includeList==null)
-				return true;
-		
-			for (String replaceElement : replaceElements) {
-				if(replaceElement!= null)
-					fileName = fileName.replaceAll(replaceElement+".*", "");
-			}
-			if (includeList.contains(fileName))
-			{
-				return true;
-			}
-			return false;
-		}
-	}
 
 	public FileSearcher() {
 	}
@@ -194,27 +114,23 @@ public class FileSearcher extends Script<FileSearcher> {
 				this.jsonFN = new File(writeName).getParent() + getJsonFN();
 			writeConfig();
 			String[] folderNames = folders.split(",");
+			FileUtils.makeDir(new File(writeName).getParent());
+				
+			//make the filters
+			StringFilters stringFilters = new StringFilters();
+			Set<String> sampleNames = parseSampleNames(sampleNamesFN);
+			stringFilters.addFilter(stringFilters.new SampleNameChecker(sampleNames,sampleCheckRemoveAfterStrings));
+			stringFilters.addFilter(stringFilters.new ForbiddenStringChecker(forbiddenStrings));
+			stringFilters.addFilter(stringFilters.new RequiredStringChecker(searchStrings));
+			final String[] requiredStringsFinal = readRequiredStrings(requiredStringFN);
+			stringFilters.addFilter(stringFilters.new RequiredStringChecker(requiredStringsFinal));
+
+			List<StringFilter> checks = stringFilters.getFilters();
+
+			//get the results
 			BufferedWriter writer = FileUtils.createWriter(writeName);
 			BufferedWriter writerFailed = FileUtils.createWriter(FileUtils.removeExtention(writeName)+"_otherFiles.txt");
-			
-			Set<String> sampleNames = parseSampleNames(sampleNamesFN);
-			SampleNameChecker sampleNameChecker = new SampleNameChecker(sampleNames,sampleCheckRemoveAfterStrings);
-			
-			ForbiddenStringChecker forbiddenStringChecker = new ForbiddenStringChecker(forbiddenStrings);
-			List<StringFilter> checks = new ArrayList<>();
-			
-			RequiredStringChecker searchStringChecker = new RequiredStringChecker(searchStrings);
-			
-			final String[] requiredStringsFinal = readRequiredStrings(requiredStringFN);
-			RequiredStringChecker requiredStringChecker = new RequiredStringChecker(requiredStringsFinal);
-			
-			checks.add(forbiddenStringChecker);
-			checks.add(searchStringChecker);
-			checks.add(requiredStringChecker);
-			checks.add(sampleNameChecker);
-			
-			Stream.of(folderNames).forEach(folderName -> searchDirectory(new File(folderName), writer, writerFailed, searchStrings,
-					requiredStringsFinal, forbiddenStrings,checks));
+			Stream.of(folderNames).forEach(folderName -> searchDirectory(new File(folderName), writer, writerFailed, checks));
 			
 			writerFailed.close();
 			writer.close();
@@ -246,17 +162,16 @@ public class FileSearcher extends Script<FileSearcher> {
 
 
 
-	public void searchDirectory(File directory, BufferedWriter writer, BufferedWriter writerFailed, String[] searchString,
-			String[] requiredString, String[] forbiddenString, List<StringFilter> checks){
+	public void searchDirectory(File directory, BufferedWriter writer, BufferedWriter writerFailed, List<StringFilter> checks){
 
 		try {
 			File[] files = directory.listFiles();
 			for (File file : files) {
 				if (file.isDirectory())
-					searchDirectory(file, writer, writerFailed, searchString, requiredString, forbiddenString, checks);
+					searchDirectory(file, writer, writerFailed, checks);
 				else {
 					String fileName = file.getName();
-					boolean include = checkInclude(searchString, fileName, requiredString, forbiddenString, checks);
+					boolean include = checkInclude(fileName, checks);
 
 					if (include)
 						writer.write(file.getAbsolutePath() + "\n");
@@ -269,13 +184,9 @@ public class FileSearcher extends Script<FileSearcher> {
 		}
 	}
 
-	private boolean checkInclude(String[] searchString, String fileName, String[] requiredString,
-			String[] forbiddenString, List<StringFilter> checks) throws Exception {
+	private boolean checkInclude(String fileName, List<StringFilter> checks) throws Exception {
 
 		boolean include = true;
-		//-1 = failed a mandatory test
-		//1 = passed but continue other checks to see if any other mandatory check are failing
-		//2 = check passed return true (break)
 		for(StringFilter check : checks)
 		{
 			include=(boolean) check.isPass(fileName);

@@ -1,8 +1,9 @@
 package Analyses;
 
-import PCA.Matrix;
 import Tools.FileUtils;
 import org.apache.commons.math3.stat.correlation.PearsonsCorrelation;
+
+import MatrixScripts.MyMatrix;
 
 public class CorrelateFiles 
 {
@@ -20,27 +21,27 @@ public class CorrelateFiles
 			writeName2 = FileUtils.replaceEnd(fn1, "_VSfile2CorrColumns.txt");
 		
 		
-		Matrix m1 = new Matrix(fn1);
-		Matrix m2 = new Matrix(fn2);
+		MyMatrix m1 = new MyMatrix(fn1);
+		MyMatrix m2 = new MyMatrix(fn2);
 
 		m1.keepRows(m2);//keep only rows present in both files and put them in the same order
 		
-		Matrix corrRows = getCorPerRow(m1, m2);
+		MyMatrix corrRows = getCorPerRow(m1, m2);
 		corrRows.write(writeName1);
 		System.out.println("File written to:" + writeName1);
 		m1.transpose();
 		m2.transpose();
 		m1.keepRows(m2);
 		
-		Matrix corrCols = getCorPerRow(m1, m2);
+		MyMatrix corrCols = getCorPerRow(m1, m2);
 
 		corrCols.write(writeName2);
 		System.out.println("File written to:" + writeName2);
 	}
-	private static Matrix getCorPerRow(Matrix m1, Matrix  m2) {
+	private static MyMatrix getCorPerRow(MyMatrix m1, MyMatrix  m2) {
 		
 		PearsonsCorrelation correlator = new PearsonsCorrelation();
-		Matrix corrRows = new Matrix(m1.rows(), 1);
+		MyMatrix corrRows = new MyMatrix(m1.rows(), 1);
 		corrRows.rowNames= m1.rowNames;
 		corrRows.colNames= new String[]{"Correlation"};
 		for(int r = 0; r < m1.rows(); r++)

@@ -6,6 +6,7 @@ import org.apache.commons.math3.stat.inference.TTest;
 
 import Analyses.WilcoxonMannWhitney;
 import JuhaPCA.PCA;
+import MatrixScripts.MatrixStruct;
 
 public class IdentifySimilarSamples 
 {

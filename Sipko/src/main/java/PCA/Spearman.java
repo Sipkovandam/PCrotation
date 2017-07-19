@@ -2,6 +2,8 @@ package PCA;
 
 import java.io.IOException;
 
+import MatrixScripts.MyMatrix;
+
 public class Spearman 
 {
 	//does not actually calculate the correlation, only ranks the sample
@@ -34,11 +36,11 @@ public class Spearman
 			}
 		}
 		
-		MatrixStruct expressionStruct = new MatrixStruct(expressionFN);
+		MyMatrix expressionStruct = new MyMatrix(expressionFN);
 		ranks(writeFolder, expressionStruct, spearman);
 	}
 
-	public static void ranks(String writeFolder, MatrixStruct expressionStruct, double spearman) throws IOException {
+	public static void ranks(String writeFolder, MyMatrix expressionStruct, double spearman) throws IOException {
 		String beforeRanks = writeFolder+"beforeRanks.txt";
 		expressionStruct.write(beforeRanks);
 		

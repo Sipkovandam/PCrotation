@@ -11,13 +11,24 @@ public class Kallisto_Variables implements Cloneable, Serializable
 	
 	private String kallistoIndexFileComment = "/root/directory/hg19.v75.cdna.all.42.2.idx; MANDATORY //Annotation file Kallisto should use. This file has to be created by Kallisto prior to running this script";
 	private String kallistoIndexFile = "/groups/umcg-wijmenga/tmp04/umcg-svandam/Data/RNAseq/Annotation/hg19.v75.cdna.all.42.2.idx";
-
+	private String extraArguments = "--fusion";
+	
 	public String getKallistoIndexFile() {
 		return kallistoIndexFile;
 	}
 
 	public void setKallistoIndexFile(String kallistoIndexFile) {
 		this.kallistoIndexFile = kallistoIndexFile;
+	}
+
+	public String getExtraArguments()
+	{
+		return extraArguments;
+	}
+
+	public void setExtraArguments(String extraArguments)
+	{
+		this.extraArguments = extraArguments;
 	}
 
 }

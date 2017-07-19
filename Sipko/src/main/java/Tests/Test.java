@@ -24,13 +24,16 @@ import java.lang.reflect.*;
 
 import org.junit.rules.TemporaryFolder;
 
-import PCA.Matrix;
-import PCA.MatrixStruct;
-import PCA.RLog;
+import Kallisto.Kallisto_Variables;
+import MatrixScripts.MatrixStruct;
+import MatrixScripts.MyMatrix;
+import PizzlyClasses.PizzlyFusionStructure;
+import PCA.DeSeqNorm;
 import PCA.RlogLargeMatrix;
 import PCA_testcases.CompareFiles;
 import STAR.SpliceSitesCount;
-import STAR._STAR_Pipeline;
+import STAR.STAR_Pipeline;
+import Slurm.Slurm;
 import Tools.FileUtils;
 import Tools.Script;
 import umcg.genetica.containers.Pair;
@@ -46,12 +49,47 @@ public class Test extends Script<Test> {
 
 	public void run()
 	{
+		String tst ="5";
+	
+
+		/*
+		PizzlyFusionStructure pizzlyFusionFile = new PizzlyFusionStructure();
+		PizzlyFusionStructure pizzlyFusionStruct = (PizzlyFusionStructure) pizzlyFusionFile.readVars("E:/Groningen/Test/PizzlyClasses.PizzlyFusionFile/pizzly.json");
+		p(pizzlyFusionStruct);
+		System.out.println(pizzlyFusionStruct.getFusions());
+		System.out.println(pizzlyFusionStruct.getFusions()[0].getGeneA());
+		
+		
+		String n = "1	1635677	rs186584733	G	A	421.32	PASS	ABHom=0.998;AC=2;AF=1;AN=2;ANN=A|synonymous_variant|LOW|CDK11A|ENSG00000008128|transcript|ENST00000378633|protein_coding|15/20|c.1680C>T|p.His560His|1760/2458|1680/2352|560/783||,A|non_coding_transcript_exon_variant|MODIFIER|RP1-283E3.8|ENSG00000268575|transcript|ENST00000598846|processed_transcript|16/20|n.4289C>T||||||;BaseCounts=23,0,593,0;BaseQRankSum=-1.114;CADD=1.85435;CADD_SCALED=15.31;DB;DP=18;EXAC_AC_HET=148;EXAC_AC_HOM=6;EXAC_AF=0.001332;ExcessHet=0.0485;FS=0;GoNL_AF=0.0030120481927710845;GoNL_GTC=495|3|0;InbreedingCoeff=0.9999;MQ=53.36;MQRankSum=3.619;OND=0.002288;QD=19.15;ReadPosRankSum=2.032;SOR=0.914;VariantType=SNP;set=variant;RLV_PRESENT=TRUE;RLV=A|0.001332|CDK11A|0.0 0.02476038338658147|ENST00000378633||||||20164002_768974_DNA093895_445436_5GPM1610:HOMOZYGOUS||20164002_768974_DNA093895_445436_5GPM1610:1s1||Predicted pathogenic|GAVIN|Variant MAF of 0.001332 is rare enough to be potentially pathogenic and its CADD score of 15.31 is greater than a global threshold of 15.||;RLV_ALLELE=[A|CDK11A]A;RLV_ALLELEFREQ=[A|CDK11A]0.001332;RLV_GENE=[A|CDK11A]CDK11A;RLV_FDR=[A|CDK11A]0.0 0.02476038338658147;RLV_TRANSCRIPT=[A|CDK11A]ENST00000378633;RLV_PHENOTYPE=[A|CDK11A]NA;RLV_PHENOTYPEINHERITANCE=[A|CDK11A]NA;RLV_PHENOTYPEONSET=[A|CDK11A]NA;RLV_PHENOTYPEDETAILS=[A|CDK11A]NA;RLV_PHENOTYPEGROUP=[A|CDK11A]NA;RLV_SAMPLESTATUS=[A|CDK11A]20164002_768974_DNA093895_445436_5GPM1610:HOMOZYGOUS;RLV_SAMPLEPHENOTYPE=[A|CDK11A]NA;RLV_SAMPLEGENOTYPE=[A|CDK11A]20164002_768974_DNA093895_445436_5GPM1610:1s1;RLV_SAMPLEGROUP=[A|CDK11A]NA;RLV_VARIANTSIGNIFICANCE=[A|CDK11A]Predicted pathogenic;RLV_VARIANTSIGNIFICANCESOURCE=[A|CDK11A]GAVIN;RLV_VARIANTSIGNIFICANCEJUSTIFICATION=[A|CDK11A]Variant MAF of 0.001332 is rare enough to be potentially pathogenic and its CADD score of 15.31 is greater than a global threshold of 15.;RLV_VARIANTCOMPOUNDHET=[A|CDK11A]NA;RLV_VARIANTGROUP=[A|CDK11A]NA	GT:AD:DP:GQ:MQ0:PL	1/1:0,22:18:53:0:475,53,0";
+		String split = n.split("(?=\\|ENSG)")[2].split("\\|")[1];
+		//System.out.println(Arrays.toString(split));
+		System.out.println(split);
+		
+		MyMatrix matrix1 = new MyMatrix("E:/Groningen/Test/MergeMatrixes/Matrix1.txt");
+		MyMatrix matrix2 = new MyMatrix("E:/Groningen/Test/MergeMatrixes/Matrix2.txt");
+		MyMatrix matrix3 = matrix1.mergeColumns(matrix2,2);
+		matrix1.print();
+		p("");
+		matrix2.print();
+		p("");
+		matrix3.print();
+
+		
+		String test = "1";
+		if(test.equals("1"))
+			p("bla1");
+		
+		File file = new File("/Volumes/Promise_RAID/sipko/Data/Patrick/Merged/pcaFromRaw/counts_4309FineSamples_GPMbloedMerged_ScaffoldGenesRemoved_DiscardedRemoved_RawCounts.txt");
+		String t = "AD10W1ACXX-7-23_1837_internal_id";
+		String removed = FileUtils.removeExtention(t);
+		System.out.println(removed);;
+				
 		String test = "bla";
 		String test2 = "bla";
 		
 		if(test.equals(test2))
 			System.out.println("ja");
-		/*
+		
 		TestObject3<TestObject> test = new TestObject3<>();
 		try {
 			Thread.sleep(4123);

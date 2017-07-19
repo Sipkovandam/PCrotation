@@ -2,6 +2,8 @@ package PCA;
 
 import java.io.IOException;
 
+import MatrixScripts.MyMatrix;
+
 public class CorrectReadcounts {
 	//corrects an expression matrix for total read counts (per sample)
 	public static void main(String[] args) throws IOException 
@@ -39,11 +41,11 @@ public class CorrectReadcounts {
 			}
 		}
 		
-		MatrixStruct expressionStruct = new MatrixStruct(expressionFN);
+		MyMatrix expressionStruct = new MyMatrix(expressionFN);
 		correct(writeFolder, correctTotalReadCount, expressionStruct, writeAll, add);
 	}
 
-	public static void correct(String writeFolder, double correctTotalReadCount, MatrixStruct expressionStruct, boolean writeAll, double add) throws IOException {
+	public static void correct(String writeFolder, double correctTotalReadCount, MyMatrix expressionStruct, boolean writeAll, double add) throws IOException {
 		JuhaPCA.PCA.log(" 6. Correcting for total read count");
 		String correctedNotLogged =  writeFolder+ "SAMPLE_TotalReadCountNormalized.txt";
 		expressionStruct.correctForTotalReadCount(correctTotalReadCount, add);

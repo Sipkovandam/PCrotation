@@ -4,8 +4,9 @@ import java.io.IOException;
 import java.util.Hashtable;
 import java.util.List;
 
-import PCA.MatrixStruct;
-import PCA.RLog;
+import MatrixScripts.MatrixStruct;
+import MatrixScripts.MyMatrix;
+import PCA.DeSeqNorm;
 import PCA.SortChromosome;
 
 public class PCA_createTestMatrix 
@@ -37,21 +38,21 @@ public class PCA_createTestMatrix
 			nGenes=Integer.parseInt(args[0]);
 			nSamples= Integer.parseInt(args[1]);
 		}
-		MatrixStruct down = new MatrixStruct(downFN);
+		MyMatrix down = new MyMatrix(downFN);
 		down.putGenesOnRows();
 		System.out.println("rows1 = " + down.rows());
 		
 		String writeDiseaseFN = writeFolder+"disease.txt";
 		String writeHealthyFN  = writeFolder+"healthy.txt";
 		
-		MatrixStruct geneAvg= getAverageExpression(down);//also normalizes
-		MatrixStruct expressionStruct=keepTopExpressedIDs(geneAvg);
+		MyMatrix geneAvg= getAverageExpression(down);//also normalizes
+		MyMatrix expressionStruct=keepTopExpressedIDs(geneAvg);
 		expressionStruct = getRandomSamples(expressionStruct);
 		
-		MatrixStruct clinic = new MatrixStruct(clinicFN);
+		MyMatrix clinic = new MyMatrix(clinicFN);
 		clinic.putGenesOnRows();
 		
-		MatrixStruct merge = clinic.mergeColumns(down);//need to fix this
+		MyMatrix merge = clinic.mergeColumns(down);//need to fix this
 		merge.keepRows(expressionStruct);
 		merge = SortChromosome.sort(merge, chromLocationsFN);//order the genes by their chromosome number and location
 		expressionStruct = SortChromosome.sort(expressionStruct, chromLocationsFN);//order the genes by their chromosome number and location
@@ -61,9 +62,9 @@ public class PCA_createTestMatrix
 		expressionStruct.write(writeHealthyFN);
 	}
 
-	private static MatrixStruct getRandomSamples(MatrixStruct expressionStruct) 
+	private static MyMatrix getRandomSamples(MyMatrix expressionStruct) 
 	{
-		MatrixStruct subset = new MatrixStruct(expressionStruct.rows(), nSamples);
+		MyMatrix subset = new MyMatrix(expressionStruct.rows(), nSamples);
 		subset.setRowHeaders(expressionStruct.getRowHeaders());
 		int stepsize = expressionStruct.cols()/nSamples;//to ensure you get samples from as wide a range of backgrounds as possible (so it has the same distribution as the actual data)
 		if(stepsize ==0)
@@ -80,8 +81,8 @@ public class PCA_createTestMatrix
 		return subset;
 	}
 
-	private static MatrixStruct keepTopExpressedIDs(MatrixStruct geneAvg) {
-		MatrixStruct expressionStruct = new MatrixStruct(publicHealthyFN);//reload matrix
+	private static MyMatrix keepTopExpressedIDs(MyMatrix geneAvg) {
+		MyMatrix expressionStruct = new MyMatrix(publicHealthyFN);//reload matrix
 		expressionStruct.putGenesOnRows();//put genes on rows if they are not already
 		
 		Hashtable<String,Integer> toKeep = new Hashtable<String,Integer>();
@@ -93,15 +94,15 @@ public class PCA_createTestMatrix
 		return expressionStruct;
 	}
 
-	private static MatrixStruct getAverageExpression(MatrixStruct down) throws IOException {
-		MatrixStruct expressionStruct = new MatrixStruct(publicHealthyFN);//load matrix
+	private static MyMatrix getAverageExpression(MyMatrix down) throws IOException {
+		MyMatrix expressionStruct = new MyMatrix(publicHealthyFN);//load matrix
 		expressionStruct.putGenesOnRows();//put genes on rows if they are not already
 		expressionStruct.keepRows(down);
 		MatrixStruct chrom = new MatrixStruct(chromLocationsFN);
 		expressionStruct.keepRows(chrom);
-		RLog.rLog(writeFolder, expressionStruct, false, writeFolder+"geomean.txt");
+		DeSeqNorm.rLog(writeFolder, expressionStruct, false, writeFolder+"geomean.txt");
 		expressionStruct.logTransform(2, 0.5);
-		MatrixStruct geneAvg = expressionStruct.getAveragesPerRow();//get the average expression per gene
+		MyMatrix geneAvg = expressionStruct.getAveragesPerRow();//get the average expression per gene
 		geneAvg.sortCol(0);
 		geneAvg.write(writeFolder+"geneAverages.txt");
 		//keep only the 10.000 highest expressed genes;

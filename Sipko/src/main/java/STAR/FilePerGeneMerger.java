@@ -9,7 +9,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import PCA.MatrixString;
+import MatrixScripts.MatrixString;
 import Tools.FileSearcher;
 import Tools.FileUtils;
 import Tools.Script;
@@ -19,16 +19,16 @@ public class FilePerGeneMerger extends Script<FilePerGeneMerger>
 {
 	//also transposes
 	//rownames need to be in same order (so before transposin)
-	//mergerges per gene output files of spliceMerger and ExonexpressionMerger
+	//mergerges per gene output files of spliceMerger and ExonExpressionMerger
 	
 	/**
 	 * 
 	 */
 	private static final long serialVersionUID = 8465877177124291824L;
 	public String folderNameComment = "/home/directory/; Foldername in which the files are located that should be merged";
-	public String folderName = "E:/Groningen/Splicing/100BPcap_analysis/Results/PerGene/Ratios/";
+	public String folderName = "E:/Groningen/Splicing/100BPcap_analysis/Results/PerGene/expression/";
 	public String writeFnComment = "/home/directory/result.txt; Filename of the merged file (result)";
-	public String writeFn = "E:/Groningen/Splicing/100BPcap_analysis/Results/PerGene/ratiosMerged.txt";
+	public String writeFn = "E:/Groningen/Splicing/100BPcap_analysis/Results/PerGene/expressionMerged.txt";
 	public transient ArrayList<String> filesToMerge = null;
 	
 	public FilePerGeneMerger()
@@ -64,11 +64,11 @@ public class FilePerGeneMerger extends Script<FilePerGeneMerger>
 			
 			Set<String> writtenSplices= new HashSet<>();
 			BufferedWriter mergedWriter = FileUtils.createWriter(writeFn);
+
 			String[] headers = null;
 			for(String fn : filesToMerge)
 			{
 				MatrixString matrix = new MatrixString(fn);
-				p(fn);
 				matrix.transpose();
 				List<Object> retVals = checkColNames(headers, matrix, mergedWriter);
 				boolean sameColNameOrder = (boolean) retVals.get(0);
@@ -88,6 +88,7 @@ public class FilePerGeneMerger extends Script<FilePerGeneMerger>
 				}
 			}
 			mergedWriter.close();
+;
 			p("Done merging files. File written to: " + writeFn);
 		}catch(Exception e){e.printStackTrace();}
 	}
@@ -105,7 +106,6 @@ public class FilePerGeneMerger extends Script<FilePerGeneMerger>
 			{
 				if(!matrix.colNames[c].equals(headers[c]))
 				{
-
 					returnVal=false;
 				}
 			}

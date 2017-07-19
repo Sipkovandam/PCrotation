@@ -6,14 +6,14 @@ import java.io.IOException;
 import java.util.Enumeration;
 import java.util.Hashtable;
 
-import PCA.Matrix;
+import MatrixScripts.MyMatrix;
 import Tools.FileUtils;
 
 public class findAllAbbreviations {
 
 	public static void main(String[] args) throws FileNotFoundException, IOException 
 	{
-		Matrix already = new Matrix("D:/Sipko/06-10-2016/AlreadyInAbreviations.txt");
+		MyMatrix already = new MyMatrix("D:/Sipko/06-10-2016/AlreadyInAbreviations.txt");
 		
 		BufferedReader reader = FileUtils.createReader("D:/Sipko/06-10-2016/ThesisText.txt");
 		
