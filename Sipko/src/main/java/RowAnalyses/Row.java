@@ -1,4 +1,4 @@
-package MatrixScripts;
+package RowAnalyses;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
@@ -11,11 +11,16 @@ import Tools.FileUtils;
 
 public class Row
 {
-	public String rowName = null;
-	public double[] values = null;
+	private String rowName = null;
+	protected double[] values = null;
 	Double avg = null;
 	Double stdev = null;
-	
+
+	public Row()
+	{
+		
+	}
+
 	public double getAvg()
 	{
 		if(avg==null)
@@ -105,6 +110,10 @@ public class Row
 	public void setValues(double[] values)
 	{
 		this.values = values;
+	}
+	public void setValue(int index, double value)
+	{
+		this.values[index] = value;
 	}
 
 	public double[] getStatistics()

@@ -9,6 +9,7 @@ import java.util.List;
 
 import org.apache.commons.math3.stat.inference.WilcoxonSignedRankTest;
 
+import RowAnalyses.Row;
 import Tools.FileUtils;
 import Tools.Script;
 
@@ -45,20 +46,20 @@ public class ZscoreCalculator extends Script<ZscoreCalculator>
 			while((line=sampleReader.readLine())!=null)
 			{
 				Row row = Row.readRow(line);
-				zscoreWriter.write(row.rowName);
+				zscoreWriter.write(row.getRowName());
 				
-				if(!scoreStats.getRowHash().containsKey(row.rowName))
+				if(!scoreStats.getRowHash().containsKey(row.getRowName()))
 				{
-					p("Error: statsFile missing rowname: " + row.rowName +  "\n exiting");
+					p("Error: statsFile missing rowname: " + row.getRowName() +  "\n exiting");
 					System.exit(2);
 				}
 				
-				int scoreStatIndex = scoreStats.getRowHash().get(row.rowName);
+				int scoreStatIndex = scoreStats.getRowHash().get(row.getRowName());
 				double avg = scoreStats.values[scoreStatIndex][0];
 				double stdev = scoreStats.values[scoreStatIndex][1];;
-				for(int v = 0; v < row.values.length; v++)
+				for(int v = 0; v < row.getValues().length; v++)
 				{
-					double zscore = (row.values[v]-avg)/stdev;
+					double zscore = (row.getValues()[v]-avg)/stdev;
 					zscoreWriter.write("\t"+zscore);
 				}
 				

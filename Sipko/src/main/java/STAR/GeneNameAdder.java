@@ -200,9 +200,9 @@ public class GeneNameAdder extends Script<GeneNameAdder>
 			else
 			{
 				if (!afterLine)
-					spliceWriter.write("\t-\t-" + line + "\n");
+					spliceWriter.write("unAnnotated\tunAnnotated\t" + line + "\n");
 				else
-					spliceWriter.write(line + "\t-\t-" + "\n");
+					spliceWriter.write(line + "\tunannotated\tunAnnotated" + "\n");
 				spliceSiteToGene.put(	chromLoc,
 										new String[] { "-", "-" });
 			}

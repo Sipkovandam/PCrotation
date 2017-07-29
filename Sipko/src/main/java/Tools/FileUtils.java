@@ -12,6 +12,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
+import java.io.RandomAccessFile;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Hashtable;
@@ -23,8 +24,8 @@ import java.net.URLDecoder;
 
 import org.apache.commons.io.IOUtils;
 
-import MatrixScripts.Row;
 import PCA.RlogLargeMatrix;
+import RowAnalyses.Row;
 
 public class FileUtils
 {
@@ -34,14 +35,33 @@ public class FileUtils
 								0,
 								1);
 	}
+	public static HashMap<String, Double> readDoublehash(String fileName, boolean hasHeader) throws FileNotFoundException, IOException
+	{
+		return readDoublehash(	fileName,
+								0,
+								1, hasHeader);
+	}
 
 	public static HashMap<String, Double> readDoublehash(	String fileName,
 															int col1,
 															int col2) throws FileNotFoundException, IOException
 	{
+		return readDoublehash(fileName,
+												col1,
+												col2, false);
+	}
+	
+	public static HashMap<String, Double> readDoublehash(	String fileName,
+															int col1,
+															int col2, boolean hasHeader) throws FileNotFoundException, IOException
+	{
 		HashMap<String, Double> hash = new HashMap<String, Double>();
 		BufferedReader reader = createReader(fileName);
 		String line = null;
+		
+		if(hasHeader)
+			reader.readLine();
+		
 		while ((line = reader.readLine()) != null)
 		{
 			String[] cells = line.split("\t");
@@ -94,6 +114,7 @@ public class FileUtils
 		return reader;
 	}
 
+	
 	public static BufferedWriter createWriter(String shellFN) throws FileNotFoundException, IOException
 	{
 		return createWriter(shellFN,
@@ -413,6 +434,14 @@ public class FileUtils
 													"");
 		return withoutExtention;
 	}
+	
+	public static double[] convertToDoubleArray(String[] valuesString)
+	{
+		double[] values = new double[valuesString.length];
+		for (int v = 0; v < valuesString.length; v++)
+			values[v] = Double.parseDouble(valuesString[v]);
+		return values;
+	}
 
 	public static String addBeforeExtention(String fileName,
 											String addString)
@@ -538,14 +567,27 @@ public class FileUtils
 		return conversionHash;
 	}
 	public static HashMap<String, HashMap<String, Integer>> readStringMultiStringHash(	String conversionFile,
+	    																				int i,
+	    																				int j,
+	    																				boolean wholeLineValue)
+	{
+		return readStringMultiStringHash(	conversionFile,
+											i,
+											j,
+											wholeLineValue, false);
+	}
+	
+	public static HashMap<String, HashMap<String, Integer>> readStringMultiStringHash(	String conversionFile,
 																				int i,
 																				int j,
-																				boolean wholeLineValue)
+																				boolean wholeLineValue, boolean skipFirstline)
 	{
 		HashMap<String, HashMap<String, Integer>>  conversionHash = new HashMap<String, HashMap<String, Integer>>();
 		try
 		{
 			BufferedReader reader = createReader(conversionFile);
+			if(skipFirstline)
+				reader.readLine();
 			String line = null;
 			while((line=reader.readLine())!=null)
 			{
@@ -664,5 +706,78 @@ public class FileUtils
 		}
 		
 		writer.close();
+	}
+	public static HashMap<String, Integer> arrayToHashMap(String[] strings)
+	{
+		HashMap<String, Integer> stringToIndex = new HashMap<String, Integer>();
+		for(int s = 0; s < strings.length; s++)
+		{
+			stringToIndex.put(strings[s], s);
+		}
+		return stringToIndex;
+	}
+	public static String doubleArrayToWriteString(double[] values)
+	{
+		String line = "";
+		StringBuilder stringbuilder = new StringBuilder();
+		for(double value : values)
+		{
+			stringbuilder.append("\t").append(value);
+		}
+		line=stringbuilder.toString();
+		return line;
+	}
+	public static String StringArrayToWriteString(String[] dataColHeaders)
+	{
+		String line = "";
+		StringBuilder stringbuilder = new StringBuilder();
+		for(String dataColHeader : dataColHeaders)
+		{
+			stringbuilder.append("\t").append(dataColHeader);
+		}
+		line=stringbuilder.toString();
+		return line;
+	}
+	public static HashMap<String, Integer> readStringToIntegerHash(String indexFile) throws NumberFormatException, IOException
+	{
+		HashMap<String, Integer> hash = new HashMap<String, Integer>();
+		BufferedReader reader = createReader(indexFile);
+		String line = null;
+		
+//		if(indexFile)
+//			reader.readLine();
+		
+		while ((line = reader.readLine()) != null)
+		{
+			String[] cells = line.split("\t");
+			hash.put(	cells[0],
+			         	Integer.parseInt(cells[1].replace(	",",
+																"")));
+		}
+		return hash;
+	}
+	public static HashMap<String, Long> readStringToLongHash(String indexFn) throws FileNotFoundException, IOException
+	{
+		HashMap<String, Long> hash = new HashMap<String, Long>();
+		BufferedReader reader = createReader(indexFn);
+		String line = null;
+		
+//		if(indexFile)
+//			reader.readLine();
+		
+		while ((line = reader.readLine()) != null)
+		{
+			String[] cells = line.split("\t");
+			
+			if(hash.containsKey(cells[0]))
+			{
+				System.out.println("File contains the same rowName multiple times, recommended to use readStringMultiLongArrayList instead");
+			}
+			
+			hash.put(	cells[0],
+			         	Long.parseLong(cells[1].replace(	",",
+																"")));
+		}
+		return hash;
 	}
 }

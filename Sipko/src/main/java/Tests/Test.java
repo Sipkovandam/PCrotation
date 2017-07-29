@@ -49,9 +49,7 @@ public class Test extends Script<Test> {
 
 	public void run()
 	{
-		String tst ="5";
-	
-
+		String test = "__-GL000214.1_64918_65045_2_2_1";
 		/*
 		PizzlyFusionStructure pizzlyFusionFile = new PizzlyFusionStructure();
 		PizzlyFusionStructure pizzlyFusionStruct = (PizzlyFusionStructure) pizzlyFusionFile.readVars("E:/Groningen/Test/PizzlyClasses.PizzlyFusionFile/pizzly.json");
@@ -97,6 +95,10 @@ public class Test extends Script<Test> {
 		p("runtime = \t" + test.getRunTime());
 		p(test.toString());
 		*/
+	}
+	public void changeValue(int[] testVal)
+	{
+		testVal[0]= 10;
 	}
 	
 	public static void main(String[] args)  throws IOException, CloneNotSupportedException, ClassNotFoundException, InstantiationException, IllegalAccessException, NoSuchMethodException, SecurityException, IllegalArgumentException, InvocationTargetException, InterruptedException

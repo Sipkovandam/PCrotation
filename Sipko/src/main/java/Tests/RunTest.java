@@ -14,13 +14,13 @@ public class RunTest
 		//args = new String[] { "getjson", "PCA.PCApipeline", "E:/Groningen/Test/JSON/" };
 		//args = new String[] { "E:/Groningen/Test/JSON/PCApipeline/config_PCA.PCApipeline_2017-02-10.json" };
 		
-		String testClass = "R.SplicingAnalysisPipeline";
+		String testClass = "R.SplicingAnalysisPipeline2";
 		//args = new String[]{"getjson",testClass,"E:/Groningen/Test/"+testClass+"/"};
 		args = new String[]{"E:/Groningen/Test/"+testClass+"/config_R.SplicingAnalysisPipeline_2017-06-25.json"};
-
+//		
+//		String testClass = "MatrixScripts.LargeFileSorter";
+//		args = new String[]{"E:/Groningen/Test/"+testClass+"/config_MatrixScripts.LargeFileSorter_2017-07-21.json"};
 		
-		//args = new String[]{"getjson", "Tests.Test", "E:/Groningen/Test/Tests.Test/"};
-		//args = new String[]{"E:/Groningen/Test/Tests.Test/config_Tests.Test_2017-06-21.json"};
 		
 		Run.run(args);
 	}
