@@ -38,10 +38,12 @@ public class FileSearcher extends Script<FileSearcher> {
 	String writeName = null;// "E:/Groningen/Test/STAR/STAR/textsearch.txt";//semitransient
 	private String searchStringsComment = "[\".txt\",\".fq\"]; MANDATORY UNLESS (fastQfilesFN) IS DEFINED //Comma separated list of strings that define which files are fastq files. Any files containing this string will be input files for the pipeline except those excluded by (forbiddenSearchStrings)";
 	String[] searchStrings = new String[] { ".fq", ".fastq" };
-	private String requiredStringFNComment = "/root/directory/requiredStrings.txt; OPTIONAL //filename of a file containing enter separated strings. One of these strings needs to be in the filename of searched files in order to be included in the results";
-	String requiredStringFN = null;// "E:/Groningen/Test/STAR/STAR/RequiredStrings.txt";
-	private String sampleNamesFNComment = "/root/directory/sampleNames.txt; OPTIONAL //filename of a file containing enter separated strings. This needs to be the name of the file (excluding root) after removing (removeBits)";
-	String sampleNamesFN = null;// "E:/Groningen/Test/STAR/STAR/RequiredStrings.txt";
+	private String requiredStringFnComment = "/root/directory/requiredStrings.txt; OPTIONAL //filename of a file containing enter separated strings. One of these strings needs to be in the filename of searched files in order to be included in the results";
+	String requiredStringFn = null;// "E:/Groningen/Test/STAR/STAR/RequiredStrings.txt";
+	private String requiredStringsComment = "deduplicated; OPTIONAL //One of these strings needs to be in the filename of searched files in order to be included in the results";
+	String[] requiredStrings = null;
+	private String sampleNamesFnComment = "/root/directory/sampleNames.txt; OPTIONAL //Re";
+	String sampleNamesFn = null;
 	private String sampleCheckRemoveAfterStringsComment = "[\"_R1_\",\".fq\"]; OPTIONAL //bits to remove from filename before checking if the sample should be included. Only used if sampleNamesFN is defined.";
 	private String[] sampleCheckRemoveAfterStrings = new String[]{"_R1.fq","_R2.fq","_1.*","_2.*"};
 	private String forbiddenStringsComment = "[\"md5\",\"DISCARDED\"]; OPTIONAL //Comma separated list of strings. Any fastq file, defined by fastQSearchStringsComment, containing this string is not included in the analysis";
@@ -86,7 +88,7 @@ public class FileSearcher extends Script<FileSearcher> {
 				forbiddenStrings = value.split(",");
 				break;
 			case "requiredstringfn":
-				requiredStringFN = parseString(value);
+				requiredStringFn = parseString(value);
 				break;
 			default:
 				System.out.println("Incorrect argument supplied: " + args[a] + "\n" + "exiting");
@@ -109,21 +111,26 @@ public class FileSearcher extends Script<FileSearcher> {
 		try {
 			//init
 			if (writeName == null)
+			{
+				System.out.println(folders);
 				writeName = folders.split(",")[0] + this.getClassName() + "_result.txt";
+			}
 			if (this.jsonFN == null)
 				this.jsonFN = new File(writeName).getParent() + getJsonFN();
 			writeConfig();
+			System.out.println(folders);
 			String[] folderNames = folders.split(",");
 			FileUtils.makeDir(new File(writeName).getParent());
 				
 			//make the filters
 			StringFilters stringFilters = new StringFilters();
-			Set<String> sampleNames = parseSampleNames(sampleNamesFN);
+			Set<String> sampleNames = parseSampleNames(sampleNamesFn);
 			stringFilters.addFilter(stringFilters.new SampleNameChecker(sampleNames,sampleCheckRemoveAfterStrings));
 			stringFilters.addFilter(stringFilters.new ForbiddenStringChecker(forbiddenStrings));
 			stringFilters.addFilter(stringFilters.new RequiredStringChecker(searchStrings));
-			final String[] requiredStringsFinal = readRequiredStrings(requiredStringFN);
+			final String[] requiredStringsFinal = readRequiredStrings(requiredStringFn);
 			stringFilters.addFilter(stringFilters.new RequiredStringChecker(requiredStringsFinal));
+			stringFilters.addFilter(stringFilters.new RequiredStringChecker(requiredStrings));
 
 			List<StringFilter> checks = stringFilters.getFilters();
 
@@ -170,7 +177,7 @@ public class FileSearcher extends Script<FileSearcher> {
 				if (file.isDirectory())
 					searchDirectory(file, writer, writerFailed, checks);
 				else {
-					String fileName = file.getName();
+					String fileName = file.getAbsolutePath();
 					boolean include = checkInclude(fileName, checks);
 
 					if (include)
@@ -245,11 +252,11 @@ public class FileSearcher extends Script<FileSearcher> {
 	}
 
 	public String getRequiredStringFN() {
-		return requiredStringFN;
+		return requiredStringFn;
 	}
 
-	public void setRequiredStringFN(String requiredStringFN) {
-		this.requiredStringFN = requiredStringFN;
+	public void setRequiredStringFn(String requiredStringFn) {
+		this.requiredStringFn = requiredStringFn;
 	}
 
 	public String[] getForbiddenStrings() {
@@ -279,5 +286,15 @@ public class FileSearcher extends Script<FileSearcher> {
 	public void setForbiddenStringsComment(String forbiddenStringsComment)
 	{
 		this.forbiddenStringsComment = forbiddenStringsComment;
+	}
+
+	public String[] getRequiredStrings()
+	{
+		return requiredStrings;
+	}
+
+	public void setRequiredStrings(String[] requiredStrings)
+	{
+		this.requiredStrings = requiredStrings;
 	}
 }

@@ -19,7 +19,7 @@ public class FileSplitter extends Script<FileSplitter>
 	String fnComment = "File to be split based on genes. Has gene names in first column";
 	String fn = null;
 	String spliceNamesColComment = "Column in which the splice file names are located (lines in new file include this and all columns behind it). This does not start from [0] index, so 1 is the 1st/rowname column";
-	int spliceNamesCol = 3;
+	int spliceNamesCol = 2;
 	String geneNameColumnComment = "Column in which the gene names are located (separated by <splitRegex>)";
 	int geneNameColumn = 0;
 	String splitFirstColumnInsteadComment = "If true, splits the first column based on splitRegex instead, to obtain the gene name";
@@ -53,7 +53,7 @@ public class FileSplitter extends Script<FileSplitter>
 			if(splitFirstColumnInstead)
 				header=reader.readLine();
 			else
-				header=reader.readLine().split("\t",spliceNamesCol)[spliceNamesCol - 1];
+				header=reader.readLine().split("\t",spliceNamesCol+1)[spliceNamesCol];
 			
 			String line = null;
 			BufferedWriter splicePerGeneWriter = null;
@@ -77,12 +77,13 @@ public class FileSplitter extends Script<FileSplitter>
 					p(n + " lines read");
 
 				String[] genes = null;
+				String[] eles = line.split("\t");
 				if (splitFirstColumnInstead)
 				{
-					genes = new String[] { line.split("\t")[0].split(splitRegex)[0] };//splits the first column by <splitRegex> and gets the first element to get the gene name
+					genes = new String[] { eles[0].split(splitRegex)[0] };//splits the first column by <splitRegex> and gets the first element to get the gene name
 				}
 				else
-					genes = line.split("\t")[geneNameColumn].split(splitRegex);
+					genes = eles[geneNameColumn].split(splitRegex);
 
 				//get all the spliceLines that should be written for this gene
 				for (String gene : genes)
@@ -93,15 +94,13 @@ public class FileSplitter extends Script<FileSplitter>
 //					if (geneLines == null)
 //						geneLines = new ArrayList<String>();
 
-					String lineToAdd = null;
-					
+					StringBuilder lineToAdd = new StringBuilder();
 					if(splitFirstColumnInstead)
-						lineToAdd = line;
+						lineToAdd.append(line);
 					else
-						lineToAdd = gene.concat("__").concat(line.split("\t",
-																	spliceNamesCol)[spliceNamesCol - 1]);
-
-					geneWriter.write(lineToAdd+"\n");
+						lineToAdd.append(gene).append("__").append(line.split("\t", spliceNamesCol+1)[spliceNamesCol]);
+					lineToAdd.append("\n");
+					geneWriter.write(lineToAdd.toString());
 //					geneLines.add(lineToAdd);
 //					
 //					geneToExpressionLines.put(	gene,

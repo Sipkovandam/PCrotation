@@ -21,33 +21,31 @@ public class RowBelowCutoffCounter extends RowJob
 	}
 	
 	@Override
-	public void execute(RowJobExecutor rowExecutor, int lineNumber)
+	public void execute(RowJobExecutor rowExecutor, int lineNumber, int threadNumber)
 	{
 		try
 		{
-			double belowCutoffCount = rowExecutor.getJobValue(belowCutoffCountName);
+			double[] values = rowExecutor.getInputValues(threadNumber);
+			int belowCutoffCount = getBelowCutoffCount(values, cutoff, absolute);
 			
-			writeResult(belowCutoffCount, rowExecutor, lineNumber);
+			rowExecutor.setJobValue(belowCutoffCountName,belowCutoffCount, threadNumber);
+			
+			super.writeResult(belowCutoffCount, rowExecutor, lineNumber, threadNumber);
 		}catch(Exception e){e.printStackTrace();}
 	}
 	
-	@Override
-	public void executeOnInitiation(RowJobExecutor rowExecutor, double value)
+	private int getBelowCutoffCount(	double[] values,
+										double cutoff, boolean absolute)
 	{
-		if(absolute)
+		int count = 0;
+		for(double value:values)
 		{
-			if(Math.abs(rowExecutor.getJobValue(belowCutoffCountName))<cutoff)
-				rowExecutor.setJobValue(belowCutoffCountName,rowExecutor.getJobValue(belowCutoffCountName)+1);
+			if(absolute)
+				value = Math.abs(value);
+			if(value<cutoff)
+				count++;
 		}
-		else
-			if(rowExecutor.getJobValue(belowCutoffCountName)<cutoff)
-				rowExecutor.setJobValue(belowCutoffCountName,rowExecutor.getJobValue(belowCutoffCountName)+1);
-	}
-
-	private void writeResult(double belowCutoffCount, RowJobExecutor rowExecutor, int lineNumber) throws FileNotFoundException, IOException
-	{
-		String writeLine = rowExecutor.getRowName().concat("\t").concat(Integer.toString(((int)belowCutoffCount)).concat("\n"));
-		super.writeLine(lineNumber, writeLine, rowExecutor, true);
+		return count;
 	}
 
 	public double getCutoff()

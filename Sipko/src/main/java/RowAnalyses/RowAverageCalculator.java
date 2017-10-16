@@ -9,45 +9,26 @@ import Tools.FileUtils;
 public class RowAverageCalculator extends RowJob
 {
 	final String averageName = "average";
-	final String sumName = "sum";
-	
 	public RowAverageCalculator()
 	{
-		this.setValueNames(new String[]{averageName, sumName});
+		this.setValueNames(new String[]{averageName});
 	}
 	
 	@Override
-	public void execute(RowJobExecutor rowExecutor, int lineNumber)
+	public void execute(RowJobExecutor rowExecutor, int lineNumber, int threadNumber)
 	{
 		try
 		{
-			double avg = rowExecutor.getJobValue(sumName)/rowExecutor.getValues().length;
-
-			rowExecutor.setJobValue(averageName, avg);
-			writeResult(avg, rowExecutor, lineNumber);
+			double[] values = rowExecutor.getInputValues(threadNumber);
+			double avg = org.apache.commons.math3.stat.StatUtils.mean(values);
+			rowExecutor.setJobValue(averageName, avg, threadNumber);
+			super.writeResult(avg, rowExecutor, lineNumber, threadNumber);
 		}catch(Exception e){e.printStackTrace();}
-	}
-
-	@Override
-	public void executeOnInitiation(RowJobExecutor rowExecutor, double value)
-	{
-		rowExecutor.setJobValue(sumName, rowExecutor.getJobValue(sumName)+value);
-	}
-	
-	private void writeResult(double avg, RowJobExecutor rowExecutor, int lineNumber) throws FileNotFoundException, IOException
-	{
-		String writeLine = rowExecutor.getRowName().concat("\t").concat(Double.toString(avg).concat("\n"));
-		super.writeLine(lineNumber, writeLine, rowExecutor, true);
 	}
 
 	public String getAverageName()
 	{
 		return averageName;
-	}
-
-	public String getSumName()
-	{
-		return sumName;
 	}
 }
 

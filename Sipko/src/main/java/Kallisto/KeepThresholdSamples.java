@@ -17,13 +17,13 @@ public class KeepThresholdSamples
 	static String countsFN = "E:/Groningen/Test/JSON/ServerTest/Kallisto/Resultscounts.txt.gz";
 	static String mappingPercentageFN = "E:/Groningen/Test/JSON/ServerTest/Kallisto/mappingPerSample.txt"; 
 	static String writeFN = null; 
-	static double threshold = 0.7;
+	static double threshold = 0;
 	
 	public static void main(String[] args) throws FileNotFoundException, IOException
 	{
 		checkArgs(args);
 		if(writeFN==null)
-			writeFN=FileUtils.replaceEnd(countsFN, "0.7.txt.gz");
+			writeFN=FileUtils.replaceEnd(countsFN, threshold+".txt.gz");
 		
 		HashMap<String, Double> mappingPercentage = FileUtils.readDoublehash(mappingPercentageFN);
 		BufferedReader reader = FileUtils.createReader(mappingPercentageFN);

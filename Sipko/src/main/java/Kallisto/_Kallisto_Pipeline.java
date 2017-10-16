@@ -5,8 +5,8 @@ import java.io.IOException;
 import java.util.ArrayList;
 
 import MatrixScripts.LaneMerger;
-import STAR.STAR_Variables;
-import Slurm.Slurm;
+import STAR.STAR_ClusterHandler;
+import Slurm.ClusterHandler;
 import Tools.FileUtils;
 import Tools.JSONutil;
 import Tools.Script;
@@ -22,7 +22,9 @@ public class _Kallisto_Pipeline extends Script<_Kallisto_Pipeline> {
 	// 6. Creates 1 large matrix for genes and one for transcripts
 	// 7. Creates 1 large matrix for samples >70% mapping
 
+	private String comments = "//all variables in this file containing (Comment) are comments on the variable below and do not need to be initiated";
 	String outputFolder = "E:/Groningen/Test/JSON/";
+	String inputComment = "/root/directory/,/root/directory2/; MANDATORY //either 1. a comma separated list of folders from which to include all files or 2. a filename containing all the filenames of the files to be included";
 	String input = "J:/DATA/";//either 1. a comma separated list of folders from which to include all files or 2. a filename containing all the filenames of the files to be included
 	String fastQSearchStrings = ".fastq,.fq";
 	String forbiddenSearchStrings = ".md5";
@@ -44,7 +46,7 @@ public class _Kallisto_Pipeline extends Script<_Kallisto_Pipeline> {
 	double kallistoThreshold = 0.7;
 	String transcriptsToGenesFN = "";
 	int minpercentagefeaturesexpressed = 0;
-	private Kallisto_Variables kallisto_Variables = new Kallisto_Variables();
+	private Kallisto_ClusterHandler kallisto_Variables = new Kallisto_ClusterHandler();
 	
 	private String sampleSheetFn = null;
 
@@ -59,7 +61,7 @@ public class _Kallisto_Pipeline extends Script<_Kallisto_Pipeline> {
 			{
 				if(input.contains(".txt"))
 				{
-					p("THis file does not exist:\n" + input +"\n Exiting");
+					p("This file does not exist:\n" + input +"\n Exiting");
 					System.exit(2);
 				}
 				fastQFiles = findFastQFiles();
@@ -110,7 +112,7 @@ public class _Kallisto_Pipeline extends Script<_Kallisto_Pipeline> {
 
 
 	private void kallistoSlurm(String fastQFiles) throws Exception {
-		Slurm<Kallisto_Variables> kallistoSettings = new Slurm<Kallisto_Variables>(kallistoVersion);
+		ClusterHandler<Kallisto_ClusterHandler> kallistoSettings = new ClusterHandler<Kallisto_ClusterHandler>(kallistoVersion);
 		
 		kallistoSettings.setFastQFiles(fastQFiles);
 		kallistoSettings.setMapper(kallistoVersion);
@@ -118,7 +120,6 @@ public class _Kallisto_Pipeline extends Script<_Kallisto_Pipeline> {
 		kallistoSettings.setThreads(Integer.parseInt(kallistoThreads));
 		kallistoSettings.setWalltime(kallistoWalltime);
 		kallistoSettings.setMaxMemory(kallistoMaxMemory);
-		kallistoSettings.setPairStrings(pairStrings.split(","));
 		kallistoSettings.setSlurmUserName(slurmUserName);
 		kallistoSettings.setFinishedemailaddress(finishedemailaddress);
 		kallistoSettings.setMapperVars(this.kallisto_Variables);

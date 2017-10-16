@@ -12,6 +12,7 @@ public class RatioCalculator extends Script<RatioCalculator>
 {
 	//Calculates ratios based on expression (line by line)
 	String expressionFolder = null;
+	String expressionSortedWriteFn = null;
 	String writeFn = null;
 	boolean spliceSitesOnRows = true;
 	
@@ -51,9 +52,15 @@ public class RatioCalculator extends Script<RatioCalculator>
 				}
 
 				if(i==0)//write the file as is
+				{
+					expression.write(expressionSortedWriteFn);
 					ratios.write(writeFn);
+				}
 				else //append it onto the file
+				{
+					expression.write(expressionSortedWriteFn);
 					ratios.write(writeFn, true);
+				}
 				i++;
 			}
 		}catch(Exception e){e.printStackTrace();}
@@ -77,5 +84,15 @@ public class RatioCalculator extends Script<RatioCalculator>
 	public void setWriteFn(String writeFn)
 	{
 		this.writeFn = writeFn;
+	}
+
+	public String getExpressionSortedWriteFn()
+	{
+		return expressionSortedWriteFn;
+	}
+
+	public void setExpressionSortedWriteFn(String expressionSortedWriteFn)
+	{
+		this.expressionSortedWriteFn = expressionSortedWriteFn;
 	}
 }

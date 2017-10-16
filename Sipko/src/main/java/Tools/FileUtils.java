@@ -51,6 +51,15 @@ public class FileUtils
 												col2, false);
 	}
 	
+	public static void extractFile(String jarFn, String fileToGet)
+	{
+		String command = "jar xf " + jarFn + " " + fileToGet;
+		System.out.println("Command =\t" + command);
+		ExecCommand exec = new ExecCommand(command);
+
+		
+	}
+	
 	public static HashMap<String, Double> readDoublehash(	String fileName,
 															int col1,
 															int col2, boolean hasHeader) throws FileNotFoundException, IOException
@@ -103,14 +112,19 @@ public class FileUtils
 		}
 		return lines;
 	}
-
 	public static BufferedReader createReader(String fn) throws FileNotFoundException, IOException
+	{
+		return createReader(fn, 8192);
+	}
+	
+
+	public static BufferedReader createReader(String fn, int bufferSize) throws FileNotFoundException, IOException
 	{
 		BufferedReader reader = null;
 		if (fn.endsWith(".gz"))
-			reader = new BufferedReader(new InputStreamReader(new GZIPInputStream(new FileInputStream(fn))));
+			reader = new BufferedReader(new InputStreamReader(new GZIPInputStream(new FileInputStream(fn))), bufferSize);
 		else
-			reader = new BufferedReader(new FileReader(new File(fn)));
+			reader = new BufferedReader(new FileReader(new File(fn)), bufferSize);
 		return reader;
 	}
 
@@ -253,8 +267,12 @@ public class FileUtils
 				else if (!wholeLineValue)
 				{
 					cells = line.split("\t");
-					conversionHash.put(	cells[keyCol],
-										line.split(	"\t")[valueCol]);
+					if(cells.length==1)
+						conversionHash.put(	cells[keyCol],
+						                   	"");
+					else
+						conversionHash.put(	cells[keyCol],
+					                   	cells[valueCol]);
 				}
 			});
 		} catch (FileNotFoundException e)
@@ -437,7 +455,11 @@ public class FileUtils
 	
 	public static double[] convertToDoubleArray(String[] valuesString)
 	{
-		double[] values = new double[valuesString.length];
+		return convertToDoubleArray(valuesString, new double[valuesString.length]);
+	}
+	
+	public static double[] convertToDoubleArray(String[] valuesString, double[] values)
+	{
 		for (int v = 0; v < valuesString.length; v++)
 			values[v] = Double.parseDouble(valuesString[v]);
 		return values;
@@ -779,5 +801,20 @@ public class FileUtils
 																"")));
 		}
 		return hash;
+	}
+	public static String getFolderName(String fn)
+	{
+		return new File(new File(fn).getParent()).getName();
+	}
+	public static String getFolderName(File fn)
+	{
+		return new File(fn.getParent()).getName();
+	}
+	public static ArrayList<String> addStringToArrayList(ArrayList<String> names, String name)
+	{
+		if(names==null)
+			names = new ArrayList<String>();
+		names.add(name);
+		return names;
 	}
 }

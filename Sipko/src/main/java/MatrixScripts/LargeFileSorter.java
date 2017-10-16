@@ -22,7 +22,7 @@ public class LargeFileSorter extends Script<LargeFileSorter>
 		try
 		{
 			if(fnSorted == null)
-				fnSorted = FileUtils.addBeforeExtention(fn,"sorted");
+				fnSorted = FileUtils.addBeforeExtention(fn,"_sorted")+".txt";
 			
 			BufferedWriter sortedWriter = FileUtils.createWriter(fnSorted);
 			writeHeader(fn, sortedWriter);
@@ -91,6 +91,42 @@ public class LargeFileSorter extends Script<LargeFileSorter>
 	{
 		String header = FileUtils.createReader(fn).readLine();
 		sortedWriter .write(header+"\n");
+	}
+
+
+	public String getFn()
+	{
+		return fn;
+	}
+
+
+	public void setFn(String fn)
+	{
+		this.fn = fn;
+	}
+
+
+	public String getSortOrderFn()
+	{
+		return sortOrderFn;
+	}
+
+
+	public void setSortOrderFn(String sortOrderFn)
+	{
+		this.sortOrderFn = sortOrderFn;
+	}
+
+
+	public String getFnSorted()
+	{
+		return fnSorted;
+	}
+
+
+	public void setFnSorted(String fnSorted)
+	{
+		this.fnSorted = fnSorted;
 	}
 	
 }

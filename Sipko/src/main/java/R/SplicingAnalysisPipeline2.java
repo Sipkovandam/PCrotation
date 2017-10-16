@@ -7,23 +7,28 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
+import RowAnalyses.JobLineWriter;
 import RowAnalyses.RowAboveCutoffCounter;
 import RowAnalyses.RowAverageCalculator;
 import RowAnalyses.RowBelowCutoffCounter;
 import RowAnalyses.RowColumnGetter;
 import RowAnalyses.RowJob;
 import RowAnalyses.RowJobExecutor;
+import RowAnalyses.RowJobExecutorThread;
 import RowAnalyses.RowMaxGetter;
 import RowAnalyses.RowMedianGetter;
 import RowAnalyses.RowStdevCalculator;
 import RowAnalyses.RowZscoreCalculator;
+import STAR.OutlierSpliceSiteRetriever;
 import Tools.FileUtils;
 import Tools.Script;
 import Tools.StringFilter;
@@ -52,7 +57,7 @@ public class SplicingAnalysisPipeline2 extends Script<SplicingAnalysisPipeline>
 	String writeFolder = null;
 	double maxOutlierCount = 4; //maximum number of times a gene is allowed to be an outleir in the other parents. Also maximum number of times a gene is allowed to be an outleir in the other cases
 	double medianCutoff = 8;
-	int nThreads = 1;//Do not run this multithreaded. I got halfway implementing it, but did not finish. Some writeVariables are used by multiple threads simultaneously which is dangerous.
+	int nThreads = 6;//Do not run this multithreaded. I got halfway implementing it, but did not finish. Some writeVariables are used by multiple threads simultaneously which is dangerous.
 	private transient int zScoreCutoff = 3;//cutoff die Patrick gebruikt voor het excluderen van outliers die vaker voorkomen.
 
 	@Override
@@ -110,7 +115,7 @@ public class SplicingAnalysisPipeline2 extends Script<SplicingAnalysisPipeline>
 
 			//bios indexes
 			FileUtils.makeDir(biosBasedResultsFolder);
-			RowJobExecutor rowJobExecutorBiosIndexes = new RowJobExecutor();
+			RowJobExecutor rowJobExecutorBiosIndexes = new RowJobExecutor(nThreads);
 			rowJobExecutorBiosIndexes.addJob(rowAverageCalculator);
 			rowJobExecutorBiosIndexes.addJob(rowStdevCalculator);
 			rowJobExecutorBiosIndexes.addJob(rowBiosBasedZscoreCalculator);
@@ -135,7 +140,7 @@ public class SplicingAnalysisPipeline2 extends Script<SplicingAnalysisPipeline>
 
 			String studyBasedResultsFolder = this.writeFolder + "study/";
 			FileUtils.makeDir(studyBasedResultsFolder);
-			RowJobExecutor rowJobExecutorStudyIndexes = new RowJobExecutor();
+			RowJobExecutor rowJobExecutorStudyIndexes = new RowJobExecutor(nThreads);
 			rowJobExecutorStudyIndexes.addJob(rowAverageCalculatorStudy);
 			rowJobExecutorStudyIndexes.addJob(rowStdevCalculatorStudy);
 			rowJobExecutorStudyIndexes.addJob(rowBiosBasedZscoreCalculatorStudy);
@@ -150,7 +155,7 @@ public class SplicingAnalysisPipeline2 extends Script<SplicingAnalysisPipeline>
 			useExecutorsOnFile(	rowJobExecutors,
 								correctedMatrixFn);
 			double timeUsed = (System.nanoTime() - nanoTime) / 1000 / 1000 / 1000;
-			System.out.println("timeused = " + timeUsed + " seconds");
+			System.out.println("timeused = " + ((int)timeUsed) + " seconds");
 			Thread.sleep(1000);
 			closeExecutorFileWriters(rowJobExecutors);
 
@@ -184,7 +189,7 @@ public class SplicingAnalysisPipeline2 extends Script<SplicingAnalysisPipeline>
 			{
 				String resultsFolder = this.writeFolder + sampleName + "/";
 				FileUtils.makeDir(resultsFolder);
-				RowJobExecutor rowJobExecutor = new RowJobExecutor();
+				RowJobExecutor rowJobExecutor = new RowJobExecutor(nThreads);
 				rowJobExecutor.addJob(rowAboveCutoffCounter);
 				rowJobExecutor.addJob(rowBelowCutoffCounter);
 				rowJobExecutor.setIncludeIndexes(sampleToOtherParentIndexesStudy.get(sampleName));
@@ -207,7 +212,7 @@ public class SplicingAnalysisPipeline2 extends Script<SplicingAnalysisPipeline>
 
 				String resultsFolder = this.writeFolder + sampleName + "/";
 				FileUtils.makeDir(resultsFolder);
-				RowJobExecutor rowJobExecutor = new RowJobExecutor();
+				RowJobExecutor rowJobExecutor = new RowJobExecutor(nThreads);
 				rowJobExecutor.addJob(rowAboveCutoffCounterChildren);
 				rowJobExecutor.addJob(rowBelowCutoffCounterChildren);
 				rowJobExecutor.setIncludeIndexes(sampleToOtherChildIndexesStudy.get(sampleName));
@@ -234,7 +239,7 @@ public class SplicingAnalysisPipeline2 extends Script<SplicingAnalysisPipeline>
 													sampleName,
 													includeColnames);
 				//get family z_scores
-				RowJobExecutor rowJobExecutor = new RowJobExecutor();
+				RowJobExecutor rowJobExecutor = new RowJobExecutor(nThreads);
 				rowJobExecutor.setIncludeColHeaders(includeColnames);
 				rowJobExecutor.addJob(columnGetter);
 				String resultsFolder = this.writeFolder + sampleName + "/";
@@ -263,7 +268,7 @@ public class SplicingAnalysisPipeline2 extends Script<SplicingAnalysisPipeline>
 			String biosBasedResultsFolderRawData = this.writeFolder + "bios/rawData/";
 			FileUtils.makeDir(biosBasedResultsFolderRawData);
 
-			RowJobExecutor rowJobExecutorBiosIndexesRawData = new RowJobExecutor();
+			RowJobExecutor rowJobExecutorBiosIndexesRawData = new RowJobExecutor(nThreads);
 			rowJobExecutorBiosIndexesRawData.addJob(rowMedianGetter);
 			rowJobExecutorBiosIndexesRawData.addJob(rowMaxGetter);
 			rowJobExecutorBiosIndexesRawData.setIncludeIndexes(biosIndexes);
@@ -277,7 +282,7 @@ public class SplicingAnalysisPipeline2 extends Script<SplicingAnalysisPipeline>
 			for (String sampleName : caseSampleNameToFamilySampleNames.keySet())
 			{
 				//get raw counts
-				RowJobExecutor rowJobExecutorGetRawCounts = new RowJobExecutor();
+				RowJobExecutor rowJobExecutorGetRawCounts = new RowJobExecutor(nThreads);
 				ArrayList<String> includeColnamesCaseSample = new ArrayList<String>();
 				includeColnamesCaseSample.add(sampleName);
 				rowJobExecutorGetRawCounts.setIncludeColHeaders(includeColnamesCaseSample);
@@ -292,7 +297,7 @@ public class SplicingAnalysisPipeline2 extends Script<SplicingAnalysisPipeline>
 			for (String sampleName : sampleToOtherIndexesStudy.keySet())
 			{
 				int[] otherStudyIndexes = sampleToOtherIndexesStudy.get(sampleName);
-				RowJobExecutor rowJobExecutorGetRawCounts = new RowJobExecutor();
+				RowJobExecutor rowJobExecutorGetRawCounts = new RowJobExecutor(nThreads);
 				ArrayList<String> includeColnamesCaseSample = new ArrayList<String>();
 				includeColnamesCaseSample.add(sampleName);
 				rowJobExecutorGetRawCounts.setIncludeIndexes(otherStudyIndexes);
@@ -311,6 +316,7 @@ public class SplicingAnalysisPipeline2 extends Script<SplicingAnalysisPipeline>
 
 			///////////////////////////////////////////////////////////////////////////////////////////////////////////
 			//MergeFiles and write Patrick files
+			String patrickFolder = writeFolder + "patrickFolder/";
 			for (String caseSampleName : caseSampleNameToFamilySampleNames.keySet())
 			{
 				String familyName = getFamilyName(	caseSampleName,
@@ -349,7 +355,6 @@ public class SplicingAnalysisPipeline2 extends Script<SplicingAnalysisPipeline>
 				String patrickWriteFn = sampleFolder + caseSampleName + "_patrick.txt";
 				BufferedWriter patrickWriter = FileUtils.createWriter(patrickWriteFn);
 
-				String patrickFolder = writeFolder + "patrickFolder/";
 				FileUtils.makeDir(patrickFolder);
 				String patrickFolderWriteFn = patrickFolder + caseSampleName + ".txt";
 				BufferedWriter patrickFolderWriter = FileUtils.createWriter(patrickFolderWriteFn);
@@ -432,10 +437,17 @@ public class SplicingAnalysisPipeline2 extends Script<SplicingAnalysisPipeline>
 
 			}
 
+			//OutlierSpliceSiteRetriever moet hier nog onder
+			OutlierSpliceSiteRetriever outlierSpliceSiteRetriever = new OutlierSpliceSiteRetriever();
+			outlierSpliceSiteRetriever.setInputFolder(patrickFolder);
+			outlierSpliceSiteRetriever.setRawMatrixFn(rawMatrixFn);
+			outlierSpliceSiteRetriever.setCorrectedMatrixFn(correctedMatrixFn);
+			outlierSpliceSiteRetriever.setSpliceNameCol(1);
 		} catch (Exception e)
 		{
 			e.printStackTrace();
 		}
+		
 	}
 
 	private void writeRescueLine(	BufferedWriter rescueWriter,
@@ -756,108 +768,160 @@ public class SplicingAnalysisPipeline2 extends Script<SplicingAnalysisPipeline>
 	private void useExecutorsOnFile(ArrayList<RowJobExecutor> rowJobExecutors,
 									String matrixFn) throws FileNotFoundException, IOException, InterruptedException
 	{
-		BufferedReader sampleReader = FileUtils.createReader(matrixFn);
+		BufferedReader sampleReader = FileUtils.createReader(matrixFn);//65 kb buffer
 		String header = sampleReader.readLine();//get rid of header
 
 		executeHeaderJobs(	rowJobExecutors,
 							header);
 
-		//		int queueSize = nThreads * 2;
-		//		ExecutorService executorService = new ThreadPoolExecutor(	nThreads,
-		//																	nThreads,
-		//																	5000L,
-		//																	TimeUnit.MILLISECONDS,
-		//																	new ArrayBlockingQueue<Runnable>(	10,
-		//																										true),
-		//																	new ThreadPoolExecutor.CallerRunsPolicy());
-		//		Executors.newFixedThreadPool(nThreads);
+		ExecutorService executorService = Executors.newFixedThreadPool(nThreads);
+//		int queueSize = nThreads * 3;
+//		ExecutorService executorService = new ThreadPoolExecutor(	nThreads,
+//																	nThreads,
+//																	5000L,
+//																	TimeUnit.MILLISECONDS,
+//																	new ArrayBlockingQueue<Runnable>(	queueSize,
+//																										true),
+//																	new ThreadPoolExecutor.CallerRunsPolicy());
+		Executors.newFixedThreadPool(nThreads);
 
 		String line = null;
 		int lineNumber = 0;
+		
+		boolean[] availableThreadNumbers = initiateAvailableThreadNumbers();
+		initiateStorageVariables(rowJobExecutors, nThreads);
+		
+		
+		double startTime = System.nanoTime();
 		while ((line = sampleReader.readLine()) != null)
 		{
-			//			Runnable worker = new RowJobExecutorThread(	line,
-			//														lineNumber,
-			//														rowJobExecutors);
-			//			lineNumber++;
-			//			executorService.execute(worker);
-
-			String rowName = line.split("\t",
-										2)[0];
-			double[] values =null;
-
-			try
+			if(lineNumber %10000 ==0)
 			{
-			String[] valuesString = line.split(	"\t",
-												2)[1].split("\t");
-			
-
-				values = FileUtils.convertToDoubleArray(valuesString);
-			}catch(Exception e)
-			{
-				e.printStackTrace();
-				System.out.println(line);
-				System.out.println(matrixFn);
+				double runtime = (System.nanoTime()-startTime)/1000/1000/1000;
+				System.out.println(lineNumber +" lines completed in\t"+ ((int)runtime)+ " seconds");
 			}
-
-			setRowJobExecutorVariables(	rowJobExecutors,
-										rowName,
-										values,
-										lineNumber);
-
-			executeJobs(rowJobExecutors);
-
+			int availableThread = getAvailableThreadNumber(availableThreadNumbers); 			
+			Runnable worker = new RowJobExecutorThread(	line,
+														lineNumber,
+														rowJobExecutors, availableThreadNumbers, availableThread);
+			
+			executorService.execute(worker);
+			
+			if(lineNumber%nThreads==0)
+				writeLines(rowJobExecutors);
+			lineNumber++;
 		}
-		//		executorService.shutdown();
-		//		while (!executorService.isTerminated())
-		//		{
-		//			Thread.sleep(1);
-		//		}
-		//		;
-	}
-
-	private void setRowJobExecutorVariables(ArrayList<RowJobExecutor> rowJobExecutors,
-											String rowName,
-											double[] values,
-											int lineNumber)
-	{
-		for (RowJobExecutor rowJobExecutor : rowJobExecutors)
+		
+		executorService.shutdown();
+		while (!executorService.isTerminated())
 		{
-			rowJobExecutor.setRowName(rowName);
-
-			setValuesUsingIncludeIndexes(	values,
-											rowJobExecutor);
-		}
+			Thread.sleep(1);
+		};
+		writeLines(rowJobExecutors);
 	}
 
-	public void setValuesUsingIncludeIndexes(	double[] values,
-												RowJobExecutor rowJobExecutor)
+	private void initiateStorageVariables(ArrayList<RowJobExecutor> rowJobExecutors, int nThreads)
 	{
-		rowJobExecutor.initiateStorageVariables();
-		int[] includeIndexes = rowJobExecutor.getIncludeIndexes();
-		double[] includeValues = new double[includeIndexes.length];
-		for (int i = 0; i < includeIndexes.length; i++)
+		for(RowJobExecutor rowJobExecutor : rowJobExecutors)
 		{
-			int e = includeIndexes[i];
-			includeValues[i] = values[e];
+			for(int t =0; t< nThreads; t++)
+				rowJobExecutor.initiateStorageVariables(t);
 		}
-		rowJobExecutor.setValuesUsingIncludeIndexes(values);
+		
 	}
 
-	private void executeJobs(ArrayList<RowJobExecutor> rowJobExecutors)
+	private void writeLines(ArrayList<RowJobExecutor> rowJobExecutors) throws IOException, InterruptedException
 	{
-		for (RowJobExecutor rowJobExecutor : rowJobExecutors)
+		for(RowJobExecutor rowJobExecutor:rowJobExecutors)
 		{
-			rowJobExecutor.execute(0);
+			HashMap<String, JobLineWriter> jobLineWriters = rowJobExecutor.getLineWriters();
+			for(JobLineWriter jobLineWriter: jobLineWriters.values())
+			{
+				jobLineWriter.writeLinesInBuffer();
+			}
 		}
+		
 	}
+
+	private boolean[] initiateAvailableThreadNumbers()
+	{
+		boolean[] availableThreadNumbers =new boolean[this.nThreads];
+		for(int t = 0; t < this.nThreads; t++)
+		{
+			availableThreadNumbers[t]=true;
+		}
+		return availableThreadNumbers;
+	}
+
+//	private void setRowJobExecutorVariables(ArrayList<RowJobExecutor> rowJobExecutors,
+//											String rowName,
+//											double[] values,
+//											int lineNumber)
+//	{
+//		for (RowJobExecutor rowJobExecutor : rowJobExecutors)
+//		{
+//			rowJobExecutor.setRowName(rowName);
+//
+//			setValuesUsingIncludeIndexes(	values,
+//											rowJobExecutor);
+//		}
+//	}
+
+//	public void setValuesUsingIncludeIndexes(	double[] values,
+//												RowJobExecutor rowJobExecutor)
+//	{
+//		rowJobExecutor.initiateStorageVariables();
+//		int[] includeIndexes = rowJobExecutor.getIncludeIndexes();
+//		double[] includeValues = new double[includeIndexes.length];
+//		for (int i = 0; i < includeIndexes.length; i++)
+//		{
+//			int e = includeIndexes[i];
+//			includeValues[i] = values[e];
+//		}
+//		rowJobExecutor.setValuesUsingIncludeIndexes(values);
+//	}
+
+	//Thread done: 1	linenumber =789
+	
+	private int getAvailableThreadNumber(boolean[] availableThreadNumbers) throws InterruptedException
+	{
+		int availableThreadNumber = -1;
+		
+		out: while(availableThreadNumber==-1)
+		{
+			for(int t = 0; t< availableThreadNumbers.length; t++)
+			{
+				if(availableThreadNumbers[t] == true)
+				{
+					availableThreadNumber=t;
+					availableThreadNumbers[t]=false;
+					break out;
+				}
+			}
+//			if(((int)(Math.random()*10)) == 0)
+//				System.out.println("Sleeping; Waiting for available thread");		
+			Thread.sleep(0,1);
+		}
+		
+		
+		return availableThreadNumber;
+	}
+
+//	private void executeJobs(ArrayList<RowJobExecutor> rowJobExecutors)
+//	{
+//		for (RowJobExecutor rowJobExecutor : rowJobExecutors)
+//		{
+//			rowJobExecutor.execute(0);
+//		}
+//	}
 
 	private void executeHeaderJobs(	ArrayList<RowJobExecutor> rowJobExecutors,
-									String header)
+									String header) throws FileNotFoundException, IOException
 	{
 		for (RowJobExecutor rowJobExecutor : rowJobExecutors)
 		{
 			rowJobExecutor.executeHeaderJob(header);
+			rowJobExecutor.writeHeaders();
 		}
 	}
 

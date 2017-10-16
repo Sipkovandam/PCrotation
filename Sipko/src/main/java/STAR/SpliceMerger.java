@@ -18,6 +18,8 @@ public class SpliceMerger extends Script<SpliceMerger>
 {
 	private String spliceFilesFolderComment = "/root/folder/results/; MANDATORY // Folder containing all the splice files from the 2nd pass";
 	private String splicesFilesFolder = null;
+	private String requiredStringsComment = "[deduplicated,.sj]; OPTIONAL // string that must be contained within filenames of files included";
+	private String[] requiredStrings = null;
 	private String spliceFileExtencionComment = "SJ.out.tab; MANDATORY // string to search for when searching for splice files in the <resultsFolder>";
 	private String spliceFileExtencion = "SJ.out.tab";
 	private String writeFnComment = "/root/folder/SJ_Merged_2ndPass_annotated.out.tab; OPTIONAL// filename of the file in which the expression for all samples for all annotated splice junctions from the second pass should be written. First 6 columns of the splice file are collapsed into the first column becoming the names of the splice junctinos";
@@ -45,6 +47,7 @@ public class SpliceMerger extends Script<SpliceMerger>
 			FileSearcher fileSearcher = new FileSearcher();
 			fileSearcher.setFolders(splicesFilesFolder);
 			fileSearcher.setSearchStrings(new String[]{spliceFileExtencion});
+			fileSearcher.setRequiredStrings(requiredStrings);
 			
 			if(exonsInsteadOfJunctions)
 				fileSearcher.setForbiddenStrings(new String[]{".out.summary"});
@@ -429,5 +432,25 @@ public class SpliceMerger extends Script<SpliceMerger>
 	public void setExonsInsteadOfJunctions(boolean exonsInsteadOfJunctions)
 	{
 		this.exonsInsteadOfJunctions = exonsInsteadOfJunctions;
+	}
+
+	public String[] getRequiredStringFn()
+	{
+		return requiredStrings;
+	}
+
+	public void setRequiredStringFn(String[] requiredStrings)
+	{
+		this.requiredStrings= requiredStrings;
+	}
+
+	public String[] getRequiredStrings()
+	{
+		return requiredStrings;
+	}
+
+	public void setRequiredStrings(String[] requiredStrings)
+	{
+		this.requiredStrings = requiredStrings;
 	}
 }

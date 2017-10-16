@@ -10,19 +10,18 @@ import Tools.FileUtils;
 
 public class RowColumnGetter extends RowJob
 {
+	public RowColumnGetter()
+	{
+		this.setHasSingleColHeader(false);
+	}
+	
 	@Override
-	public void execute(RowJobExecutor rowExecutor, int lineNumber)
+	public void execute(RowJobExecutor rowExecutor, int lineNumber, int threadNumber)
 	{
 		try
 		{
-			double[] values = rowExecutor.getValues();
-			writeResult(values, rowExecutor, lineNumber);
+			double[] values = rowExecutor.getInputValues(threadNumber);
+			super.writeResult(values, rowExecutor, lineNumber, threadNumber);
 		}catch(Exception e){e.printStackTrace();}
-	}
-
-	private void writeResult(double[] values, RowJobExecutor rowExecutor, int lineNumber) throws FileNotFoundException, IOException
-	{
-		String writeLine = rowExecutor.getRowName().concat(FileUtils.doubleArrayToWriteString(values)).concat("\n");
-		super.writeLine(lineNumber, writeLine, rowExecutor, false);
 	}
 }

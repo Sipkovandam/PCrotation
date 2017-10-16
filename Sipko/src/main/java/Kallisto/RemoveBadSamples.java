@@ -16,7 +16,7 @@ public class RemoveBadSamples {
 	public static String expressionFN = "E:/Groningen/Data/RNAseq_clinic/DownSamples/GRCh38/31.07.pc1.illumina.genes.expressed_DownSamples_ScaffoldGenesRemoved.txt";
 	public static String writeFolder = null;
 	public static int cutOff =0;//number of reads/transcripts that should be expressed (if 0, will become based on minPercentageExpressed)
-	public static int minPercentageExpressed= 10;
+	public static int minPercentageExpressed= 0;
 	
 	public static void main (String[] args) throws IOException
 	{

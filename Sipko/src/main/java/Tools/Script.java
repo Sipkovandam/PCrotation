@@ -68,7 +68,7 @@ public class Script <T> implements Tools.Runnable, Serializable
 		}
 		writeConfig(this.jsonFN, object,writeTransient,serializeNulls);	
 	}
-	public Script<T> readVars(String jsonFilename)//function should be in separate interface...
+	public Script<T> read(String jsonFilename)//function should be in separate interface...
 	{
 		return readVars(jsonFilename, null);
 	}

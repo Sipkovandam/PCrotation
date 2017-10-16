@@ -27,7 +27,7 @@ import PCA.RlogLargeMatrix_Main;
 import PrepData.GetSamplesWithEmptyCells;
 import STAR.SpliceMerger_InfiniteFileSizes;
 import STAR.STAR_Pipeline;
-import Slurm.Slurm;
+import Slurm.ClusterHandler;
 import Slurm.SumTranscriptsToGenes;
 import no.uib.cipr.matrix.NotConvergedException;
 

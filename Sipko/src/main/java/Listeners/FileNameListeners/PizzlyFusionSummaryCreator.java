@@ -9,33 +9,41 @@ import PizzlyClasses.PizzlyFusionStructure;
 import Tools.FileUtils;
 import Tools.Script;
 
-public class PizzlyFusionFileOperator extends FileNameListener
+public class PizzlyFusionSummaryCreator extends FileNameListener
 {
 	HashMap<String,int[]> fusionCounts;
+	int minReadSupportForInclusionInTable = 8;
 	
 	@Override
 	public void run(String pizzlyFusionFn)
 	{
 		try
 		{
-			PizzlyFusionStructure pizzlyFusionStructure = new PizzlyFusionStructure();
-			pizzlyFusionStructure=(PizzlyFusionStructure) pizzlyFusionStructure.readVars(pizzlyFusionFn);
-			BufferedWriter sampleFusionWriter = FileUtils.createWriter(FileUtils.removeExtention(pizzlyFusionFn)+ "_table.txt"); 
+			PizzlyFusionStructure pizzlyFusionStructure = new PizzlyFusionStructure();//contains all the fusions
+			pizzlyFusionStructure=(PizzlyFusionStructure) pizzlyFusionStructure.read(pizzlyFusionFn);
+			//BufferedWriter fusionSummaryWriter = FileUtils.createWriter(FileUtils.removeExtention(pizzlyFusionFn)+ "_summary.txt"); 
+			BufferedWriter fusionTableWriter = FileUtils.createWriter(FileUtils.removeExtention(pizzlyFusionFn)+ "_table.txt");
 			
+			int nIncludeIntable = 0;
 			for(Fusion fusion : pizzlyFusionStructure.getFusions())
 			{
 				String fusionName = getFusionName(fusion);
 				addCountsToFusionCountsHash(fusion, fusionName);
-				writeFusionToFile(sampleFusionWriter, fusion, fusionName);
+				//writeFusionToFile(fusionSummaryWriter, fusion, fusionName, nIncludeIntable);
 			}
-			sampleFusionWriter.close();
+			
+			//fusionSummaryWriter.close();
 		}catch(Exception e){e.printStackTrace();}
 	}
 
 	private void writeFusionToFile(	BufferedWriter sampleFusionWriter,
-									Fusion fusion, String fusionName) throws IOException
+									Fusion fusion, String fusionName, int nIncludeIntable) throws IOException
 	{
-		String overlappingReads = Integer.toString(fusion.getPaircount());
+		int readCount = fusion.getPaircount();
+		if(readCount >= minReadSupportForInclusionInTable)
+			nIncludeIntable++;
+		
+		String overlappingReads = Integer.toString(readCount);
 		sampleFusionWriter.write(fusionName.concat("\t").concat(overlappingReads).concat("\n"));
 	}
 

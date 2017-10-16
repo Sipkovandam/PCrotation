@@ -9,7 +9,7 @@ import java.util.List;
 
 import Listeners.FileNameListeners.FileNameListener;
 import Listeners.FileNameListeners.PizzlyFusionFileMaker;
-import Listeners.FileNameListeners.PizzlyFusionFileOperator;
+import Listeners.FileNameListeners.PizzlyFusionSummaryCreator;
 import Tools.FileSearcher;
 import Tools.FileUtils;
 import Tools.Script;
@@ -46,9 +46,13 @@ public class FusionFileCreator extends Script<FusionFileCreator>
 			
 			p("Mering pizzly splice files into 1 summary file");
 			//Count the fusions in all the pizzly output files
-			PizzlyFusionFileOperator pizzlyFusionFileOperator = new PizzlyFusionFileOperator();
+			PizzlyFusionSummaryCreator pizzlyFusionFileOperator = new PizzlyFusionSummaryCreator();
 			HashMap<String,int[]> fusionCounts = new HashMap<String,int[]>();
 			pizzlyFusionFileOperator.setFusionCounts(fusionCounts);
+			
+			//add a class that creates one big table with all fusions?
+			
+			
 			jobList = new ArrayList<FileNameListener>();
 			jobList.add(pizzlyFusionFileOperator);
 			

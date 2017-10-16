@@ -5,6 +5,7 @@ echo "2=$2"
 echo "3=$3"
 echo "4=$4"
 echo "5=$5"
+echo "6=$6"
 nodenames=(umcg-node011 umcg-node012 umcg-node013 umcg-node014 umcg-node015 umcg-node016 umcg-node017 umcg-node018)
 
 user=$3
@@ -13,7 +14,7 @@ do
 	waiting=true
 	while "$waiting" -eq "true"
 	do
-		squeue -u $user -o %j_%i_%n_%t_%M_%N_%Y | egrep 'Kallisto|STAR'  &> currentJobs.txt
+		squeue -u $user -o %j_%i_%n_%t_%M_%N_%Y | egrep "$6"  &> currentJobs.txt
 		nodeName=${nodenames[$a]}
 		
 		nodeJobs=$(egrep "$nodeName|__\(null\)" currentJobs.txt | wc -l)
@@ -36,8 +37,8 @@ sleep 10
 waiting=true
 while "$waiting" -eq "true"
 do
-	squeue -u $user -o %j_%i_%n | egrep 'Kallisto|STAR' &> currentJobs.txt 
-	nodeJobs=$(grep "$nodeName" currentJobs.txt | egrep 'Kallisto|STAR' | wc -l)
+	squeue -u $user -o %j_%i_%n | egrep "$6" &> currentJobs.txt 
+	nodeJobs=$(grep "$nodeName" currentJobs.txt | egrep "$6" | wc -l)
 	if [[ "$nodeJobs" -lt 1 ]] # as long as there are jobs keep waiting
 	then
 		waiting="false";

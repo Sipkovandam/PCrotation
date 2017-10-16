@@ -1,14 +1,16 @@
 package RowAnalyses;
 
 import java.io.BufferedWriter;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 
 import Tools.FileUtils;
 
-public class RowJobExecutor extends Row
+public class RowJobExecutor
 {
 	private String writeFolder = null;
 	private List<RowJob> rowJobs = null;
@@ -17,27 +19,31 @@ public class RowJobExecutor extends Row
 	private String[] dataColHeaders = null;
 	
 	HashMap<String, Integer> valueNameToJobVarIndex = null;
-	private double[] jobVars = null;
-	private boolean[] jobVarIsCalulated = null;
+
+	ThreadVars[] threadVars = null; 
 	
 //	HashMap<String,ArrayList<String>> resultSlots = new HashMap<String, ArrayList<String>>(); //something for making it multithreaded
 //	HashMap<String,Integer> resultsWrittenIndex = new HashMap<String,Integer>();
 
-	HashMap<String,BufferedWriter> fileWriters = new HashMap<String,BufferedWriter>();
+	//lineWriter for each job
+	HashMap<String,JobLineWriter> lineWriters = new HashMap<String,JobLineWriter>();
+
 	
-	//public HashMap<String,BufferedWriter> fileWriters = new HashMap<String,BufferedWriter>();//a writer for each job
-	
-	
-	public RowJobExecutor()
+	public RowJobExecutor(int nThreads)
 	{
 		super();
+		threadVars = new ThreadVars[nThreads];
+		for(int t =0; t < nThreads; t++)
+		{
+			threadVars[t] = new ThreadVars();
+		}
 	}
 
-	public void execute(int lineNumber)
+	public void execute(int lineNumber, int threadNumber)
 	{
 		for(RowJob rowJob : rowJobs)
 		{
-			rowJob.execute(this, lineNumber);
+			rowJob.execute(this, lineNumber, threadNumber);
 		}
 	}
 
@@ -51,17 +57,6 @@ public class RowJobExecutor extends Row
 	public void setJobs(List<RowJob> rowJobs)
 	{
 		this.rowJobs=rowJobs;
-	}
-
-
-	
-
-	public void closeWriters() throws IOException
-	{
-		for(BufferedWriter writer: fileWriters.values())
-		{
-			writer.close();
-		}
 	}
 
 	public void executeHeaderJob(String header)
@@ -81,24 +76,30 @@ public class RowJobExecutor extends Row
 		{
 			int e = this.includeIndexes[i];
 			dataColHeaders[i]=dataHeaders[e];
-		}
+		}		
 		return dataColHeaders;
 	}
-
-	public void setValuesUsingIncludeIndexes(double[] values)
-	{
-		this.values= new double[includeIndexes.length];
-		for(int i = 0; i < includeIndexes.length; i++)
-		{
-			int e = includeIndexes[i];
-			this.values[i]=values[e];
-
-			for(RowJob rowJob : rowJobs)
-			{
-				rowJob.executeOnInitiation(this, this.values[i]);
-			}
-		}
-	}
+//
+//	public void setValuesUsingIncludeIndexes(double[] values, int threadNumber)
+//	{
+//		ThreadVars threadVars = this.threadVars[threadNumber];
+//		double[] tempValues = threadVars.getIncludeIndexValues();
+//		
+//		if(tempValues==null)
+//			tempValues=new double[includeIndexes.length];
+//		
+//		for(int i = 0; i < includeIndexes.length; i++)
+//		{
+//			int e = includeIndexes[i];
+//			tempValues[i]=values[e];
+//
+//			for(RowJob rowJob : rowJobs)
+//			{
+//				rowJob.executeOnInitiation(this, tempValues[i], threadNumber);
+//			}
+//		}
+//		threadVars.setIncludeIndexValues(tempValues);
+//	}
 
 	public int[] getIncludeIndexes()
 	{
@@ -175,18 +176,8 @@ public class RowJobExecutor extends Row
 	{
 		this.rowJobs = rowJobs;
 	}
-
-	public HashMap<String, BufferedWriter> getFileWriters()
-	{
-		return fileWriters;
-	}
-
-	public void setFileWriters(HashMap<String, BufferedWriter> fileWriters)
-	{
-		this.fileWriters = fileWriters;
-	}
 	
-	public void initiateStorageVariables()
+	public void initiateStorageVariables(int threadNumber)
 	{
 		if(valueNameToJobVarIndex==null)
 		{
@@ -202,22 +193,35 @@ public class RowJobExecutor extends Row
 			}
 		}
 
-		this.jobVars = new double[valueNameToJobVarIndex.size()];
-		this.jobVarIsCalulated = new boolean[valueNameToJobVarIndex.size()];
+		if(this.threadVars[threadNumber].getThread_JobVars()==null)
+			this.threadVars[threadNumber].setThread_JobVars(new double[valueNameToJobVarIndex.size()]);
+		if(this.threadVars[threadNumber].getThread_JobVarIsCalulated()==null)
+			this.threadVars[threadNumber].setThread_JobVarIsCalulated(new boolean[valueNameToJobVarIndex.size()]);
+		else
+			this.threadVars[threadNumber].setThread_JobVarIsCalulatedFalse();
 	}
 
-
-	public double getJobValue(String valueName)
+	public void writeHeaders() throws FileNotFoundException, IOException
 	{
-		int valueIndex = this.valueNameToJobVarIndex.get(valueName);
-		return this.jobVars[valueIndex];
+		for(RowJob rowJob : rowJobs)
+		{
+			JobLineWriter jobLineWriter= new JobLineWriter(this.writeFolder, rowJob.getWriteFn(), this.getDataColHeaders(), rowJob.hasSingleColHeader());
+			lineWriters.put(rowJob.getWriteFn(), jobLineWriter);
+		}
+		
 	}
 
-	public void setJobValue(String valueName, double value)
+	public double getJobValue(String valueName, int threadNumber)
+	{
+		int valueNameIndex = this.valueNameToJobVarIndex.get(valueName);
+		return this.threadVars[threadNumber].getThread_JobVars()[valueNameIndex];
+	}
+
+	public void setJobValue(String valueName, double value, int threadNumber)
 	{
 		int valueIndex = this.valueNameToJobVarIndex.get(valueName);	
-		this.jobVars[valueIndex]= value;
-		this.jobVarIsCalulated[valueIndex]=true;
+		this.threadVars[threadNumber].setThread_JobVars(valueIndex, value);
+		this.threadVars[threadNumber].setThread_JobVarIsCalulated(valueIndex,true);
 	}
 
 	public HashMap<String, Integer> getValueNameToJobVarIndex()
@@ -230,9 +234,52 @@ public class RowJobExecutor extends Row
 		this.valueNameToJobVarIndex = valueNameToJobVarIndex;
 	}
 
-	public boolean getJobVarIsCalulated(String valueName)
+	public boolean getJobVarIsCalulated(String valueName, int threadNumber)
 	{
 		int valueIndex = this.valueNameToJobVarIndex.get(valueName);	
-		return this.jobVarIsCalulated[valueIndex];
+		return this.threadVars[threadNumber].getThread_JobVarIsCalulated(valueIndex);
+	}
+
+	public void write(String writeLine, String writeFn, boolean hasSingleColHeader, int lineNumber,int threadNumber) throws FileNotFoundException, IOException, InterruptedException
+	{
+		JobLineWriter writer = getJobLineWriter(writeFn,hasSingleColHeader);
+		writer.writeIntoBufferAndWriteBuffer(lineNumber,writeLine, threadNumber);
+	}
+
+	private JobLineWriter getJobLineWriter(	String writeFn,
+											boolean hasSingleColHeader) throws FileNotFoundException, IOException
+	{
+		JobLineWriter jobLineWriter = lineWriters.get(writeFn);
+		return jobLineWriter;
+	}
+
+
+	public void closeWriters() throws IOException
+	{
+		for(JobLineWriter jobLineWriter: lineWriters.values())
+		{
+			jobLineWriter.close();
+		}
+	}
+
+	public void setRowName(	String rowName,
+							int threadNumber)
+	{
+		this.threadVars[threadNumber].setRowName(rowName);
+	}
+
+	public double[] getInputValues(int threadNumber)
+	{
+		return this.threadVars[threadNumber].getIncludeIndexValues();
+	}
+
+	public String getRowName(int threadNumber)
+	{
+		return this.threadVars[threadNumber].getRowName();
+	}
+
+	public HashMap<String, JobLineWriter> getLineWriters()
+	{
+		return lineWriters;
 	}
 }

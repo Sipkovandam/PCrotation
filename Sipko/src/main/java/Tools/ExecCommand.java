@@ -110,6 +110,14 @@ public class ExecCommand {
 		}
 	}
 
+	public void reportErrors()
+	{
+		if(this.getError().length()>1)
+			System.out.println("execute error: \n" + this.getError());
+		else
+			System.out.println("No errors occurred running the slurm scripts");	
+	}
+
 	public String getOutput() {
 		try {
 			outputSem.acquire();

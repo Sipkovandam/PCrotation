@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
+import java.io.IOException;
 
 import Tools.FileUtils;
 import Tools.SampleSheetGafParser;
@@ -34,50 +35,12 @@ public class LaneMerger extends Script<LaneMerger>
 			gafSheet.setSeparator(",");
 			gafSheet.run();
 			
-			int nextIndex = 0;
-			HashMap<Integer,Integer> oldToNewIndex = new HashMap<Integer,Integer>();
-			HashMap<String,Integer> internalIdToNewIndex = new HashMap<String,Integer>();
-			
 			ArrayList<String> newNames = new ArrayList<String>();
+			HashMap<Integer,Integer> oldToNewIndex = gafSheet.getOldToNewIndexes(countsFn, newNames);
 			
-			BufferedReader countsReader = FileUtils.createReader(countsFn); 
-			
-			String[] sampleNames = countsReader.readLine().split("\t");
-			//fill table that contains conversion of the old column indexes to the new indexes
-			for(int h = 1; h< sampleNames.length; h++)
-			{
-				int newIndex = 0;
-				String internalId = gafSheet.sampleSheet.get("internalSampleID").get(sampleNames[h]);//get the internalId of this sample
-				
-				if(internalId!= null && internalIdToNewIndex.containsKey(internalId))
-				{//if a sample is run on multiple lanes then
-					newIndex=internalIdToNewIndex.get(internalId);
-					String oldName = newNames.get(newIndex);
-					
-//					String[] oldInfo = oldName.split("_");
-//					//String laneInfo = sampleNames[h].split("_")[laneIndexInFileName];
-//					String newName = oldInfo[0];
-//					
-//					for(int l = 1; l < laneIndexInFileName; l++)
-//						newName+="_"+oldInfo[l];
-//					newName+="_";
-//					//add lane element in the right place, you can do this if you want to keep all the lane numbers of the merged lanes in the filename
-//					//newName = orderLaneNumbersAndAdd(newName,oldInfo,laneInfo);
-					String newName =oldName.replaceAll("_L._", "_");
-					
-					newNames.set(newIndex, newName);
-				}
-				else
-				{
-					newNames.add(sampleNames[h]);
-					newIndex = nextIndex;
-					internalIdToNewIndex.put(internalId, newIndex);
-					nextIndex++;
-				}
-				oldToNewIndex.put(h, newIndex);
-			}
-			
+
 			BufferedWriter summedFileWriter = FileUtils.createWriter(summedFn);
+			BufferedReader countsReader = FileUtils.createReader(countsFn); 
 			String line = null;
 			for(String newName : newNames)
 			{
@@ -87,7 +50,7 @@ public class LaneMerger extends Script<LaneMerger>
 			
 			while((line = countsReader.readLine())!=null)
 			{
-				double[] newValues = new double[nextIndex];
+				double[] newValues = new double[newNames.size()];
 				String[] row = line.split("\t");
 				for(int v = 1; v < row.length; v++)
 				{
@@ -106,6 +69,8 @@ public class LaneMerger extends Script<LaneMerger>
 			p("Summed file written to:" + summedFn);
 		}catch(Exception e){e.printStackTrace();}
 	}
+
+	
 
 	private String orderLaneNumbersAndAdd(String newName, String[] oldInfo, String laneInfo)
 	{

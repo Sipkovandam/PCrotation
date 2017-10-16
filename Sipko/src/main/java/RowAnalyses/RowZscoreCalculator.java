@@ -21,8 +21,13 @@ public class RowZscoreCalculator extends RowJob
 //		this.setValueNames(new String[]{zScoresName});
 //	}
 	
+	public RowZscoreCalculator()
+	{
+		this.setHasSingleColHeader(false);
+	}
+	
 	@Override
-	public void execute(RowJobExecutor rowExecutor, int lineNumber)
+	public void execute(RowJobExecutor rowExecutor, int lineNumber, int threadNumber)
 	{
 		try
 		{		
@@ -30,24 +35,22 @@ public class RowZscoreCalculator extends RowJob
 				executorWithAvgStdevsToUse = rowExecutor;
 			
 			double avg = 0;
-			if(rowAverageCalculator!= null && executorWithAvgStdevsToUse.getJobVarIsCalulated(rowAverageCalculator.getAverageName()))
-				avg = executorWithAvgStdevsToUse.getJobValue(rowAverageCalculator.getAverageName());
+			if(rowAverageCalculator!= null && executorWithAvgStdevsToUse.getJobVarIsCalulated(rowAverageCalculator.getAverageName(), threadNumber))
+				avg = executorWithAvgStdevsToUse.getJobValue(rowAverageCalculator.getAverageName(), threadNumber);
 			else
-				avg = getAvg(rowExecutor);
+				avg = getAvg(rowExecutor, threadNumber);
 			double stdev = 0;
-			if(rowStdevCalculator!=null && executorWithAvgStdevsToUse.getJobVarIsCalulated(rowStdevCalculator.getStdevName()))
-				stdev = executorWithAvgStdevsToUse.getJobValue(rowStdevCalculator.getStdevName());
+			if(rowStdevCalculator!=null && executorWithAvgStdevsToUse.getJobVarIsCalulated(rowStdevCalculator.getStdevName(), threadNumber))
+				stdev = executorWithAvgStdevsToUse.getJobValue(rowStdevCalculator.getStdevName(), threadNumber);
 			else
-				stdev= getStdev(rowExecutor);
+				stdev= getStdev(rowExecutor, threadNumber);
 			
-			double[] zScores = convertToZscores(rowExecutor.getRowName(), rowExecutor.getValues(), avg, stdev);
-			writeResult(zScores, rowExecutor, lineNumber);
+			double[] zScores = convertToZscores(rowExecutor.getRowName(threadNumber), rowExecutor.getInputValues(threadNumber), avg, stdev);
+			super.writeResult(zScores, rowExecutor, lineNumber, threadNumber);
 		}catch(Exception e){e.printStackTrace();}
 	}
 	private double[] convertToZscores(String rowName, double[] values, double avg, double stdev) throws FileNotFoundException, IOException
 	{
-		
-		
 		double[] zScores = new double[values.length];
 		for(int v = 0; v < values.length; v++)
 		{
@@ -56,25 +59,16 @@ public class RowZscoreCalculator extends RowJob
 		return zScores;
 	}
 
-	private void writeResult(double[] zScores, RowJobExecutor rowExecutor, int lineNumber) throws FileNotFoundException, IOException
+	private double getStdev(RowJobExecutor rowExecutor, int threadNumber)
 	{
-		String writeLine = rowExecutor.getRowName();
-		writeLine=writeLine.concat(FileUtils.doubleArrayToWriteString(zScores));
-		writeLine=writeLine.concat("\n");
-		super.writeLine(lineNumber, writeLine, rowExecutor, false);
-	}
-
-
-	private double getStdev(RowJobExecutor rowExecutor)
-	{
-		double variance = org.apache.commons.math3.stat.StatUtils.variance(rowExecutor.getValues());
+		double variance = org.apache.commons.math3.stat.StatUtils.variance(rowExecutor.getInputValues(threadNumber));
 		double stdev =  java.lang.Math.pow(variance,0.5);
 		return stdev;
 	}
 
-	private double getAvg(RowJobExecutor rowExecutor)
+	private double getAvg(RowJobExecutor rowExecutor, int threadNumber)
 	{
-		double avg = org.apache.commons.math3.stat.StatUtils.mean(rowExecutor.getValues());
+		double avg = org.apache.commons.math3.stat.StatUtils.mean(rowExecutor.getInputValues(threadNumber));
 		return avg;
 	}
 	public RowAverageCalculator getRowAverageCalculator()

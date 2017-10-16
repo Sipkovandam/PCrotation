@@ -1,44 +1,15 @@
 package Tests;
 
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FileReader;
-import java.io.FileWriter;
 import java.io.IOException;
-import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Hashtable;
-import java.util.List;
-import java.util.Map.Entry;
-import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.stream.Collectors;
-import java.util.stream.IntStream;
-import java.util.stream.Stream;
-import java.lang.reflect.*;
 
-import org.junit.rules.TemporaryFolder;
-
-import Kallisto.Kallisto_Variables;
-import MatrixScripts.MatrixStruct;
-import MatrixScripts.MyMatrix;
-import PizzlyClasses.PizzlyFusionStructure;
-import PCA.DeSeqNorm;
-import PCA.RlogLargeMatrix;
-import PCA_testcases.CompareFiles;
-import STAR.SpliceSitesCount;
-import STAR.STAR_Pipeline;
-import Slurm.Slurm;
-import Tools.FileUtils;
 import Tools.Script;
-import umcg.genetica.containers.Pair;
-import umcg.genetica.math.matrix.DoubleMatrixDataset;
-
+import htsjdk.samtools.SAMRecord;
+import htsjdk.samtools.SamReader;
+import htsjdk.samtools.SamReaderFactory;
 
 public class Test extends Script<Test> {
 
@@ -47,10 +18,52 @@ public class Test extends Script<Test> {
 	 */
 	private static final long serialVersionUID = 1L;
 
+	public void test(double value)
+	{
+		HashMap<Double,Double> th = new HashMap<Double,Double>();
+		th.put(value, value);
+		System.out.println(value);
+	}
+	
 	public void run()
 	{
-		String test = "__-GL000214.1_64918_65045_2_2_1";
+		final SamReader reader = SamReaderFactory.makeDefault().open(new File("bla"));
+		for (final SAMRecord samRecord : reader) {
+            // Convert read name to upper case.
+            samRecord.setReadName(samRecord.getReadName().toUpperCase());
+            samRecord.getCigar();
+//            outputSam.addAlignment(samRecord);
+        }
 		/*
+		long test = Long.parseLong("112345678910");
+		long test2=0;
+		test2 += (long)test;
+		test2 += (long)test;
+		p(test2);
+		
+		DecimalFormat f = new DecimalFormat("0000000000.0E0");
+
+		double x = 123;
+		if(x == Math.rint(x))
+			p("bla");
+		double val =1000000.06345345346;
+		System.out.println(String.format("%.3f",val));
+		System.out.println(String.format("%s = %d", "joe", 35));
+		
+		try
+		{
+			String gtfFn = "E:/Groningen/Data/Annotation/GRCh37/Homo_sapiens.GRCh37.75.gtf";
+			GtfReader gtfReader = new GtfReader(new File(gtfFn));
+			PerChrIntervalTree<GffElement> genome = gtfReader.createIntervalTree();
+			List<GffElement> gffElements = genome.searchPosition("1", 11869);
+			for(GffElement gffElement: gffElements)
+			{
+				System.out.println(gffElement.toString());
+			}
+			
+		}catch(Exception e){e.printStackTrace();}
+		
+		
 		PizzlyFusionStructure pizzlyFusionFile = new PizzlyFusionStructure();
 		PizzlyFusionStructure pizzlyFusionStruct = (PizzlyFusionStructure) pizzlyFusionFile.readVars("E:/Groningen/Test/PizzlyClasses.PizzlyFusionFile/pizzly.json");
 		p(pizzlyFusionStruct);

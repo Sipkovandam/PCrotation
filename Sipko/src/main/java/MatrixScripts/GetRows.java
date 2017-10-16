@@ -14,10 +14,10 @@ import Tools.Script;
 
 public class GetRows extends Script<GetRows>
 {
-	String fileName = "E:/Groningen/Data/Juha/Genes31995/Healthy/PCA/31.07.pc1.illumina.genes.expressed_DownSamples/PC_1-0__zScores.txt";
-	String fileName2 = "E:/Groningen/Data/Juha/Genes31995/Old/31.07.pc1.illumina.genes.expressed.DEseqnorm_notRounded/18DownSyndrome26Normal2Cancer_counts_transposed/PC_1-300_DevidedBySTdevsTop12000Expressed.txt";
+	String fileName = null;
+	String rowsToGetFn = null;
 	//String fileName2 = "ENSG00000268903,ENSG00000269981,ENSG00000225630";
-	String writeName = "E:/Groningen/Data/Juha/Genes31995/Healthy/PCA/31.07.pc1.illumina.genes.expressed_DownSamples/PC_1-0_zScores_12000highest.txt";
+	String writeName = null;
 	String remove = null;
 	
 	public void run()
@@ -26,17 +26,17 @@ public class GetRows extends Script<GetRows>
 		{
 			MyMatrix file2 = null;
 			
-			if(!fileName2.contains(",") && fileName2.contains(".txt"))
-				file2 = new MyMatrix(fileName2);
+			if(!this.rowsToGetFn.contains(",") && this.rowsToGetFn.contains(".txt"))
+				file2 = new MyMatrix(this.rowsToGetFn);
 			else{
-				String[] rowNames = fileName2.split(",");
+				String[] rowNames = this.rowsToGetFn.split(",");
 				file2 = new MyMatrix(rowNames.length, 1);
 				file2.rowNames = rowNames;
 				file2.colNames[0] = "-";
 			}
 			
-			BufferedReader reader = FileUtils.createReader(fileName);
-			BufferedWriter writer = FileUtils.createWriter(writeName);
+			BufferedReader reader = FileUtils.createReader(this.fileName);
+			BufferedWriter writer = FileUtils.createWriter(this.writeName);
 			String line = reader.readLine();
 			writer.write(line+"\n");//write the first line by default (headers)
 			Hashtable<String, Integer> toGet = file2.namesToHash(file2.rowNames);
@@ -62,7 +62,47 @@ public class GetRows extends Script<GetRows>
 			
 			writer.close();
 			reader.close();
-			System.out.println("File written to:" + writeName);
+			System.out.println("File written to:" + this.writeName);
 		}catch(Exception e){e.printStackTrace();}
+	}
+
+	public String getFileName()
+	{
+		return fileName;
+	}
+
+	public void setFileName(String fileName)
+	{
+		this.fileName = fileName;
+	}
+
+	public String getRowsToGetFn()
+	{
+		return rowsToGetFn;
+	}
+
+	public void setRowsToGetFn(String rowsToGetFn)
+	{
+		this.rowsToGetFn = rowsToGetFn;
+	}
+
+	public String getWriteName()
+	{
+		return writeName;
+	}
+
+	public void setWriteName(String writeName)
+	{
+		this.writeName = writeName;
+	}
+
+	public String getRemove()
+	{
+		return remove;
+	}
+
+	public void setRemove(String remove)
+	{
+		this.remove = remove;
 	}
 }

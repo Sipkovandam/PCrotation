@@ -1,0 +1,23 @@
+Date	31/10/2016 23:14:11
+Input file	/Volumes/Promise_RAID/sipko/Tests/PCA/TESTexpression.txt
+writeFolder	/Volumes/Promise_RAID/sipko/Tests/PCA/
+chromLocationsFile	E:/Groningen/Data/GenePositionInfo_23X_24Y_25MT_26rest.txt
+writeAll	true
+correctTotalReadCount	-1.0
+log2	true
+correctInputForSTdevs	false
+randomValue	0.0
+duplicateCutoff	1.0
+TopXhighestExpressed	1.0
+skipQuantileNorm	true
+STdevCutoff	false
+zScores	false
+directPCA	true
+spearman	-1.0
+setLowestToAverage	false
+adjustSampleAverages	false
+removeGene	null
+minExpression	-1
+minSamplesExpressed	-1
+correlation	false
+addLogVal	0.5

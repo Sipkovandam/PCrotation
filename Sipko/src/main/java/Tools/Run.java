@@ -69,7 +69,7 @@ public class Run
 
 	public static String getClassToRun(String jsonFN)
 	{
-		Script<?> runClassJson = new Script<Object>().readVars(jsonFN);
+		Script<?> runClassJson = new Script<Object>().read(jsonFN);
 		return runClassJson.getClassName();
 	}
 

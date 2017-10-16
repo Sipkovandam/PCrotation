@@ -32,7 +32,7 @@ import com.google.gson.GsonBuilder;
 
 import MatrixScripts.MatrixString;
 import MatrixScripts.MyMatrix;
-import Slurm.Slurm;
+import Slurm.ClusterHandler;
 import Tools.FileUtils;
 import Tools.JSONutil;
 import Tools.Script;

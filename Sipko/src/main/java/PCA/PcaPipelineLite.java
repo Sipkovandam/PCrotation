@@ -147,14 +147,13 @@ public class PcaPipelineLite extends Script<PcaPipelineLite>
 							this,
 							false,
 							true);
+
+		this.init();
+		
 		switch (runMode)
 		{
 		case 0:
 		{
-			if (this.writeFolder == null)
-				this.writeFolder = FileUtils.removeExtention(this.expFile) + "/";
-
-			init();
 			this.filePathsExist();
 			// normalize and center the data
 			normalize();
@@ -451,7 +450,7 @@ public class PcaPipelineLite extends Script<PcaPipelineLite>
 							MyMatrix geneAverages,
 							PcaPipelineLite pcApipelineLite) throws IOException
 	{
-		makeFolder(writeFolderCorrected);
+		FileUtils.makeDir(writeFolderCorrected);
 		JuhaPCA.PCA.log(" 3. Removing rows that do not exist in the averages vector from public data");
 		geneAverages.keepRows(singleSample);
 
@@ -543,6 +542,8 @@ public class PcaPipelineLite extends Script<PcaPipelineLite>
 
 		//remove rows without variance (problem in deseq normalization)
 		expressionStruct.removeNoVariance();
+
+		JuhaPCA.PCA.log(" 5.1 Writing file from which genes without variance are removed");
 		expressionStruct.write(this.writeFolder + "noVarianceRowsRemoved.txt.gz");
 		
 		// keep only a subset of genes
@@ -614,22 +615,14 @@ public class PcaPipelineLite extends Script<PcaPipelineLite>
 
 	public void init() throws IOException, ParserConfigurationException, TransformerException
 	{
-		makeFolder(this.writeFolder);
-		// create an XML file: //need to fix this so I can use it for calling Tessa's/Juha's prediction program that calculates AUCs per Reactome/GO term
-		//		DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
-		//		DocumentBuilder db = dbf.newDocumentBuilder();
+		if (this.writeFolder == null)
+		{
+			this.writeFolder = FileUtils.removeExtention(this.expFile) + "/";	
+		}
+		FileUtils.makeDir(this.writeFolder);
+
 		// create json File
 		this.writeConfig();
-	}
-
-	void makeFolder(String writeFolder)
-	{
-		File folder = new File(writeFolder);
-		if (!folder.exists())
-		{
-			folder.mkdir();
-		}
-
 	}
 
 	void pca(	String type,
@@ -703,7 +696,7 @@ public class PcaPipelineLite extends Script<PcaPipelineLite>
 
 	public void readVars()
 	{
-		readVars(this.jsonFN);
+		read(this.jsonFN);
 	}
 
 	private void adjustForPCs(	MyMatrix inputMatrix,

@@ -18,38 +18,13 @@ public class RowMaxGetter extends RowJob
 	}
 	
 	@Override
-	public void execute(RowJobExecutor rowExecutor, int lineNumber)
+	public void execute(RowJobExecutor rowExecutor, int lineNumber, int threadNumber)
 	{
 		try
 		{
-			double max =rowExecutor.getJobValue(maxName);
-			writeResult(max, rowExecutor, lineNumber);
+			double[] values = rowExecutor.getInputValues(threadNumber);
+			double max =  org.apache.commons.math3.stat.StatUtils.max(values);
+			super.writeResult(max, rowExecutor, lineNumber, threadNumber);
 		}catch(Exception e){e.printStackTrace();}
 	}
-	
-	@Override
-	public void executeOnInitiation(RowJobExecutor rowExecutor, double value)
-	{
-		if(rowExecutor.getJobValue(maxName)<value)
-			rowExecutor.setJobValue(maxName,value);
-	}
-
-	private void writeResult(double max, RowJobExecutor rowExecutor, int lineNumber) throws FileNotFoundException, IOException
-	{
-		String writeLine = rowExecutor.getRowName().concat("\t").concat(Double.toString(max).concat("\n"));
-		super.writeLine(lineNumber, writeLine, rowExecutor, true);
-	}
-	
-//	public double getMax(double[] values)
-//	{
-//		double max = Double.NEGATIVE_INFINITY;
-//		for(double value:values)
-//		{
-//			if(value>max)
-//				max=value;
-//		}
-//		return max;
-//	}
-	
-	
 }

@@ -24,6 +24,7 @@ public class ExonExpressionMerger_InfiniteFileSizes extends Script<ExonExpressio
 	private static final long serialVersionUID = -8940680788150581125L;
 	private String searchFolder = null;//semitransient
 	private String writeFolder = null;//semitransient
+	private String writeMergedFn = null;//semitransient
 	private String ensgToGeneSymbolFn = null;//semitransient
 
 	public void run()
@@ -126,7 +127,7 @@ public class ExonExpressionMerger_InfiniteFileSizes extends Script<ExonExpressio
 					writer.close();
 				}
 				new FilePerGeneMerger(	geneRatioFns,
-										writeFolder + "expression.txt").run();
+				                      	writeMergedFn).run();
 			}
 		} catch (Exception e)
 		{
@@ -205,6 +206,9 @@ public class ExonExpressionMerger_InfiniteFileSizes extends Script<ExonExpressio
 				}
 			}
 		}
+
+		if(writeMergedFn==null)
+			writeMergedFn=writeFolder + "expression.txt.gz";
 	}
 
 	private void writeToGeneFiles(	String fn,
@@ -417,5 +421,15 @@ public class ExonExpressionMerger_InfiniteFileSizes extends Script<ExonExpressio
 	public void setEnsgToGeneSymbolFn(String ensgToGeneSymbolFn)
 	{
 		this.ensgToGeneSymbolFn = ensgToGeneSymbolFn;
+	}
+
+	public String getWriteMergedFn()
+	{
+		return writeMergedFn;
+	}
+
+	public void setWriteMergedFn(String writeMergedFn)
+	{
+		this.writeMergedFn = writeMergedFn;
 	}
 }

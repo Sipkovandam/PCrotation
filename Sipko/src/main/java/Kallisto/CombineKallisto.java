@@ -1,5 +1,6 @@
 package Kallisto;
 
+import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -25,7 +26,7 @@ public class CombineKallisto extends Script<CombineKallisto>{
 	double threshold = 0.7;
 	int minPercentageFeaturesExpressed = 0;// features are either
 													// transcripts or genes
-	String mappingPercentagesFN = null;// "E:/Groningen/Test/JSON/ServerTest/Kallisto/mappingPerSample.txt";
+	String mappingPercentagesFn = null;// "E:/Groningen/Test/JSON/ServerTest/Kallisto/mappingPerSample.txt";
 	String tsvThatshouldBeThereFN = null;// "E:/Groningen/Test/JSON/ServerTest/Kallisto/scriptNumberToFiles.txt";//should have the .tsv filenames in the first column (including path)
 	String genesFN = null;//optional; writeFn for counts per gene
 	
@@ -36,6 +37,9 @@ public class CombineKallisto extends Script<CombineKallisto>{
 		{
 			if (writeFolder == null)
 				writeFolder = new File(kallistoOutputFolder).getAbsolutePath() + "/";
+			
+			if(mappingPercentagesFn == null)
+				mappingPercentagesFn= FileUtils.makeFolderNameEndWithSlash(writeFolder)+"mappingPercentages.txt";
 			
 			String combindedFN = writeFolder + "counts.txt.gz";
 			if(genesFN == null)
@@ -55,12 +59,13 @@ public class CombineKallisto extends Script<CombineKallisto>{
 			ArrayList<String> outputFiles = FileUtils.readArrayList(tsvFN);
 			
 			combineFiles(outputFiles, combindedFN);// Combining files
-			String genesFN = FileUtils.replaceEnd(combindedFN, "_GENES.txt.gz");
+			
+			getMappingPercentages(mappingPercentagesFn, kallistoOutputFolder);
 	
 			if (transcriptsToGenesFN != null)
 				sumTranscriptsToGenes(combindedFN, genesFN);
 	
-			if (mappingPercentagesFN != null && threshold!=0) {
+			if (mappingPercentagesFn != null && threshold!=0) {
 				System.out.println("Removing samples where less than " + (threshold * 100) + "% of reads map");
 				String writeFNtranscritps = FileUtils.replaceEnd(combindedFN, "_" + threshold + ".txt.gz");
 				keepThresholdSamples(combindedFN, writeFNtranscritps);
@@ -79,6 +84,43 @@ public class CombineKallisto extends Script<CombineKallisto>{
 		
 	}
 
+	private void getMappingPercentages(	String mappingPercentagesFn, String kallistoOutputFolder) throws FileNotFoundException, IOException
+	{
+		FileSearcher mappingPercentageFnSearcher = new FileSearcher();
+		
+		String mappingPercentagesFnsFn = FileUtils.makeFolderNameEndWithSlash(kallistoOutputFolder)+"errFilenames.txt";
+		mappingPercentageFnSearcher.setWriteName(mappingPercentagesFnsFn);
+		mappingPercentageFnSearcher.setSearchStrings(new String[]{".err"});	
+		mappingPercentageFnSearcher.setFolders(kallistoOutputFolder);
+		mappingPercentageFnSearcher.run();
+
+		BufferedWriter mappingPercentageWriter = FileUtils.createWriter(mappingPercentagesFn);
+		ArrayList<String> mappingFns = FileUtils.readArrayList(mappingPercentagesFnsFn);
+		mappingPercentageWriter.write("Sample\tMappingPercentages\n");
+		for(String mappingFn : mappingFns)
+		{
+			double mappingPercentage = getMappingpercentage(mappingFn);
+			mappingPercentageWriter.write(new File(mappingFn).getName().replace(".err","")+"\t"+mappingPercentage + "\n");
+		}
+		mappingPercentageWriter.close();
+	}
+
+	private double getMappingpercentage(String mappingFn) throws FileNotFoundException, IOException
+	{
+		BufferedReader mappingReader = FileUtils.createReader(mappingFn);
+		String line = null;
+		while((line = mappingReader.readLine())!=null)
+		{
+			if(!line.startsWith("[quant] processed"))
+				continue;
+			String totalReads = line.split(" processed ")[1].split(" reads, ")[0].replace(",", "");
+			String mappedReads = line.split(" reads, ")[1].split(" reads pseudoaligned")[0].replace(",", "");
+			double mappingPercentage = Double.parseDouble(mappedReads)/Double.parseDouble(totalReads);
+			return mappingPercentage;
+		}
+		return 0;
+	}
+
 	private void removeBadSamples(String filename) throws IOException {
 		RemoveBadSamples.main(new String[] { "filename=" + filename, "writeFolder=" + writeFolder,
 				"minPercentageExpressed=" + minPercentageFeaturesExpressed });
@@ -88,7 +130,7 @@ public class CombineKallisto extends Script<CombineKallisto>{
 	private void keepThresholdSamples(String combindedFN, String writeFN)
 			throws FileNotFoundException, IOException {
 		KeepThresholdSamples.main(new String[] { "filename=" + combindedFN,
-				"mappingPercentageFN=" + mappingPercentagesFN, "writeFN=" + writeFN, "threshold=" + threshold });
+				"mappingPercentageFN=" + mappingPercentagesFn, "writeFN=" + writeFN, "threshold=" + threshold });
 	}
 
 	private void sumTranscriptsToGenes(String combindedFN, String genesFN) {
@@ -247,12 +289,12 @@ public class CombineKallisto extends Script<CombineKallisto>{
 
 	public String getMappingPercentagesFN()
 	{
-		return mappingPercentagesFN;
+		return mappingPercentagesFn;
 	}
 
 	public void setMappingPercentagesFN(String mappingPercentagesFN)
 	{
-		this.mappingPercentagesFN = mappingPercentagesFN;
+		this.mappingPercentagesFn = mappingPercentagesFN;
 	}
 
 	public String getTsvThatshouldBeThereFN()

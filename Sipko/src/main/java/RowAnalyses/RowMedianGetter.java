@@ -18,20 +18,14 @@ public class RowMedianGetter extends RowJob
 	}
 	
 	@Override
-	public void execute(RowJobExecutor rowExecutor, int lineNumber)
+	public void execute(RowJobExecutor rowExecutor, int lineNumber, int threadNumber)
 	{
 		try
 		{
-			double median =getMedian(rowExecutor.getValues());
-			rowExecutor.setJobValue(medianName, median);
-			writeResult(median, rowExecutor, lineNumber);
+			double median =getMedian(rowExecutor.getInputValues(threadNumber));
+			rowExecutor.setJobValue(medianName, median, threadNumber);
+			super.writeResult(median, rowExecutor, lineNumber, threadNumber);
 		}catch(Exception e){e.printStackTrace();}
-	}
-
-	private void writeResult(double avg, RowJobExecutor rowExecutor, int lineNumber) throws FileNotFoundException, IOException
-	{
-		String writeLine = rowExecutor.getRowName().concat("\t").concat(Double.toString(avg).concat("\n"));
-		super.writeLine(lineNumber, writeLine, rowExecutor, true);
 	}
 	
 	public double getMedian(double[] values)

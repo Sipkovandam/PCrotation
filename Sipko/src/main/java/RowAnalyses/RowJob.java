@@ -10,18 +10,14 @@ import Tools.FileUtils;
 
 public abstract class RowJob
 {
+	private boolean hasSingleColHeader = true;
 	String writeFn = null;
 	String[] valueNames = null;
 	
-	public void execute(RowJobExecutor row, int lineNumber)
+	public void execute(RowJobExecutor row, int lineNumber, int threadNumber)
 	{
 	}
-	
-	public void executeOnInitiation(RowJobExecutor row, double value)
-	{
 		
-	}
-	
 	public String getWriteFn()
 	{
 		return writeFn;
@@ -37,48 +33,10 @@ public abstract class RowJob
 		 return true;
 	}
 
-	public BufferedWriter getWriter(RowJobExecutor rowExecutor, boolean hasSingleColheader) throws FileNotFoundException, IOException
-	{	
-		HashMap<String, BufferedWriter> rowExecutorFileWriters = rowExecutor.getFileWriters();
-		BufferedWriter fileWriter = rowExecutorFileWriters.get(this.getWriteFn());
-		
-		if(fileWriter == null)
-		{
-			String colheader = null;
-			if(hasSingleColheader)
-				colheader ="\t"+FileUtils.removeExtention(getWriteFn());
-			else
-			{
-				colheader = FileUtils.StringArrayToWriteString(rowExecutor.getDataColHeaders());
-			}
-			
-			String fileName = rowExecutor.getWriteFolder()+this.getWriteFn();
-			fileWriter = FileUtils.createWriter(fileName);
-			String header = "Rowname"+colheader+"\n";
-			fileWriter.write(header);
-			rowExecutorFileWriters.put(this.getWriteFn(), fileWriter);
-		}
-		return fileWriter;
-	}
-
-//	public void writeResultSlots(RowJobExecutor rowExecutor, boolean hasSingleColHeader) throws IOException
-//	{
-//		String line = null;
-//		while(resultSlots.size() > this.resultsWrittenIndex && (line = resultSlots.get(this.resultsWrittenIndex))!=null)//get the next line that should be written. If it is available yet, write it and move to the next line to write
-//		{
-//			resultSlots.set(this.resultsWrittenIndex, null);
-//			this.resultsWrittenIndex++;
-//			
-//			BufferedWriter writer = getWriter(rowExecutor, hasSingleColHeader);
-//			writer.write(line);	
-//		}
-//	}
-//
 	public void writeLine(	int lineNumber,
-											String writeLine, RowJobExecutor rowExecutor, boolean hasSingleColHeader) throws IOException
+											String writeLine, RowJobExecutor rowExecutor, boolean hasSingleColHeader, int threadNumber) throws IOException, InterruptedException
 	{
-		BufferedWriter writer = getWriter(rowExecutor,hasSingleColHeader);
-		writer.write(writeLine);		
+		rowExecutor.write(writeLine, this.getWriteFn(), hasSingleColHeader, lineNumber, threadNumber);
 	}
 
 	public String[] getValueNames()
@@ -89,5 +47,33 @@ public abstract class RowJob
 	public void setValueNames(String[] valueNames)
 	{
 		this.valueNames = valueNames;
+	}
+
+	protected void writeResult(double value, RowJobExecutor rowExecutor, int lineNumber, int threadNumber) throws FileNotFoundException, IOException, InterruptedException
+	{
+		String writeLine = rowExecutor.getRowName(threadNumber).concat("\t").concat(Double.toString(value).concat("\n"));
+		writeLine(lineNumber, writeLine, rowExecutor, true, threadNumber);
+	}
+	
+	protected void writeResult(int value, RowJobExecutor rowExecutor, int lineNumber, int threadNumber) throws FileNotFoundException, IOException, InterruptedException
+	{
+		String writeLine = rowExecutor.getRowName(threadNumber).concat("\t").concat(Integer.toString(value).concat("\n"));
+		writeLine(lineNumber, writeLine, rowExecutor, true, threadNumber);
+	}
+
+	protected void writeResult(double[] values, RowJobExecutor rowExecutor, int lineNumber, int threadNumber) throws FileNotFoundException, IOException, InterruptedException
+	{
+		String writeLine = rowExecutor.getRowName(threadNumber).concat(FileUtils.doubleArrayToWriteString(values)).concat("\n");
+		writeLine(lineNumber, writeLine, rowExecutor, false, threadNumber);
+	}
+
+	public boolean hasSingleColHeader()
+	{
+		return hasSingleColHeader;
+	}
+
+	public void setHasSingleColHeader(boolean hasSingleColHeader)
+	{
+		this.hasSingleColHeader = hasSingleColHeader;
 	}
 }

@@ -16,24 +16,19 @@ public class RowStdevCalculator extends RowJob
 	}
 	
 	@Override
-	public void execute(RowJobExecutor rowExecutor, int lineNumber)
+	public void execute(RowJobExecutor rowExecutor, int lineNumber, int threadNumber)
 	{
 		try
 		{
-			double variance = org.apache.commons.math3.stat.StatUtils.variance(rowExecutor.getValues());
+			double variance = org.apache.commons.math3.stat.StatUtils.variance(rowExecutor.getInputValues(threadNumber));
 			double stdev =  java.lang.Math.pow(variance,0.5);
 			
-			rowExecutor.setJobValue(stdevName, stdev);
+			rowExecutor.setJobValue(stdevName, stdev, threadNumber);
 			
-			writeResult(stdev, rowExecutor, lineNumber);
+			super.writeResult(stdev, rowExecutor, lineNumber, threadNumber);
 		}catch(Exception e){e.printStackTrace();}
 	}
 
-	private void writeResult(double avg, RowJobExecutor rowExecutor, int lineNumber) throws FileNotFoundException, IOException
-	{
-		String writeLine = rowExecutor.getRowName().concat("\t").concat(Double.toString(avg).concat("\n"));
-		super.writeLine(lineNumber, writeLine, rowExecutor, true);
-	}
 	public String getStdevName()
 	{
 		return stdevName;

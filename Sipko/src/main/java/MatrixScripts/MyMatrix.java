@@ -836,7 +836,6 @@ public class MyMatrix
 		this.values = remainder;
 		this.rowNames = remainderRowNames;
 		matrix = new GetVal(values);
-		JuhaPCA.PCA.log(" 5.1 Writing file from which genes without variance are removed");
 	}
 
 	private boolean hasVariance(int row)
