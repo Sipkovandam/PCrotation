@@ -6,6 +6,9 @@ import java.lang.reflect.InvocationTargetException;
 import java.util.HashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import Slurm.ClusterVariables;
+import Slurm.SharkVariables;
+import Slurm.SlurmVariables;
 import Tools.Script;
 import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.SamReader;
@@ -27,14 +30,19 @@ public class Test extends Script<Test> {
 	
 	public void run()
 	{
-		final SamReader reader = SamReaderFactory.makeDefault().open(new File("bla"));
+		ClusterVariables slurmVariables = new SharkVariables();
+		System.out.println("slurmVariables=" + slurmVariables.getExtra());
+
+		
+		
+/*		final SamReader reader = SamReaderFactory.makeDefault().open(new File("bla"));
 		for (final SAMRecord samRecord : reader) {
             // Convert read name to upper case.
             samRecord.setReadName(samRecord.getReadName().toUpperCase());
             samRecord.getCigar();
 //            outputSam.addAlignment(samRecord);
         }
-		/*
+		
 		long test = Long.parseLong("112345678910");
 		long test2=0;
 		test2 += (long)test;

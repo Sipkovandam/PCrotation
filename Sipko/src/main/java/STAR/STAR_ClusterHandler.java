@@ -7,6 +7,7 @@ import java.io.IOException;
 import java.io.Serializable;
 import java.util.ArrayList;
 import Slurm.ClusterHandler;
+import Slurm.ClusterVariables;
 import Slurm.SlurmJob;
 import Tools.FileUtils;
 import Tools.Script;
@@ -117,7 +118,7 @@ public class STAR_ClusterHandler extends SlurmJob implements Cloneable, Serializ
 									int scriptNumber,
 									ClusterHandler slurmVars) throws Exception
 	{
-		slurmVars.writeSlurmCommands(	writer,
+		ClusterVariables clusterCommands = slurmVars.writeSlurmCommands(	writer,
 										scriptNumber);
 
 		echoAndWriteCommand("STAR --version", writer);
@@ -129,7 +130,7 @@ public class STAR_ClusterHandler extends SlurmJob implements Cloneable, Serializ
 		}
 		if (samtoolsVersion != null)
 		{
-			echoAndWriteCommand("ml " + samtoolsVersion, writer);
+			echoAndWriteCommand(clusterCommands.getLoadModule() + samtoolsVersion, writer);
 		}
 	}
 

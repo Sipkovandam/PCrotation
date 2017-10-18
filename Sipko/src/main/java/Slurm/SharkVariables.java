@@ -1,21 +1,20 @@
 package Slurm;
 
-public class SlurmVariables extends ClusterVariables
+public class SharkVariables extends ClusterVariables
 {
-	private final String fileHeader = "#!/bin/bash";
-	private final String jobName = "#SBATCH --job-name=";
-	private final String logsFolder = "#SBATCH --output=";
-	private final String errorsFolder = "#SBATCH --errorsFolder=";
-	private final String walltime = "#SBATCH --walltime=";
-	private final String threads = "#SBATCH --threads=";
-	private final String maxMemory = "#SBATCH --maxMemory=";
+	private final String fileHeader = "#!/bin/bash\n"+
+						"#$ -S /bin/bash";
+	private final String jobName = "#$ -N ";
+	private final String logsFolder = "#$ -o ";
+	private final String errorsFolder = "#$ -e ";
+	private final String walltime = "#$ -l h rt=";
+	private final String threads = "#$ -pe BWA x";
+	private final String maxMemory = "#$ -l h_vmem=";
+
+	private final String extra = "#$ -q all.q\n";
 	
-	private final String extra ="#SBATCH --nodes=1\n"+
-						"#SBATCH --export=NONE\n" + 
-						"#SBATCH --get-user-env=L\n";
-	
-	private final String loadModule = "ml ";
-	
+	private final String loadModule = "export PATH=$PATH:";
+
 	@Override
 	public String getLoadModule()
 	{
@@ -69,4 +68,5 @@ public class SlurmVariables extends ClusterVariables
 	{
 		return maxMemory;
 	}
+	
 }

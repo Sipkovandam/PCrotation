@@ -58,6 +58,9 @@ public class ClusterHandler <M> extends Script<ClusterHandler<M>> implements Clo
 	private String slurmUserName = "umcg-svandam";
 	private String finishedemailaddressComment = "sipkovandam@gmail.com; OPTIONAL // best left empty, but sends a message whenever the mapping is completed. Both after first and second pass.";
 	private String finishedemailaddress = "sipkovandam@gmail.com";
+	
+	private String clusterHandlerComment = "slurm for slurm, shark for shark";
+	private String clusterHandler = "slurm";
 
 	// pairStrings to be in pairs. String in uneven index is replaced with that
 	// in the even index to get the paired end partner.
@@ -146,19 +149,42 @@ public class ClusterHandler <M> extends Script<ClusterHandler<M>> implements Clo
 		p("Output folder of slurm scripts:\t" + this.getScriptsFolderName());
 		p("Running SLURM scripts using:\t" + command);	
 		
+//		System.exit(2);
+		
 		ExecCommand exec = new ExecCommand(command);
 		exec.reportErrors();
 	}
 	private String getShellFileToRun()
 	{
-		String shellFN = "resources/Kallisto200.sh";//FileUtils.prepareBinaryFromJar("Kallisto200.sh");
-		if(isSTAR())
-			shellFN="resources/STAR_OnePerNode.sh";
-		
+		String shellFN = null; 
+		if(clusterHandler.toLowerCase().equals("slurm"))
+			shellFN=getSlurmShellFile();
+		else if(clusterHandler.toLowerCase().equals("shark"))
+			shellFN=getSharkShellFile();
+			
 		FileUtils.extractFile(ClusterHandler.class.getProtectionDomain().getCodeSource().getLocation().getPath(), shellFN);
 		
 		if(!new File(shellFN).exists())
+		{
 			p("Slurmscript does not exist, please copy to:\t" + shellFN);
+			System.exit(2);
+		}
+		return shellFN;
+	}
+
+	private String getSharkShellFile()
+	{
+		String shellFN = "resources/Kallisto_Shark.sh";//FileUtils.prepareBinaryFromJar("Kallisto200.sh");
+		if(isSTAR())
+			shellFN="resources/STAR_OnePerNode_MultiUser_Shark.sh";
+		return shellFN;
+	}
+
+	private String getSlurmShellFile()
+	{
+		String shellFN = "resources/Kallisto_Slurm.sh";//FileUtils.prepareBinaryFromJar("Kallisto200.sh");
+		if(isSTAR())
+			shellFN="resources/STAR_OnePerNode_MultiUser_Slurm.sh";
 		return shellFN;
 	}
 
@@ -207,23 +233,26 @@ public class ClusterHandler <M> extends Script<ClusterHandler<M>> implements Clo
 	}
 
 
-	public void writeSlurmCommands(BufferedWriter writer, int fileNumber) throws Exception {
+	public ClusterVariables writeSlurmCommands(BufferedWriter writer, int fileNumber) throws Exception {
 		ClusterVariables clusterCommands = null;
-		if(true)
+		p("Clusterhandler = " + clusterHandler);
+		if(clusterHandler.toLowerCase().equals("slurm"))
 			clusterCommands = new SlurmVariables();
-			
+		else if(clusterHandler.toLowerCase().equals("shark"))
+			clusterCommands = new SharkVariables();
 		
-		writer.write(clusterCommands.fileHeader + "\n");
-		writer.write(clusterCommands.jobName + fileNumber+".sh_"+jobName + "\n");
-		writer.write(clusterCommands.logsFolder + logsFolder + fileNumber + ".out\n");
-		writer.write(clusterCommands.errorsFolder + errorsFolder + fileNumber + ".err\n");
-		writer.write(clusterCommands.walltime + walltime + "\n");
-		writer.write(clusterCommands.threads + threads + "\n");
-		writer.write(clusterCommands.maxMemory + maxMemory + "\n");
-		writer.write(clusterCommands.nodes +" 1\n");
-		writer.write(clusterCommands.extra);
+		writer.write(clusterCommands.getFileHeader() + "\n");
+		writer.write(clusterCommands.getJobName() + fileNumber+".sh_"+jobName + "\n");
+		writer.write(clusterCommands.getLogsFolder() + logsFolder + fileNumber + ".out\n");
+		writer.write(clusterCommands.getErrorsFolder() + errorsFolder + fileNumber + ".err\n");
+		writer.write(clusterCommands.getWalltime() + walltime + "\n");
+		writer.write(clusterCommands.getThreads() + threads + "\n");
+		writer.write(clusterCommands.getMaxMemory() + maxMemory + "\n");
+		writer.write(clusterCommands.getExtra());
 		
-		writer.write("module load " + jobName + "\n");
+		writer.write(clusterCommands.getLoadModule() + jobName + "\n");
+		
+		return clusterCommands;
 	}
 
 	void checkArgs(String[] args) {
