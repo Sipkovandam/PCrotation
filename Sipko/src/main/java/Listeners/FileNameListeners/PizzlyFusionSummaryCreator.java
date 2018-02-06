@@ -11,8 +11,8 @@ import Tools.Script;
 
 public class PizzlyFusionSummaryCreator extends FileNameListener
 {
-	HashMap<String,int[]> fusionCounts;
-	int minReadSupportForInclusionInTable = 8;
+	HashMap<String,HashMap<String,Integer>> fusionCountsPerSample;//<fusion,<fusionCount,count>
+
 	
 	@Override
 	public void run(String pizzlyFusionFn)
@@ -21,31 +21,21 @@ public class PizzlyFusionSummaryCreator extends FileNameListener
 		{
 			PizzlyFusionStructure pizzlyFusionStructure = new PizzlyFusionStructure();//contains all the fusions
 			pizzlyFusionStructure=(PizzlyFusionStructure) pizzlyFusionStructure.read(pizzlyFusionFn);
-			//BufferedWriter fusionSummaryWriter = FileUtils.createWriter(FileUtils.removeExtention(pizzlyFusionFn)+ "_summary.txt"); 
+
 			BufferedWriter fusionTableWriter = FileUtils.createWriter(FileUtils.removeExtention(pizzlyFusionFn)+ "_table.txt");
 			
 			int nIncludeIntable = 0;
 			for(Fusion fusion : pizzlyFusionStructure.getFusions())
 			{
 				String fusionName = getFusionName(fusion);
-				addCountsToFusionCountsHash(fusion, fusionName);
-				//writeFusionToFile(fusionSummaryWriter, fusion, fusionName, nIncludeIntable);
+				addCountsToFusionCountsHash(fusion, fusionName, pizzlyFusionFn);
 			}
-			
-			//fusionSummaryWriter.close();
+			log("Fusions:" + fusionCountsPerSample.size());
+
 		}catch(Exception e){e.printStackTrace();}
 	}
 
-	private void writeFusionToFile(	BufferedWriter sampleFusionWriter,
-									Fusion fusion, String fusionName, int nIncludeIntable) throws IOException
-	{
-		int readCount = fusion.getPaircount();
-		if(readCount >= minReadSupportForInclusionInTable)
-			nIncludeIntable++;
-		
-		String overlappingReads = Integer.toString(readCount);
-		sampleFusionWriter.write(fusionName.concat("\t").concat(overlappingReads).concat("\n"));
-	}
+
 
 	private String getFusionName(Fusion fusion)
 	{
@@ -56,28 +46,25 @@ public class PizzlyFusionSummaryCreator extends FileNameListener
 		return fusionName;
 	}
 
-	private void addCountsToFusionCountsHash(Fusion fusion, String fusionName)
+	private void addCountsToFusionCountsHash(Fusion fusion, String fusionName, String sampleName)
 	{		
-		int[] counts = this.fusionCounts.get(fusionName);
-		if(counts == null)
-		{
-			counts = new int[]{0,0};
-		}
-		//number of samples
-		counts[0]++;
+		HashMap<String,Integer> fusionCounts = this.fusionCountsPerSample.get(fusionName);
+		if(fusionCounts==null)
+			fusionCounts = new HashMap<String,Integer>();
 		//number of reads overlapping the splice junction
-		counts[1]+= fusion.getPaircount();
+		int counts = fusion.getPaircount();
+		fusionCounts.put(sampleName, counts);
 		
-		this.fusionCounts.put(fusionName, counts);
+		this.fusionCountsPerSample.put(fusionName, fusionCounts);
 	}
 	
-	public HashMap<String, int[]> getFusionCounts()
+	public HashMap<String,HashMap<String,Integer>> getFusionCounts()
 	{
-		return fusionCounts;
+		return fusionCountsPerSample;
 	}
 
-	public void setFusionCounts(HashMap<String, int[]> fusionCounts)
+	public void setFusionCounts(HashMap<String,HashMap<String,Integer>> fusionCounts)
 	{
-		this.fusionCounts = fusionCounts;
+		this.fusionCountsPerSample = fusionCounts;
 	}
 }

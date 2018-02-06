@@ -8,7 +8,7 @@ echo "5=$5" #Email address used to mail the user when the script is done
 echo "6=$6" #Command used to execute STAR
 echo "7=$7" #Filename of the file containing which scripts are already ran
 
-#get the username (e.g. umcg-svandam)
+#username (e.g. umcg-svandam)
 user=$3
 #get the location of the file containing all the scripts that have already been starten (creates a new file here if it does not already exist)
 startedJobs=$7
@@ -28,8 +28,7 @@ sleep 10
 waiting=true
 while "$waiting" -eq "true"
 do
-	
-	nodeJobs=$(qstat | grep $user | egrep 'sh_STAR' | wc -l)
+	nodeJobs=$(qstat | grep $user | egrep -i 'starJob' | wc -l)
 	if [[ "$nodeJobs" -lt 1 ]] # as long as there are jobs keep waiting
 	then
 		waiting="false";

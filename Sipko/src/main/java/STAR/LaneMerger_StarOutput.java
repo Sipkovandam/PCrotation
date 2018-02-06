@@ -37,7 +37,7 @@ public class LaneMerger_StarOutput extends Script<LaneMerger_StarOutput>
 			File[] files = new File(starResultsFolderName).listFiles();
 			HashMap<String,ArrayList<String>> newFilesToOldFiles = addOldToNewFileNamesHash(files, gafSheet);
 			
-			p("newFilesToOldFiles.size="+newFilesToOldFiles.size());
+			log("newFilesToOldFiles.size="+newFilesToOldFiles.size());
 			combineMultiLaneSamples(newFilesToOldFiles);
 		}catch(Exception e){e.printStackTrace();}
 	}
@@ -66,13 +66,13 @@ public class LaneMerger_StarOutput extends Script<LaneMerger_StarOutput>
 				merge(fileToMerge, oldFolders, mergeFolder);
 			}
 
-			p("Moving files to " + unMergedFolderName);
+			log("Moving files to " + unMergedFolderName);
 			new File(unMergedFolderName).mkdirs();
 			
 			//move the old unmerged folders to a different directory
 			for(String oldFol: oldFolders)
 			{
-				p("Moving director\t=" + oldFol);
+				log("Moving director\t=" + oldFol);
 				String newDirectory = FileUtils.makeFolderNameEndWithSlash(unMergedFolderName)+new File(oldFol).getName();
 				org.apache.commons.io.FileUtils.moveDirectory(new File(oldFol), new File(newDirectory));
 			}
@@ -142,7 +142,7 @@ public class LaneMerger_StarOutput extends Script<LaneMerger_StarOutput>
 				
 				try{
 					value += Integer.parseInt(eles[6]);
-				}catch(Exception e){p("line =" + line);e.printStackTrace();}
+				}catch(Exception e){log("line =" + line);e.printStackTrace();}
 				
 				if(r==0)
 				{
@@ -612,7 +612,7 @@ public class LaneMerger_StarOutput extends Script<LaneMerger_StarOutput>
 			String readsStr = line.split("\t")[1].replace("%","");
 			return readsStr;
 		}
-		p("Corrupt mapping file detected: " + oldName);
+		log("Corrupt mapping file detected: " + oldName);
 		return null;
 	}
 

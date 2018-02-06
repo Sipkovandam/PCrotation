@@ -1,5 +1,7 @@
 package Tools;
 
+import java.io.BufferedInputStream;
+import java.io.BufferedOutputStream;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
@@ -13,13 +15,16 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.io.RandomAccessFile;
+import java.io.Reader;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
-
+import java.net.MalformedURLException;
 import java.net.URL;
+import java.net.URLConnection;
 import java.net.URLDecoder;
 
 import org.apache.commons.io.IOUtils;
@@ -56,8 +61,6 @@ public class FileUtils
 		String command = "jar xf " + jarFn + " " + fileToGet;
 		System.out.println("Command =\t" + command);
 		ExecCommand exec = new ExecCommand(command);
-
-		
 	}
 	
 	public static HashMap<String, Double> readDoublehash(	String fileName,
@@ -191,11 +194,15 @@ public class FileUtils
 			writer.write(line + "\n");
 		}
 	}
-
-	public static Hashtable<String, Integer> makeHash(String line)
+	public static HashMap<String, Integer> makeHash(String line)
 	{
-		String[] cells = line.split("\t");
-		Hashtable<String, Integer> index = new Hashtable<String, Integer>();
+		return makeHash(line, "\t");
+	}
+
+	public static HashMap<String, Integer> makeHash(String line, String sep)
+	{
+		String[] cells = line.split(sep);
+		HashMap<String, Integer> index = new HashMap<String, Integer>();
 		for (int c = 0; c < cells.length; c++)
 		{
 			index.put(	cells[c],
@@ -426,7 +433,7 @@ public class FileUtils
 	{
 		try
 		{
-			BufferedReader reader = FileUtils.createReader(searchString);
+			BufferedReader reader = FileUtils.createReader(fileName);
 			String line = null;
 			while ((line = reader.readLine()) != null)
 				if (line.contains(searchString))
@@ -699,6 +706,14 @@ public class FileUtils
 		return ensgToPositions;
 	}
 
+	public static String getMd5(String countFilePath) throws IOException
+	{
+		FileInputStream fis = new FileInputStream(new File(countFilePath));
+		String md5 = org.apache.commons.codec.digest.DigestUtils.md5Hex(fis);
+		fis.close();
+		return md5;
+	}
+	
 	public static void checkNull(Object pizzlyExecute, String string)
 	{
 		if(pizzlyExecute == null)
@@ -816,5 +831,54 @@ public class FileUtils
 			names = new ArrayList<String>();
 		names.add(name);
 		return names;
+	}
+	
+	public static BufferedReader getWebsiteReader(String webUrl) throws IOException
+	{
+		URL geneNetwork = new URL(webUrl);
+		System.out.println(webUrl);
+        URLConnection yc =geneNetwork.openConnection();
+        System.out.println("yc=" + yc);
+    	BufferedReader in = null;
+        try
+        {
+        	in = new BufferedReader(new InputStreamReader(yc.getInputStream(), "UTF-8"));
+        }catch(Exception e)
+        {
+        	e.printStackTrace();
+        	System.out.println("Errro cannot open this web url: \t" + webUrl);
+        	System.exit(1);
+        }
+        return in;
+	}
+	public static void saveFileFromUrl(String url, String fn) throws IOException
+	{
+		BufferedInputStream in = new BufferedInputStream(new URL(url).openStream());
+		BufferedOutputStream writer = new BufferedOutputStream(new FileOutputStream(fn));
+	    byte data[] = new byte[1024];
+	    int count;
+	    while((count = in.read(data,0,1024)) != -1)
+	    {
+	    	writer.write(data, 0, count);
+	    }
+	    writer.close();
+	}
+	public static String makeLineFromArray(String[] colValues)
+	{
+		if(colValues.length==0)
+			return null;
+		
+		StringBuilder lineBuilder = new StringBuilder();
+		lineBuilder.append(colValues[0]);
+		for(int c =1; c <  colValues.length; c++)
+		{
+			lineBuilder.append("\t");
+			String toAdd =colValues[c];
+			if(toAdd==null)
+				toAdd="";
+			lineBuilder.append(toAdd);
+		}
+		
+		return lineBuilder.toString();
 	}
 }

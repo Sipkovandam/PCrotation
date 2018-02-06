@@ -23,6 +23,6 @@ public class TestObject extends Script<TestObject> implements Cloneable, Runnabl
 	
 	public void run()
 	{
-		p("Running!");
+		log("Running!");
 	}
 }

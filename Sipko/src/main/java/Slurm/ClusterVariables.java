@@ -10,6 +10,7 @@ public abstract class ClusterVariables
 	private String threads;
 	private String maxMemory;
 	private String loadModule;
+	private String loadModule2; 
 	
 	private String extra;
 	private String moduleLoad;
@@ -93,5 +94,13 @@ public abstract class ClusterVariables
 	public void setExtra(String extra)
 	{
 		this.extra = extra;
+	}
+	public String getLoadModule2()
+	{
+		return loadModule2;
+	}
+	public void setLoadModule2(String loadModule2)
+	{
+		this.loadModule2 = loadModule2;
 	} 
 }

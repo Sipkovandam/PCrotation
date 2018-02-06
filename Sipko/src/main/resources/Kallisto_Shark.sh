@@ -27,7 +27,7 @@ waiting=true
 while "$waiting" -eq "true"
 do
 	
-	nodeJobs=$(qstat | grep $user | egrep 'sh_STAR' | wc -l)
+	nodeJobs=$(qstat | grep $user | egrep -i 'kallistoJob' | wc -l)
 	if [[ "$nodeJobs" -lt 1 ]] # as long as there are jobs keep waiting
 	then
 		waiting="false";

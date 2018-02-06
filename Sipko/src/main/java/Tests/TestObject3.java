@@ -13,13 +13,13 @@ public class TestObject3 <M> extends Script<TestObject3<M>>
 	{
 		testObject3 = (M) new TestObject("zzzz");
 		TestObject test = (TestObject) testObject3;
-		test.p(test.bla);
+		test.log(test.bla);
 		setJsonFN("E:/Groningen/Test/JSON/TestCombinedObjects.config");
 	}
 	
 	public void run()
 	{
 		testObject3 = null;
-		p("ruunning!");
+		log("ruunning!");
 	}
 }

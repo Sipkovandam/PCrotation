@@ -12,6 +12,7 @@ public class RowAverageCalculator extends RowJob
 	public RowAverageCalculator()
 	{
 		this.setValueNames(new String[]{averageName});
+		this.setHasSingleColHeader(true);
 	}
 	
 	@Override

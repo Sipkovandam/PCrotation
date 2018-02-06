@@ -61,10 +61,10 @@ public class GetCols extends Script<GetCols>{
 				}
 				writer.write("\n");
 			}
-			System.out.println("Done! File written to:" + writeName);
+			log("Closing reader and writer");
 			inputReader.close();
-
 			writer.close();
+			log("Done! File written to:" + writeName);
 		} catch (FileNotFoundException e)
 		{
 			// TODO Auto-generated catch block
@@ -85,7 +85,7 @@ public class GetCols extends Script<GetCols>{
 			if(remove!=null)
 				colNames[n] = colNames[n].replaceAll(remove, "");
 			
-			p(colNames[n] +"\t"+ namesToKeepOnRows.getRowHash().containsKey((colNames[n])) );
+			log(colNames[n] +"\t"+ namesToKeepOnRows.getRowHash().containsKey((colNames[n])) );
 			//add the extra few columns if there are any
 			if(!namesToKeepOnRows.getRowHash().containsKey((colNames[n])) && n > extraColumns2)
 				continue;

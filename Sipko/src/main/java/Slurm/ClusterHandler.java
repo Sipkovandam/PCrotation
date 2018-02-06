@@ -78,7 +78,7 @@ public class ClusterHandler <M> extends Script<ClusterHandler<M>> implements Clo
 			jobType = (M) new FastqDeduplicator_ClusterHandler();
 		else
 		{
-			p("Please select an appropriate mapper containing \"FastqDeduplicator\",\"STAR\" of \"kallisto\" in the jobName name");
+			log("Please select an appropriate mapper containing \"FastqDeduplicator\",\"STAR\" of \"kallisto\" in the jobName name");
 		}
 	}
 
@@ -96,7 +96,7 @@ public class ClusterHandler <M> extends Script<ClusterHandler<M>> implements Clo
 	private void init() {
 		if (outputRoot == null && fastQFiles!=null)
 			outputRoot = new File(fastQFiles).getParent() + "/";
-		p("WriteFolder=" +outputRoot);
+		log("WriteFolder=" +outputRoot);
 		
 		scriptsFolderName = outputRoot + "Scripts/";
 		logsFolder = outputRoot + "Logs/";
@@ -146,8 +146,8 @@ public class ClusterHandler <M> extends Script<ClusterHandler<M>> implements Clo
 		String command = "bash " + shellFN + " " + scriptsFolderName + "*.sh " + sTAR_Folder + " "
 				+ slurmUserName + " " + mappingPercentagesFN + " " + finishedemailaddress + " " + jobName + " " + scriptTrackingFile;
 		
-		p("Output folder of slurm scripts:\t" + this.getScriptsFolderName());
-		p("Running SLURM scripts using:\t" + command);	
+		log("Output folder of slurm scripts:\t" + this.getScriptsFolderName());
+		log("Running SLURM scripts using:\t" + command);	
 		
 //		System.exit(2);
 		
@@ -157,16 +157,16 @@ public class ClusterHandler <M> extends Script<ClusterHandler<M>> implements Clo
 	private String getShellFileToRun()
 	{
 		String shellFN = null; 
-		if(clusterHandler.toLowerCase().equals("slurm"))
+		if(isSlurmCluster())
 			shellFN=getSlurmShellFile();
-		else if(clusterHandler.toLowerCase().equals("shark"))
+		else if(isSharkCluster())
 			shellFN=getSharkShellFile();
 			
 		FileUtils.extractFile(ClusterHandler.class.getProtectionDomain().getCodeSource().getLocation().getPath(), shellFN);
 		
 		if(!new File(shellFN).exists())
 		{
-			p("Slurmscript does not exist, please copy to:\t" + shellFN);
+			log("Slurmscript does not exist, please copy to:\t" + shellFN);
 			System.exit(2);
 		}
 		return shellFN;
@@ -235,31 +235,82 @@ public class ClusterHandler <M> extends Script<ClusterHandler<M>> implements Clo
 
 	public ClusterVariables writeSlurmCommands(BufferedWriter writer, int fileNumber) throws Exception {
 		ClusterVariables clusterCommands = null;
-		p("Clusterhandler = " + clusterHandler);
-		if(clusterHandler.toLowerCase().equals("slurm"))
+		String jN = getJobName(jobName);
+		if(isSlurmCluster())
 			clusterCommands = new SlurmVariables();
-		else if(clusterHandler.toLowerCase().equals("shark"))
+		else if(isSharkCluster())
 			clusterCommands = new SharkVariables();
 		
-		writer.write(clusterCommands.getFileHeader() + "\n");
-		writer.write(clusterCommands.getJobName() + fileNumber+".sh_"+jobName + "\n");
-		writer.write(clusterCommands.getLogsFolder() + logsFolder + fileNumber + ".out\n");
-		writer.write(clusterCommands.getErrorsFolder() + errorsFolder + fileNumber + ".err\n");
-		writer.write(clusterCommands.getWalltime() + walltime + "\n");
-		writer.write(clusterCommands.getThreads() + threads + "\n");
-		writer.write(clusterCommands.getMaxMemory() + maxMemory + "\n");
-		writer.write(clusterCommands.getExtra());
-		
-		writer.write(clusterCommands.getLoadModule() + jobName + "\n");
-		
+		writeClusterCommand(writer,
+							true,
+							clusterCommands.getFileHeader() + "\n");
+		writeClusterCommand(writer,
+							true,
+							clusterCommands.getJobName() + "j" + jN + fileNumber + ".sh" + "\n");
+		writeClusterCommand(writer,
+							true,
+							clusterCommands.getLogsFolder() + logsFolder + fileNumber + ".out\n");
+		writeClusterCommand(writer,
+							true,
+							clusterCommands.getErrorsFolder() + errorsFolder + fileNumber + ".err\n");
+		writeClusterCommand(writer,
+							true,
+							clusterCommands.getWalltime() + walltime + "\n");
+		writeClusterCommand(writer,
+							true,
+							clusterCommands.getThreads() + threads + "\n");
+		writeClusterCommand(writer,
+							true,
+							clusterCommands.getMaxMemory() + maxMemory + "\n");
+
+		writeClusterCommand(writer,
+							true,
+							clusterCommands.getExtra());
+		writeClusterCommand(writer,
+							true,
+							clusterCommands.getLoadModule() + jobName + clusterCommands.getLoadModule2() + "\n");
+
 		return clusterCommands;
+	}
+	
+	private void writeClusterCommand(	BufferedWriter writer,
+	                                 	boolean conditionPass,
+										String command) throws IOException
+	{
+		if(conditionPass)
+			writer.write(command+ "\n");
+		
+	}
+
+	public boolean isSlurmCluster()
+	{
+		return clusterHandler.toLowerCase().equals("slurm");
+	}
+
+	public boolean isSharkCluster()
+	{
+		return clusterHandler.toLowerCase().equals("shark");
+	}
+
+	private String getJobName(String jobName)
+	{
+		if(clusterHandler.toLowerCase().equals("slurm"))
+			return jobName;
+		else if(clusterHandler.toLowerCase().equals("shark"))
+		{
+			if(jobName.toLowerCase().contains("star"))
+				return "starJob";
+			if(jobName.toLowerCase().contains("kallisto"))
+				return "kallistoJob";
+		}
+		return jobName;
 	}
 
 	void checkArgs(String[] args) {
 		if (System.getProperty("user.dir").contains("C:\\Users\\Sipko\\git\\PCrotation\\Sipko") && args.length < 1)
 			return;
 		if (args.length < 1) {
-			p("Script requires the following arguments:\n"
+			log("Script requires the following arguments:\n"
 					+ "1.  fastQFiles=<fastQFiles.txt> - File containing all the fastQfileNames preferably including their directories\n"
 					+ "2.  kallistoIndexFile=<kallistoIndexFile.idx> - Kallist index file that should be used\n"
 					+ "3.  writefolder=<writefolder> - Folder where the output will be written (default=<fastQFilesRoot>/Kallisto/Scripts/)\n"
@@ -277,12 +328,12 @@ public class ClusterHandler <M> extends Script<ClusterHandler<M>> implements Clo
 		}
 
 		for (int a = 0; a < args.length; a++) {
-			p("arg=" + args[a]);
+			log("arg=" + args[a]);
 			String[] split =args[a].split("=");
 			String arg = split[0];
 			if(split.length <2)
 			{
-				p("Argument missing, skipping:" + args[a]);
+				log("Argument missing, skipping:" + args[a]);
 				continue;
 			}
 			String value = split[1];
@@ -344,7 +395,7 @@ public class ClusterHandler <M> extends Script<ClusterHandler<M>> implements Clo
 				batchSize = Integer.parseInt(value);
 				break;	
 			default:
-				p("Incorrect argument supplied:\n" + args[a] + "\nexiting");
+				log("Incorrect argument supplied:\n" + args[a] + "\nexiting");
 				System.exit(1);
 			}
 		}
@@ -537,5 +588,15 @@ public class ClusterHandler <M> extends Script<ClusterHandler<M>> implements Clo
 	public void setSTAR_Folder(String sTAR_Folder)
 	{
 		this.sTAR_Folder = sTAR_Folder;
+	}
+
+	public String getClusterHandler()
+	{
+		return clusterHandler;
+	}
+
+	public void setClusterHandler(String clusterHandler)
+	{
+		this.clusterHandler = clusterHandler;
 	}
 }

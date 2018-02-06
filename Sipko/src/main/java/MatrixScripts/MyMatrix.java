@@ -141,7 +141,7 @@ public class MyMatrix
 					true,
 					true,
 					x,
-					y);
+					y,0);
 	}
 
 	public MyMatrix(String fileName,
@@ -191,6 +191,14 @@ public class MyMatrix
 		this.values = DenseMatrixToValues(matrix);
 	}
 
+	public MyMatrix(String fileName,
+					int columnToUseAsRowNames)//-1 is last column
+	{
+		readFile(	fileName,
+					true,
+					true, -1,-1,-1);
+	}
+
 	public void readFile(String fileName)
 	{
 		readFile(	fileName,
@@ -206,7 +214,7 @@ public class MyMatrix
 					hasRowNames,
 					hasColName,
 					-1,
-					-1);
+					-1,0);
 	}
 
 	private void numberNames(	String[] names,
@@ -242,15 +250,21 @@ public class MyMatrix
 		}
 	}
 
+	//Matrix looks like this:
+	//X n n n
+	//n v v v
+	//n v v v
+	//n v v v
+	//Where "n" is row or column name and "v" is value
 	public void readFile(	String fileName,
 							boolean hasRowNames,
 							boolean hasColNames,
 							int maxX,
-							int maxY)
+							int maxY, int rowNameColumn)
 	{		
 		int nRows = 0;
 		if (maxX < 1)
-			nRows = getRowNumber(fileName) - 1;
+			nRows = getRowNumber(fileName);
 		else
 			nRows = maxX;
 		
@@ -272,21 +286,12 @@ public class MyMatrix
 				//System.out.println("This includes 1 row and 1 column for the row/col names");
 			}
 
-			//Matrix looks like this:
-			//X n n n
-			//n v v v
-			//n v v v
-			//n v v v
-			//Where "n" is row or column name and "v" is value
-
 			String secondLine = reader.readLine();
 			int secondLineCols = secondLine.split("\t").length;
 			int minusCol = 1;
 			if (secondLineCols == nCols + 1)//first line is missing a cell
 				minusCol = 0;
 
-			//Put the colNames into the matrix
-			firstField = eles[0];
 			if (hasColNames && hasRowNames)
 				values = new double[nRows - 1][nCols - minusCol];
 			else if (hasColNames && !hasRowNames)
@@ -296,38 +301,42 @@ public class MyMatrix
 			else
 				values = new double[nRows][nCols];
 			
-			
+			if(rowNameColumn==-1)
+				rowNameColumn=eles.length-1;
 			
 			matrix = new GetVal(values);
 			
-			if (hasColNames)
+			colNames = new String[nCols - minusCol];
+			//Deal with first line missing first cell
+			int outCol=0;
+			for (int y = 0; y < nCols; y++)
 			{
-				colNames = new String[nCols - minusCol];//-1 because one of them is for the rowNames, that column does not have a column name
-				//Deal with first line missing first cell
-				for (int y = 0; y < nCols - minusCol; y++)
+				if(y==rowNameColumn)
 				{
-					colNames[y] = eles[y + minusCol];
+					if(minusCol==0)
+						continue;
+					firstField=eles[y];
+					continue;
 				}
+				
+				if(!hasColNames)
+					colNames[outCol] = "Col" + Integer.toString(y);
+				else
+					colNames[outCol] = eles[y];
+				
+				outCol++;
 			}
-			else //reset reader to start of file, probably not the best way of doing it...
+			
+			if(!hasColNames) //reset reader to start of file, probably not the best way of doing it...
 			{
-				colNames = new String[nCols];//-1 because one of them is for the rowNames, that column does not have a column name
-
 				reader.close();
-				for (int y = 0; y < eles.length; y++)
-				{
-					colNames[y] = "Col" + Integer.toString(y);
-				}
 				reader = getReader(fileName);
 			}
-			if (hasRowNames)
+			
+			if (hasColNames)
 				rowNames = new String[nRows - 1];
 			else
 				rowNames = new String[nRows];
-
-			int num = 0;//number to substract if it has rowNames (1) or if it does not (0)
-			if (hasRowNames)
-				num = 1;
 			
 			int x = 0;
 			if (hasColNames == true)
@@ -357,24 +366,25 @@ public class MyMatrix
 				if (hasRowNames)
 				{
 					//System.out.println(eles.length+ "rowNames.length " + rowNames.length + " x=" + x);
-					rowNames[x] = eles[0];
+					rowNames[x] = eles[rowNameColumn];
 				}
 				else
 				{
 					rowNames[x] = "Row" + Integer.toString(x);
 				}
 
-				for (int y = 0; y < nCols - num; y++)
+				int yOut = 0;
+				for (int y = 0; y < nCols; y++)
 				{
+					if(y==rowNameColumn)
+						continue;
 					try
 					{
 						double value = 0;
-						if (hasRowNames && eles[y + 1].length() > 0)
-							value = Double.parseDouble(eles[y + 1]);
-						else if (eles[y].length() > 0)
+						if (eles[y].length() > 0)
 							value = Double.parseDouble(eles[y]);
-
-						values[x][y] = value;
+						
+						values[x][yOut] = value;
 					} catch (Exception e1)
 					{
 						System.out.println("FileName =  " + fileName);
@@ -386,6 +396,7 @@ public class MyMatrix
 						e1.printStackTrace();
 						System.exit(666);
 					}
+					yOut++;
 					if (maxY > 0 && y >= maxY - 1)
 						break;
 				}
@@ -657,7 +668,11 @@ public class MyMatrix
 				{
 					DateFormat dateFormat = new SimpleDateFormat("dd/MM/yyyy");
 					Date date = new Date();
-					printOrWrite(	dateFormat.format(date),
+
+					if(this.firstField==null)
+						this.firstField=dateFormat.format(date);
+					
+					printOrWrite(	this.firstField,
 									writer);
 
 					for (int y = 0; y < maxY; y++)
@@ -781,7 +796,7 @@ public class MyMatrix
 			BufferedReader fileReader = getReader(fileName);
 			LineNumberReader lnr = new LineNumberReader(fileReader);
 			lnr.skip(Long.MAX_VALUE);
-			nLines = lnr.getLineNumber() + 1; //Add 1 because line index starts at 0
+			nLines = lnr.getLineNumber(); //Add 1 because line index starts at 0
 			fileReader.close();
 		} catch (FileNotFoundException e1)
 		{
@@ -790,29 +805,29 @@ public class MyMatrix
 		{
 			e.printStackTrace();
 		}
-		//System.out.println("lines = " + nLines);		
 		return nLines;
 	}
 
-	public void removeNoVariance()
+	public int removeNoVariance()
 	{
 		//important that he probes/gene/transcripts are on the X-axis (rowNames)
 		ArrayList<Integer> noVarRows = new ArrayList<Integer>();
-		for (int x = 0; x < this.rowNames.length; x++)//Identify all rows that have no variance
+		for (int rowNumber = 0; rowNumber < this.rowNames.length; rowNumber++)//Identify all rows that have no variance
 		{
-			boolean hasVariance = hasVariance(x);
+			boolean hasVariance = hasVariance(rowNumber);
 			if (!hasVariance)
 			{
-				noVarRows.add(x);
+				noVarRows.add(rowNumber);
 			}
 		}
 
 		if (noVarRows.size() == 0)
 		{
 			System.out.println("There are no rows without variance");
-			return;
+			return 0;
 		}
-
+		System.out.println("Removing " + noVarRows.size() + " rows without variance");
+		
 		double[][] remainder = new double[this.rowNames.length - noVarRows.size()][];
 		String[] remainderRowNames = new String[this.rowNames.length - noVarRows.size()];
 
@@ -836,13 +851,16 @@ public class MyMatrix
 		this.values = remainder;
 		this.rowNames = remainderRowNames;
 		matrix = new GetVal(values);
+		return noVarRows.size();
 	}
 
 	private boolean hasVariance(int row)
 	{
 		double firstValue = this.values[row][0];
+		System.out.println("firstval=\t" + firstValue);
 		for (int y = 0; y < this.colNames.length; y++)
 		{
+			System.out.println("val=\t" + this.values[row][y]+"\t" + firstValue);
 			if (firstValue != this.values[row][y])
 				return true;
 		}
@@ -1601,7 +1619,6 @@ public class MyMatrix
 					}
 				}
 
-				//System.out.println("x =" + x + "Initial value: " + column[x][0] + "vNew value: " + val + " outputRow: " + (int) column[x][1] + " quantVectorRow: " + x + " c: " + y + " rowname = " + this.rowNames[(int) column[x][1]]);
 				//replace the actual value
 				double before = this.matrix.get((int) column[r][1],
 												c);
@@ -2112,7 +2129,7 @@ public class MyMatrix
 			result.setRowValues(r,
 							row);
 		}
-		System.out.println((this.rows() - result.rows()) + " rows added compared to first input file (or removed if negative)");
+		System.out.println("All colulmns merged and " + (this.rows() - result.rows()) + " rows added compared to first input file (or removed if negative)");
 		return result;
 	}
 
@@ -2367,8 +2384,7 @@ public class MyMatrix
 		for (int c = 0; c < this.cols(); c++)
 		{
 			if (firstValue != this.matrix.get(	row,
-												c))
-				;
+												c))	;
 			results[0] = 1;
 			if (this.matrix.get(row,
 								c) >= minimum)
@@ -2749,4 +2765,54 @@ public class MyMatrix
         String time = timeFormat.format(new Date());
         System.out.println(time + "\t" + text);
     }
+
+	public MyMatrix mergeRows(MyMatrix matrixToAdd)
+	{
+		//keeps columns from the original matrix only
+		this.getColHash();
+		
+		MyMatrix newMatrix = new MyMatrix(this.rows()+matrixToAdd.rows(), this.cols()+matrixToAdd.cols());
+		
+		newMatrix.colNames=this.colNames;
+		for(int r=0; r< matrixToAdd.rows(); r++)
+			newMatrix.rowNames[r]=this.rowNames[r];
+		
+		for(int r=0; r< this.rows(); r++)
+			for(int c =0; c < this.cols(); c++)
+				newMatrix.values[r][c]=this.values[r][c];
+
+
+		//add the fields in the addmatrix that are also in this matrix
+		
+		//first rownames
+		int newRow=this.rows();	
+		for(int r=0; r< matrixToAdd.rows(); r++)
+		{
+			newMatrix.rowNames[newRow]=matrixToAdd.rowNames[r];
+			newRow++;
+		}
+		
+		for(int c =0; c < matrixToAdd.cols(); c++)
+		{
+			String colNameAddMatrix=matrixToAdd.colNames[c];
+			
+			if(!this.getColHash().containsKey(colNameAddMatrix))
+				continue;
+			
+			int newCol=this.getColHash().get(colNameAddMatrix);
+			newRow=this.rows();	
+			for(int r=0; r< matrixToAdd.rows(); r++)
+			{
+				newMatrix.values[newRow][newCol]=this.values[r][c];
+				newRow++;
+				
+			}
+		}
+		
+		this.rowNames=newMatrix.rowNames;
+		this.colNames=newMatrix.colNames;
+		this.values=newMatrix.values;
+		
+		return newMatrix;
+	}
 }

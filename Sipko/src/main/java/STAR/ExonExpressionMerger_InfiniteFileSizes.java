@@ -29,7 +29,7 @@ public class ExonExpressionMerger_InfiniteFileSizes extends Script<ExonExpressio
 
 	public void run()
 	{
-		p(searchFolder);
+		log(searchFolder);
 		try
 		{
 			init();
@@ -86,7 +86,7 @@ public class ExonExpressionMerger_InfiniteFileSizes extends Script<ExonExpressio
 
 				// go through all the featureCounts files one by one and write the
 				// results per sample to results per gene files
-				p("Creating expression files");
+				log("Creating expression files");
 				BufferedReader fcFnReader = FileUtils.createReader(featureCountFilesFn);
 				AtomicInteger counter = new AtomicInteger(0);
 				fcFnReader.lines().forEach(fn -> writeToGeneFiles(	fn,
@@ -96,13 +96,13 @@ public class ExonExpressionMerger_InfiniteFileSizes extends Script<ExonExpressio
 																	counter,
 																	geneExpressionFns,
 																	writeFolderExpression));
-				p(counter.get() + " files merged");
+				log(counter.get() + " files merged");
 				// close all writers
 				for (BufferedWriter writer : writerPerGene.values())
 					writer.close();
 
 				// go through all the expression files (so each gene)
-				p("Creating ratio files");
+				log("Creating ratio files");
 
 				String folderName = getWriteFolder() + "Ratios/";
 				new File(folderName).mkdir();
@@ -199,8 +199,8 @@ public class ExonExpressionMerger_InfiniteFileSizes extends Script<ExonExpressio
 					writeFolderFile.mkdir();
 				else
 				{
-					p("Parent folder does not exist: \t" + parent.getAbsolutePath());
-					p("Exiting");
+					log("Parent folder does not exist: \t" + parent.getAbsolutePath());
+					log("Exiting");
 					System.exit(2);
 
 				}
@@ -221,7 +221,7 @@ public class ExonExpressionMerger_InfiniteFileSizes extends Script<ExonExpressio
 	{
 
 		if (i.getAndIncrement() % 100 == 0)
-			p(i.get() + " files merged");
+			log(i.get() + " files merged");
 		BufferedReader exonFileReader;
 		HashMap<String, String> exonToData = new HashMap<String, String>();
 		try

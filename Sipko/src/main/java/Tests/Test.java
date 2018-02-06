@@ -30,10 +30,15 @@ public class Test extends Script<Test> {
 	
 	public void run()
 	{
-		ClusterVariables slurmVariables = new SharkVariables();
-		System.out.println("slurmVariables=" + slurmVariables.getExtra());
-
 		
+		String equal = "test";
+		ClusterVariables slurmVariables = new SharkVariables();
+		System.out.println("slurmVariables=" + slurmVariables.getMaxMemory());
+
+		String test = "/groups/umcg-gdio/tmp04/umcg-svandam/Data/RNAseq/Counts/GRCh37/BloodStudy_BiosQcAnnique/Kallisto/Results/161221_NB501043_0096_AH775HBGX2_L1_ATGAGC"; 
+		
+		if(equal.equals("test"))
+			System.out.println("test result:" + test.matches("_0694_|_0713_|_0096_"));
 		
 /*		final SamReader reader = SamReaderFactory.makeDefault().open(new File("bla"));
 		for (final SAMRecord samRecord : reader) {
@@ -375,7 +380,7 @@ public class Test extends Script<Test> {
 	
 	private static Test t(Test a)
 	{
-		a.p(a.jsonFN);
+		a.log(a.jsonFN);
 		
 		return a;
 	}

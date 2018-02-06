@@ -23,7 +23,7 @@ public class SampleSheetGafParser extends Script<SampleSheetGafParser>
 			HashMap<String,Integer> colNameToColNumber= new HashMap<String, Integer>();
 			
 			String header=sampleSheetReader.readLine();
-			p("header = " +header);
+			log("header = " +header);
 			String[] colNames = header.split(separator);
 			for(int c = 0; c < colNames.length; c++)
 			{

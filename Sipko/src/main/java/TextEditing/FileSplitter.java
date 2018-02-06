@@ -40,8 +40,8 @@ public class FileSplitter extends Script<FileSplitter>
 				writeFolder=new File(fn).getParent()+"/perGene/";
 			if(new File(writeFolder).exists() && new File(writeFolder).list().length>1)
 			{
-				p("WriteFolder needs to be empty:\nrm -r " + writeFolder);
-				p("Exiting");
+				log("WriteFolder needs to be empty:\nrm -r " + writeFolder);
+				log("Exiting");
 				System.exit(2);
 			}
 				
@@ -74,7 +74,7 @@ public class FileSplitter extends Script<FileSplitter>
 			{
 
 				if (n % 100000 == 0)
-					p(n + " lines read");
+					log(n + " lines read");
 
 				String[] genes = null;
 				String[] eles = line.split("\t");
@@ -135,7 +135,7 @@ public class FileSplitter extends Script<FileSplitter>
 //				}
 //			});
 
-			p("Finished! Files written at:\t" + writeFolder);
+			log("Finished! Files written at:\t" + writeFolder);
 		} catch (Exception e)
 		{
 			e.printStackTrace();

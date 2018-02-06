@@ -29,7 +29,7 @@ public class FastQCmerger extends Script<FastQCmerger>
 			
 			
 			String fastQcFileFns = fastQcSearcher.getWriteName();
-			p(fastQcFileFns);			
+			log(fastQcFileFns);			
 			
 			BufferedReader fastQcFilesReader = FileUtils.createReader(fastQcFileFns);
 			String fastqFn = null;

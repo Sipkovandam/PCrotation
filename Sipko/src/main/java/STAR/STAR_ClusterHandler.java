@@ -130,7 +130,7 @@ public class STAR_ClusterHandler extends SlurmJob implements Cloneable, Serializ
 		}
 		if (samtoolsVersion != null)
 		{
-			echoAndWriteCommand(clusterCommands.getLoadModule() + samtoolsVersion, writer);
+			echoAndWriteCommand(clusterCommands.getLoadModule() + samtoolsVersion + clusterCommands.getLoadModule2(), writer);
 		}
 	}
 
@@ -176,7 +176,7 @@ public class STAR_ClusterHandler extends SlurmJob implements Cloneable, Serializ
 																										"").replace(" sortedbycoordinate",
 																													"");
 
-			//run featurecounts, but only if deduplication does noet have to happen first.
+			//run featurecounts, but only if deduplication does not have to happen first.
 			if (this.picardJarFn == null && getOutMode() != null && !getOutMode().toLowerCase().equals("none"))
 				writeCommandsFeatureCounts(	commandWriter,
 											bamFn,
@@ -374,7 +374,7 @@ public class STAR_ClusterHandler extends SlurmJob implements Cloneable, Serializ
 									String outPutMode) throws IOException
 	{
 		String line = "STAR ";
-		if (getSjdbFileChrStartEnd() == null)
+		if (getSjdbFileChrStartEnd() == null && !slurmvars.getClusterHandler().toLowerCase().equals("shark"))
 			line = line + "--genomeLoad LoadAndKeep ";//The --genomeLoad LoadAndKeep option loads the genome if it's not already loaded, and then starts mapping
 		line = line + "--genomeDir " + getGenomeDir() + " --readFilesIn " + fastqWithPath;
 		if (pairedStringForward != null)

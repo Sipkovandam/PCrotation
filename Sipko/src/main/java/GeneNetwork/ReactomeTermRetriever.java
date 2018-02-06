@@ -12,6 +12,7 @@ import Tools.Script;
 
 public class ReactomeTermRetriever extends Script<ReactomeTermRetriever>
 {
+	//uses the gene-network api to get 1 reactome term per gene (based on co-expressed genes enrichment)
 	String geneNamesFn = null;//must contain all gene names to be queried in the first column
 	String url = "http://molgenis27.target.rug.nl/api/v1/gene/";
 	
@@ -58,7 +59,6 @@ public class ReactomeTermRetriever extends Script<ReactomeTermRetriever>
 	private static String getUrlSource(String url, String gene) throws IOException {
         URL geneNetwork = new URL(url);
         URLConnection yc =geneNetwork.openConnection();
-        
     	BufferedReader in = null;
         try
         {

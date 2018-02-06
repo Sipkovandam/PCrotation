@@ -21,7 +21,7 @@ public class Kallisto_ClusterHandler extends SlurmJob implements Cloneable, Seri
 	private String kallistoIndexFileComment = "/root/directory/hg19.v75.cdna.all.42.2.idx; MANDATORY //Annotation file Kallisto should use. This file has to be created by Kallisto prior to running this script";
 	private String kallistoIndexFile = "/groups/umcg-wijmenga/tmp04/umcg-svandam/Data/RNAseq/Annotation/hg19.v75.cdna.all.42.2.idx";
 	private String extraArguments = "--fusion";
-	
+
 	private String pairStringsComment = "[\"_R1_\",\"_R2_\",\"_1.fq\",\"_2.fq\"]; MANDATORY for paired end data // comma separated list of string pairs defining the difference between forward read and backward read files.  For example, immagine a file name fastqFile_1.fq - to obtain the complementary file in this file name _R1_ is replaced iwth _R2_ and _1.fq is replaced with _2.fq. Since _R1_ is not present in the file name but _1.fq is, the complementary file becomes fastqFile_2.fq and these 2 files then are used by STAR. If you files do not contain any of these strings STAR will map the data as if it was single end data";
 	private String[] pairStrings = new String[] { "_R1", "_R2", "_1.fq", "_2.fq" };
 
@@ -168,7 +168,10 @@ public class Kallisto_ClusterHandler extends SlurmJob implements Cloneable, Seri
 											int fileNumber,
 											ClusterHandler slurmVars) throws IOException
 	{
-		String line = "kallisto quant --bias -t " + slurmVars.getThreads() + " -i " + getKallistoIndexFile() + " -o " + slurmVars.getSTAR_Folder() + outputFolder + " " + getExtraArguments() + " \"" + fastqWithPath + "\" \"" + fastqWithPath.replace(pairedStringForward,
+		String line = "kallisto quant --bias ";
+		if(!slurmVars.isSharkCluster())
+			line += "-t " + slurmVars.getThreads();
+		line += "-i " + getKallistoIndexFile() + " -o " + slurmVars.getSTAR_Folder() + outputFolder + " " + getExtraArguments() + " \"" + fastqWithPath + "\" \"" + fastqWithPath.replace(pairedStringForward,
 																																																														pairedStringReverse)
 				+ "\" &> " + slurmVars.getSTAR_Folder() + outputFolder + outputFolder.replace(	"/",
 																								"")

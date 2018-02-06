@@ -7,13 +7,14 @@ public class SharkVariables extends ClusterVariables
 	private final String jobName = "#$ -N ";
 	private final String logsFolder = "#$ -o ";
 	private final String errorsFolder = "#$ -e ";
-	private final String walltime = "#$ -l h rt=";
-	private final String threads = "#$ -pe BWA x";
+	private final String walltime = "#$ -l h_rt=";
+	private final String threads = "#$ -pe BWA ";
 	private final String maxMemory = "#$ -l h_vmem=";
 
 	private final String extra = "#$ -q all.q\n";
 	
-	private final String loadModule = "export PATH=$PATH:";
+	private final String loadModule = "export PATH=";
+	private final String loadModule2 = ":$PATH"; 
 
 	@Override
 	public String getLoadModule()
@@ -67,6 +68,12 @@ public class SharkVariables extends ClusterVariables
 	public String getMaxMemory()
 	{
 		return maxMemory;
+	}
+
+	@Override
+	public String getLoadModule2()
+	{
+		return loadModule2;
 	}
 	
 }

@@ -49,7 +49,7 @@ public class SpliceRescuer extends Script<SpliceRescuer>
 			writeSpliceSitesToRescue(	spliceSitesToSamplesToCounts,
 										spliceFileSearcher.getWriteName());
 			
-			p("Output written at:\t" + writeFn);
+			log("Output written at:\t" + writeFn);
 
 		} catch (Exception e)
 		{

@@ -86,7 +86,7 @@ public class BiosSampleOverviewMaker extends Script<BiosSampleOverviewMaker>
 				missingSampleWriter.write(sample+"\n");
 			}
 			missingSampleWriter.close();
-			p("Done, file written to:\n" + writeFn);
+			log("Done, file written to:\n" + writeFn);
 		}catch(Exception e){e.printStackTrace();}
 	}
 

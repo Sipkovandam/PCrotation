@@ -50,7 +50,7 @@ public class ZscoreCalculator extends Script<ZscoreCalculator>
 				
 				if(!scoreStats.getRowHash().containsKey(row.getRowName()))
 				{
-					p("Error: statsFile missing rowname: " + row.getRowName() +  "\n exiting");
+					log("Error: statsFile missing rowname: " + row.getRowName() +  "\n exiting");
 					System.exit(2);
 				}
 				

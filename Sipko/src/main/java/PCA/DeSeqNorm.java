@@ -17,7 +17,7 @@ public class DeSeqNorm
 	static String writeFolder = null;//if null becomes new File(expressionFN).getParent()+"/";
 	static String geoFN = null;//if null calculates geometric means based on this dataset
 	static boolean writeAll = true;	//write all intemediary files too
-	static double logAdd = 0.5;//previously used to multiply the results by this number, but seems pointless since it does not have any effect, so does not do anything anymore
+	static double logAdd = 1;//previously used to multiply the results by this number, but seems pointless since it does not have any effect, so does not do anything anymore
 	static boolean log = false;
 	static boolean genes = true;
 	static boolean roundValues = true;//rounds expression values to whole counts
@@ -33,20 +33,20 @@ public class DeSeqNorm
 		if(!new File(writeFolder).exists())
 			new File(writeFolder).mkdirs();
 		
-		MyMatrix expressionStruct = new MyMatrix(expressionFN);
+		MyMatrix expression = new MyMatrix(expressionFN);
 		if(genes)
-			expressionStruct.putGenesOnRows();
+			expression.putGenesOnRows();
 		if(roundValues)
-			expressionStruct.roundValues();
+			expression.roundValues();
 		double start = System.nanoTime();
-		rLog(writeFolder, expressionStruct, writeAll, geoFN);
+		rLog(writeFolder, expression, writeAll, geoFN);
 		double end = System.nanoTime();
 		System.out.println((end-start)/1000/1000/1000 + " sec");
 		if(log)
 		{
-			expressionStruct.log2Transform(logAdd);
+			expression.log2Transform(logAdd);
 			//write the results
-			expressionStruct.write(writeFolder + new File(expressionFN).getName().replace(".txt", "").replace(".gz","")+".DESeqNorm.Log2.txt.gz");
+			expression.write(writeFolder + new File(expressionFN).getName().replace(".txt", "").replace(".gz","")+".DESeqNorm.Log2.txt.gz");
 		}
 	}
 
@@ -54,7 +54,7 @@ public class DeSeqNorm
 	{
 		String swapFN = writeFolder + "swapFile.txt";
 		expressionStruct.write(swapFN);
-		JuhaPCA.PCA.log(" 6. Deseq normalization without log");
+		JuhaPCA.PCA.log(" 6. Deseq normalization");
 		String correctedNotLogged =  writeFolder + new File(expressionFN).getName().replace(".txt", "").replace(".gz","") + ".DESeqNorm.txt.gz";
 		if(geoFN!= null && new File(geoFN).exists())
 			rLog(expressionStruct, writeFolder, swapFN, new MyMatrix(geoFN), null);
@@ -98,22 +98,22 @@ public class DeSeqNorm
 		return geoMean;
 	}
 	
-	public static void rLog(MyMatrix expressionStruct, String writeFolder, String fileName, MyMatrix geoMean, String writeGeoFN) throws IOException 
+	public static void rLog(MyMatrix expression, String writeFolder, String fileName, MyMatrix geoMean, String writeGeoFN) throws IOException 
 	{
 		if(geoMean == null)
 		{
-			geoMean = getGeoMeans(expressionStruct, writeFolder, writeGeoFN);
+			geoMean = getGeoMeans(expression, writeFolder, writeGeoFN);
 			//need to read the matrix again here because we logged it before...
-			expressionStruct.readFile(fileName);
+			expression.readFile(fileName);
 		}
-		MyMatrix denominators = getDenominators(expressionStruct, fileName, geoMean, writeFolder);
+		MyMatrix denominators = getDenominators(expression, fileName, geoMean, writeFolder);
 		
-		expressionStruct.readFile(fileName);//read the file again since we kept only the rows that have no 0 values.
+		expression.readFile(fileName);//read the file again since we kept only the rows that have no 0 values.
 		
 		//calculate the normalized readcounts
-		for(int c = 0; c < expressionStruct.cols(); c++)
-			for(int r = 0; r < expressionStruct.rows(); r++)
-				expressionStruct.matrix.set(r,c,expressionStruct.matrix.get(r,c)/denominators.matrix.get(c,0));	
+		for(int c = 0; c < expression.cols(); c++)
+			for(int r = 0; r < expression.rows(); r++)
+				expression.matrix.set(r,c,expression.matrix.get(r,c)/denominators.matrix.get(c,0));	
 	}
 	
 	private static MyMatrix getDenominators(MyMatrix expressionStruct, String fileName, MyMatrix geoMean, String writeFolder) throws IOException {
@@ -165,6 +165,9 @@ public class DeSeqNorm
 		
 		for(int a = 0; a < args.length; a++)
 		{
+			if(args[a]==null)//called from another script
+				return;
+			
 			String split[] = args[a].split("=");
 			if(split.length<2)
 			{

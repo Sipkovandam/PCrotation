@@ -15,6 +15,7 @@ public class RowMedianGetter extends RowJob
 	public RowMedianGetter()
 	{
 		this.setValueNames(new String[]{medianName});
+		this.setHasSingleColHeader(true);
 	}
 	
 	@Override

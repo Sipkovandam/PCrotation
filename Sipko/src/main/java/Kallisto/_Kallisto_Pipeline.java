@@ -49,6 +49,7 @@ public class _Kallisto_Pipeline extends Script<_Kallisto_Pipeline> {
 	private Kallisto_ClusterHandler kallisto_Variables = new Kallisto_ClusterHandler();
 	
 	private String sampleSheetFn = null;
+	private String clusterHandler = "slurm";
 
 	@Override
 	public void run()
@@ -61,7 +62,7 @@ public class _Kallisto_Pipeline extends Script<_Kallisto_Pipeline> {
 			{
 				if(input.contains(".txt"))
 				{
-					p("This file does not exist:\n" + input +"\n Exiting");
+					log("This file does not exist:\n" + input +"\n Exiting");
 					System.exit(2);
 				}
 				fastQFiles = findFastQFiles();
@@ -123,7 +124,7 @@ public class _Kallisto_Pipeline extends Script<_Kallisto_Pipeline> {
 		kallistoSettings.setSlurmUserName(slurmUserName);
 		kallistoSettings.setFinishedemailaddress(finishedemailaddress);
 		kallistoSettings.setMapperVars(this.kallisto_Variables);
-		
+		kallistoSettings.setClusterHandler(this.clusterHandler);;
 		
 		kallistoSettings.run();
 	}

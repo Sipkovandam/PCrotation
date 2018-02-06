@@ -15,6 +15,7 @@ public class RowMaxGetter extends RowJob
 	public RowMaxGetter()
 	{
 		this.setValueNames(new String[]{maxName});
+		this.setHasSingleColHeader(true);
 	}
 	
 	@Override

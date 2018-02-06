@@ -42,11 +42,12 @@ public class Script <T> implements Tools.Runnable, Serializable
 	private String executor = Script.class.getProtectionDomain().getCodeSource().getLocation().toString();
 	private transient double start = System.nanoTime();
 	private String runTime = "Not finished";
-	public String jsonFN = "No need to initiate this variable, but used in pipelines to identify the scripts that where used in all substeps";
+	public String jsonFN = null;
+	private transient BufferedWriter logWriter= null;
 	
 	protected Script()
 	{
-		
+		this.setJsonFN(this.getNewJsonFN());
 	}
 	
 	public void writeConfig()
@@ -62,7 +63,7 @@ public class Script <T> implements Tools.Runnable, Serializable
 		this.setJsonFN(jsonFN);
 		if(new File(this.jsonFN).exists())
 		{
-			p("Json file already exists at: " + this.jsonFN +"\n"
+			log("Json file already exists at: " + this.jsonFN +"\n"
 			+ "Exiting");
 			System.exit(1);
 		}
@@ -80,8 +81,7 @@ public class Script <T> implements Tools.Runnable, Serializable
 			File file = new File(jsonFilename);
 			if(!file.exists())
 			{
-				p("Json file does not exist:" + jsonFilename);
-				System.exit(0);
+				throw new Exception("Json file does not exist:" + jsonFilename); 
 			}
 			jsonString = new String(Files.readAllBytes(Paths.get(jsonFilename)));
 		}catch(Exception e){e.printStackTrace();}
@@ -115,13 +115,13 @@ public class Script <T> implements Tools.Runnable, Serializable
 	
 	public void run()
 	{
-		p("run() not defined for this class:" + className);
-		p("exiting");
+		log("run() not defined for this class:" + className);
+		log("exiting");
 		System.exit(2);
 	}
 	public void run(String[] args) throws Exception
 	{
-		p("run(String[] args) not defined for this class:" + className);
+		log("run(String[] args) not defined for this class:" + className);
 	}
 	
 	public void writeConfig(String jsonFN, T script)
@@ -156,7 +156,7 @@ public class Script <T> implements Tools.Runnable, Serializable
 		File file = new File(jsonFN);
 		if(file.isDirectory())
 			if(!file.exists())
-				p("Directory does not exist, exiting: " + file);
+				log("Directory does not exist, exiting: " + file);
 			else
 				this.jsonFN=FileUtils.makeFolderNameEndWithSlash(jsonFN)+this.getNewJsonFN(null);
 		else
@@ -188,7 +188,7 @@ public class Script <T> implements Tools.Runnable, Serializable
 			write_StripNestedScriptVariables(gson.toJson(script), writer);
 			writer.close();
 		}catch(Exception e){e.printStackTrace();}
-		p("Config file written at:\t"+this.getJsonFN());
+		log("Config file written at:\t"+this.getJsonFN().replace("\\\\", "\\").replace("\\", "/"));
 	}
 	
 	private void write_StripNestedScriptVariables(String jsonString, BufferedWriter writer) throws IOException {
@@ -273,7 +273,11 @@ public class Script <T> implements Tools.Runnable, Serializable
 	{
 		this.runTime = this.getRunTime();
 		writeConfig(this.jsonFN, true,true);
-		p("Done! Runtime:\t" + this.runTime);
+		log("Done! Runtime:\t" + this.runTime);
+		try
+		{
+			this.logWriter.close();
+		} catch (IOException e){e.printStackTrace();}
 	}
 	
 	public String getRunTime()
@@ -297,11 +301,37 @@ public class Script <T> implements Tools.Runnable, Serializable
 		
 		return runTime;
 	}
-	
-	public void p(Object line)
+	public void log(HashMap<?,?> hashMap)
 	{
 		String time = timeFormat.format(new Date());
-        System.out.println(time + " (" + this.getClassName() + "):\t" + line);
+		
+		try
+		{
+			if(logWriter==null)
+				logWriter=FileUtils.createWriter(jsonFN+".log");
+			for(Object key : hashMap.keySet())
+			{
+				String line=key+"\t" + hashMap.get(key);
+				String logLine = time + " (" + this.getClassName() + "):\tHashRow=\t"+line;
+				logWriter.write(logLine+"\n");
+				System.out.println(logLine);
+			}
+			
+		}catch(Exception e){e.printStackTrace();}
+      
+	}
+	
+	public void log(Object line)
+	{
+		String time = timeFormat.format(new Date());
+		String logLine = time + " (" + this.getClassName() + "):\t" + line;
+		try
+		{
+			if(logWriter==null)
+				logWriter=FileUtils.createWriter(jsonFN+".log");
+			logWriter.write(logLine+"\n");
+		}catch(Exception e){e.printStackTrace();}
+        System.out.println(logLine);
 	}
 
 	public String getClassName() {

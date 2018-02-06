@@ -31,7 +31,8 @@ public class MergeFiles extends Script<MergeFiles>
 				this.writeFn=FileUtils.addBeforeExtention(fn1, "_merged");
 	
 			HashMap<String, String> addRownamesToAddBit = FileUtils.readStringStringHash(fn2,true,1);
-	
+			Set<String> missingRowsInFn1 = addRownamesToAddBit.keySet();
+			
 			BufferedReader f1Reader = FileUtils.createReader(fn1);
 			BufferedReader f2Reader = FileUtils.createReader(fn2);
 			String addHeader = f2Reader.readLine().split("\t",2)[1];
@@ -47,23 +48,26 @@ public class MergeFiles extends Script<MergeFiles>
 			
 			String line = null;
 
-			Set<String> addedRows = addRownamesToAddBit.keySet();
-			
+			int missingFile2 = 0;
 			while((line = f1Reader.readLine())!=null)
 			{
 				String rowName = line.split("\t",2)[0];
 				String addLine = addRownamesToAddBit.get(rowName);
 				
-				//only add once?
-//				if(addedRows.contains(rowName))
-//					addedRows.remove(rowName);
+				//do not add the same lines twice if "keepAllFromFn2 == true"
+				if(missingRowsInFn1.contains(rowName))
+					missingRowsInFn1.remove(rowName);
 				
 				if(addLine!= null)
+				{
 					writer.write(line.concat("\t").concat(addLine).concat("\n"));
+				}
 				else if (keepAllFromFn1)
+				{
 					writer.write(line.concat("\t").concat(placeHolder).concat("\n"));
+					missingFile2++;
+				}
 			}
-			
 			
 			
 			if(keepAllFromFn2)
@@ -72,15 +76,22 @@ public class MergeFiles extends Script<MergeFiles>
 				for(int n = 0; n < oldCols-1; n++)
 					placeHolder2=placeHolder2.concat("\t0");
 
-				for(String geneName: addedRows)
+				for(String rowName: missingRowsInFn1)
 				{
-					String addLine = addRownamesToAddBit.get(geneName);
-					writer.write(geneName.concat(placeHolder2).concat("\t").concat(addLine).concat("\n"));
+					String addLine = addRownamesToAddBit.get(rowName);
+					writer.write(rowName.concat(placeHolder2).concat("\t").concat(addLine).concat("\n"));
 				}
 			}
+			
 			writer.close();
 			f1Reader.close();
 			f2Reader.close();
+			
+			if(keepAllFromFn1)
+				log("There were " + missingFile2 + " lines present in file1 that were missing from file2 ");
+			if(keepAllFromFn1)
+				log("There were " + missingRowsInFn1.size() + " lines present in file2 that were missing from file1 ");
+			
 		}catch(Exception e){e.printStackTrace();}
 	}
 

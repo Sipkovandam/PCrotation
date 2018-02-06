@@ -3,7 +3,9 @@ package PCA;
 import java.io.IOException;
 
 import MatrixScripts.MyMatrix;
+import Tools.FileUtils;
 import Tools.Script;
+import umcg.genetica.math.matrix2.DoubleMatrixDataset;
 import umcg.genetica.math.stats.concurrent.ConcurrentCorrelation;
 import umcg.genetica.math.stats.concurrent.ConcurrentCovariation;
 
@@ -18,7 +20,8 @@ public class CorrelationLarge extends Script<CorrelationLarge>{
 	private int threads = 20;
 	private boolean correlation = false;
 	private transient boolean writeParralel=false;//if true writes the output in parallel proceeding to the next step with the resulting matrix
-	
+
+	@Override
 	public void run() 
 	{
 		this.run(null, false);
@@ -26,16 +29,19 @@ public class CorrelationLarge extends Script<CorrelationLarge>{
 	
 	public MyMatrix run(MyMatrix passMatrix, boolean writeParallel) 
 	{
-		//disabled this, because the next function has to accept this matrix or it won't work and you never know which script comes after this. Need to find solution
 		MyMatrix covMat=null;
 		try
 		{
 			MyMatrix expression = passMatrix;
 			if(passMatrix==null)
 				expression = new MyMatrix(expressionFN);
-
+		
 			writeFn = checkWriteFn();
 
+//			int rowsWithoutVariance=expression.removeNoVariance();
+//			if(rowsWithoutVariance>0)
+//				FileUtils.addBeforeExtention(writeFn, "RowsWithoutVarianceRemoved");
+				
 			covMat = correlation(writeFn, expression,correlation,threads);
 			covMat.write(writeFn,false,writeParallel);
 			if(!writeParallel)
@@ -44,7 +50,7 @@ public class CorrelationLarge extends Script<CorrelationLarge>{
 		{
 			// TODO Auto-generated catch block
 			e.printStackTrace();
-			p("Exiting");
+			log("Exiting");
 			System.exit(2);
 		}
 		return covMat;
@@ -65,6 +71,9 @@ public class CorrelationLarge extends Script<CorrelationLarge>{
 	public static MyMatrix correlation(String writeFile, MyMatrix expression, boolean correlation, int threads) throws IOException 
 	{
 		double[][] matrix = null;
+		
+		DoubleMatrixDataset doubleMatrixDataset = new  DoubleMatrixDataset();
+		
 		if(correlation)
 		{
 			ConcurrentCorrelation calculator = new ConcurrentCorrelation(threads);

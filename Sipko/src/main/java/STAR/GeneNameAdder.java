@@ -142,7 +142,7 @@ public class GeneNameAdder extends Script<GeneNameAdder>
 		{
 			e.printStackTrace();
 		}
-		p("GeneNames Merged, file written at:\n" + writeFn);
+		log("GeneNames Merged, file written at:\n" + writeFn);
 	};
 
 	private void writeFirstLine(BufferedReader spliceReader, String spliceFN, boolean afterLine, BufferedWriter spliceWriter, BufferedWriter spliceWriter2) throws IOException
@@ -150,7 +150,7 @@ public class GeneNameAdder extends Script<GeneNameAdder>
 		String firstline = spliceReader.readLine();
 		if (firstline == null)
 		{
-			p("File is empty:\t " + spliceFN);
+			log("File is empty:\t " + spliceFN);
 			return;
 		}
 

@@ -3,6 +3,7 @@ package PrepData;
 import java.io.BufferedReader;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.Hashtable;
 
 import MatrixScripts.MyMatrix;
@@ -44,7 +45,7 @@ public class BarcodeToSampleID {
 		
 		BufferedReader reader = FileUtils.createReader(conversionFN);
 		String line = reader.readLine();//header line
-		Hashtable<String, Integer> colIndex = FileUtils.makeHash(line);
+		HashMap<String, Integer> colIndex = FileUtils.makeHash(line);
 		
 		int barcode = colIndex.get("barcode");
 		int lane = colIndex.get("lane");

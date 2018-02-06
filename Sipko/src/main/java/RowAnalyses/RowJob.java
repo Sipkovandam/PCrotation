@@ -10,7 +10,7 @@ import Tools.FileUtils;
 
 public abstract class RowJob
 {
-	private boolean hasSingleColHeader = true;
+	private boolean hasSingleColHeader = false;
 	String writeFn = null;
 	String[] valueNames = null;
 	
@@ -63,8 +63,12 @@ public abstract class RowJob
 
 	protected void writeResult(double[] values, RowJobExecutor rowExecutor, int lineNumber, int threadNumber) throws FileNotFoundException, IOException, InterruptedException
 	{
-		String writeLine = rowExecutor.getRowName(threadNumber).concat(FileUtils.doubleArrayToWriteString(values)).concat("\n");
-		writeLine(lineNumber, writeLine, rowExecutor, false, threadNumber);
+		String writeLine = null;
+		if(values!=null)
+			writeLine = rowExecutor.getRowName(threadNumber).concat(FileUtils.doubleArrayToWriteString(values)).concat("\n");
+		else
+			writeLine="dontWriteMe";
+		writeLine(lineNumber, writeLine, rowExecutor, false, threadNumber);		
 	}
 
 	public boolean hasSingleColHeader()

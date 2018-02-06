@@ -15,6 +15,7 @@ public class SlurmVariables extends ClusterVariables
 						"#SBATCH --get-user-env=L\n";
 	
 	private final String loadModule = "ml ";
+	private final String loadModule2 = ""; 
 	
 	@Override
 	public String getLoadModule()
@@ -68,5 +69,11 @@ public class SlurmVariables extends ClusterVariables
 	public String getMaxMemory()
 	{
 		return maxMemory;
+	}
+
+	@Override
+	public String getLoadModule2()
+	{
+		return loadModule2;
 	}
 }

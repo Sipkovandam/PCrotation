@@ -66,7 +66,7 @@ public class LaneMerger extends Script<LaneMerger>
 				summedFileWriter.write(newLine.concat("\n"));
 			}
 			summedFileWriter.close();
-			p("Summed file written to:" + summedFn);
+			log("Summed file written to:" + summedFn);
 		}catch(Exception e){e.printStackTrace();}
 	}
 

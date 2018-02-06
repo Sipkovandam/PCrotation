@@ -28,6 +28,7 @@ import RowAnalyses.RowMaxGetter;
 import RowAnalyses.RowMedianGetter;
 import RowAnalyses.RowStdevCalculator;
 import RowAnalyses.RowZscoreCalculator;
+import RowAnalyses.RowCenterer;
 import STAR.OutlierSpliceSiteRetriever;
 import Tools.FileUtils;
 import Tools.Script;
@@ -108,7 +109,7 @@ public class SplicingAnalysisPipeline2 extends Script<SplicingAnalysisPipeline>
 			RowStdevCalculator rowStdevCalculator = new RowStdevCalculator();
 			rowStdevCalculator.setWriteFn(stDevFn);
 
-			RowZscoreCalculator rowBiosBasedZscoreCalculator = new RowZscoreCalculator();
+			RowCenterer rowBiosBasedZscoreCalculator = new RowCenterer();
 			String biosBasedZscoreFn = "biosBasedZscores.txt";
 			rowBiosBasedZscoreCalculator.setWriteFn(biosBasedZscoreFn);
 			ArrayList<RowJobExecutor> rowJobExecutors = new ArrayList<RowJobExecutor>();
@@ -152,13 +153,11 @@ public class SplicingAnalysisPipeline2 extends Script<SplicingAnalysisPipeline>
 			rowJobExecutors.add(rowJobExecutorStudyIndexes);
 
 			double nanoTime = System.nanoTime();
-			useExecutorsOnFile(	rowJobExecutors,
+			RowJobExecutor.useExecutorsOnFile(	rowJobExecutors,
 								correctedMatrixFn);
 			double timeUsed = (System.nanoTime() - nanoTime) / 1000 / 1000 / 1000;
 			System.out.println("timeused = " + ((int)timeUsed) + " seconds");
 			Thread.sleep(1000);
-			closeExecutorFileWriters(rowJobExecutors);
-
 			//OUTLIERCOUNTS Z-SCORES/////////////////////////////////////////////////////////////////////////////////////////////////////////
 			//calculate outlierCounts in other parents
 			//calculate outlierCounts in other patients
@@ -219,9 +218,8 @@ public class SplicingAnalysisPipeline2 extends Script<SplicingAnalysisPipeline>
 				rowJobExecutor.setWriteFolder(resultsFolder);
 				rowJobExecutors2.add(rowJobExecutor);
 			}
-			useExecutorsOnFile(	rowJobExecutors2,
+			RowJobExecutor.useExecutorsOnFile(	rowJobExecutors2,
 								zScoreFn);
-			closeExecutorFileWriters(rowJobExecutors2);
 			
 			//MERGE Z-SCORES FAMILY/////////////////////////////////////////////////////////////////////////////////////////////////////////
 			//merge family files for z-scores based on BIOS
@@ -247,9 +245,8 @@ public class SplicingAnalysisPipeline2 extends Script<SplicingAnalysisPipeline>
 
 				rowJobExecutors3.add(rowJobExecutor);
 			}
-			useExecutorsOnFile(	rowJobExecutors3,
+			RowJobExecutor.useExecutorsOnFile(	rowJobExecutors3,
 								studyBasedResultsFolder + biosBasedZscoreFn);
-			closeExecutorFileWriters(rowJobExecutors3);
 			
 			//RAWDATA/////////////////////////////////////////////////////////////////////////////////////////////////////////
 			//calculate medians rawData BIOS
@@ -310,9 +307,8 @@ public class SplicingAnalysisPipeline2 extends Script<SplicingAnalysisPipeline>
 			}
 
 			rowJobExecutorsOnRawData.add(rowJobExecutorBiosIndexesRawData);
-			useExecutorsOnFile(	rowJobExecutorsOnRawData,
+			RowJobExecutor.useExecutorsOnFile(	rowJobExecutorsOnRawData,
 								this.rawMatrixFn);
-			closeExecutorFileWriters(rowJobExecutorsOnRawData);
 
 			///////////////////////////////////////////////////////////////////////////////////////////////////////////
 			//MergeFiles and write Patrick files
@@ -496,14 +492,14 @@ public class SplicingAnalysisPipeline2 extends Script<SplicingAnalysisPipeline>
 			familyName = parentSampleNameToFamilyId.get(sampleName);
 			if (familyName != null)
 			{
-				p("Sample is parent: " + sampleName + ". Skipping");
+				log("Sample is parent: " + sampleName + ". Skipping");
 				return null;
 			}
 		}
-		p("familyName =\t" + familyName);
+		log("familyName =\t" + familyName);
 		if (familyName == null)
 		{
-			p("Sample to family name missing for sample: " + sampleName + ". Skipping");
+			log("Sample to family name missing for sample: " + sampleName + ". Skipping");
 			return null;
 		}
 		return familyName;
@@ -757,102 +753,6 @@ public class SplicingAnalysisPipeline2 extends Script<SplicingAnalysisPipeline>
 		return includeColnames;
 	}
 
-	private void closeExecutorFileWriters(ArrayList<RowJobExecutor> rowJobExecutors) throws IOException
-	{
-		for (RowJobExecutor rowJobExecutor : rowJobExecutors)
-		{
-			rowJobExecutor.closeWriters();
-		}
-	}
-
-	private void useExecutorsOnFile(ArrayList<RowJobExecutor> rowJobExecutors,
-									String matrixFn) throws FileNotFoundException, IOException, InterruptedException
-	{
-		BufferedReader sampleReader = FileUtils.createReader(matrixFn);//65 kb buffer
-		String header = sampleReader.readLine();//get rid of header
-
-		executeHeaderJobs(	rowJobExecutors,
-							header);
-
-		ExecutorService executorService = Executors.newFixedThreadPool(nThreads);
-//		int queueSize = nThreads * 3;
-//		ExecutorService executorService = new ThreadPoolExecutor(	nThreads,
-//																	nThreads,
-//																	5000L,
-//																	TimeUnit.MILLISECONDS,
-//																	new ArrayBlockingQueue<Runnable>(	queueSize,
-//																										true),
-//																	new ThreadPoolExecutor.CallerRunsPolicy());
-		Executors.newFixedThreadPool(nThreads);
-
-		String line = null;
-		int lineNumber = 0;
-		
-		boolean[] availableThreadNumbers = initiateAvailableThreadNumbers();
-		initiateStorageVariables(rowJobExecutors, nThreads);
-		
-		
-		double startTime = System.nanoTime();
-		while ((line = sampleReader.readLine()) != null)
-		{
-			if(lineNumber %10000 ==0)
-			{
-				double runtime = (System.nanoTime()-startTime)/1000/1000/1000;
-				System.out.println(lineNumber +" lines completed in\t"+ ((int)runtime)+ " seconds");
-			}
-			int availableThread = getAvailableThreadNumber(availableThreadNumbers); 			
-			Runnable worker = new RowJobExecutorThread(	line,
-														lineNumber,
-														rowJobExecutors, availableThreadNumbers, availableThread);
-			
-			executorService.execute(worker);
-			
-			if(lineNumber%nThreads==0)
-				writeLines(rowJobExecutors);
-			lineNumber++;
-		}
-		
-		executorService.shutdown();
-		while (!executorService.isTerminated())
-		{
-			Thread.sleep(1);
-		};
-		writeLines(rowJobExecutors);
-	}
-
-	private void initiateStorageVariables(ArrayList<RowJobExecutor> rowJobExecutors, int nThreads)
-	{
-		for(RowJobExecutor rowJobExecutor : rowJobExecutors)
-		{
-			for(int t =0; t< nThreads; t++)
-				rowJobExecutor.initiateStorageVariables(t);
-		}
-		
-	}
-
-	private void writeLines(ArrayList<RowJobExecutor> rowJobExecutors) throws IOException, InterruptedException
-	{
-		for(RowJobExecutor rowJobExecutor:rowJobExecutors)
-		{
-			HashMap<String, JobLineWriter> jobLineWriters = rowJobExecutor.getLineWriters();
-			for(JobLineWriter jobLineWriter: jobLineWriters.values())
-			{
-				jobLineWriter.writeLinesInBuffer();
-			}
-		}
-		
-	}
-
-	private boolean[] initiateAvailableThreadNumbers()
-	{
-		boolean[] availableThreadNumbers =new boolean[this.nThreads];
-		for(int t = 0; t < this.nThreads; t++)
-		{
-			availableThreadNumbers[t]=true;
-		}
-		return availableThreadNumbers;
-	}
-
 //	private void setRowJobExecutorVariables(ArrayList<RowJobExecutor> rowJobExecutors,
 //											String rowName,
 //											double[] values,
@@ -882,30 +782,6 @@ public class SplicingAnalysisPipeline2 extends Script<SplicingAnalysisPipeline>
 //	}
 
 	//Thread done: 1	linenumber =789
-	
-	private int getAvailableThreadNumber(boolean[] availableThreadNumbers) throws InterruptedException
-	{
-		int availableThreadNumber = -1;
-		
-		out: while(availableThreadNumber==-1)
-		{
-			for(int t = 0; t< availableThreadNumbers.length; t++)
-			{
-				if(availableThreadNumbers[t] == true)
-				{
-					availableThreadNumber=t;
-					availableThreadNumbers[t]=false;
-					break out;
-				}
-			}
-//			if(((int)(Math.random()*10)) == 0)
-//				System.out.println("Sleeping; Waiting for available thread");		
-			Thread.sleep(0,1);
-		}
-		
-		
-		return availableThreadNumber;
-	}
 
 //	private void executeJobs(ArrayList<RowJobExecutor> rowJobExecutors)
 //	{
@@ -914,16 +790,6 @@ public class SplicingAnalysisPipeline2 extends Script<SplicingAnalysisPipeline>
 //			rowJobExecutor.execute(0);
 //		}
 //	}
-
-	private void executeHeaderJobs(	ArrayList<RowJobExecutor> rowJobExecutors,
-									String header) throws FileNotFoundException, IOException
-	{
-		for (RowJobExecutor rowJobExecutor : rowJobExecutors)
-		{
-			rowJobExecutor.executeHeaderJob(header);
-			rowJobExecutor.writeHeaders();
-		}
-	}
 
 	private void createWriteFolder()
 	{

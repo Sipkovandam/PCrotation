@@ -45,7 +45,7 @@ public class RlogLargeMatrix extends Script<RlogLargeMatrix>
 	public void run()
 	{	try 
 	{	
-			p("Input filename =" + expressionFN);
+			log("Input filename =" + expressionFN);
 			if(writeFolder == null)
 				writeFolder = new File(expressionFN).getParent()+"/DESeqNorm/";
 			
@@ -56,7 +56,7 @@ public class RlogLargeMatrix extends Script<RlogLargeMatrix>
 			if(roundValues)
 				expression.roundValues();
 				rLog(writeFolder, expression, writeAll, geoFN);
-			p(" 7. Log transforming");
+			log(" 7. Log transforming");
 			expression.logTransform(2,logAdd);//adds +0.5 before log
 			expression.write(writeFolder + new File(expressionFN).getName().replace(".txt", "").replace(".gz","")+".DESeqNorm.Log2.txt.gz");
 			end();
@@ -90,7 +90,7 @@ public class RlogLargeMatrix extends Script<RlogLargeMatrix>
 		expression.putGenesOnRows();
 		String swapFN = writeFolder + "swapFile.txt";
 		expression.write(swapFN);
-		p(" 6. Rlog without log");
+		log(" 6. Rlog without log");
 		String correctedNotLogged =  writeFolder + new File(expressionFN).getName().replace(".txt", "").replace(".gz","") + ".DESeqNorm.txt.gz";
 		rLog(expression, writeFolder, swapFN, geoMean, null);
 		
@@ -165,7 +165,7 @@ public class RlogLargeMatrix extends Script<RlogLargeMatrix>
 		geoMean.keepRows(keepGenes);
 		if(writeGeoFN == null)
 			writeGeoFN = writeFolder+ "geoMean.txt";
-		p("geofilename=" + writeGeoFN);
+		log("geofilename=" + writeGeoFN);
 		this.geoFN=writeGeoFN;
 		geoMean.write(writeGeoFN);
 		
@@ -176,7 +176,7 @@ public class RlogLargeMatrix extends Script<RlogLargeMatrix>
 	{
 		if(args.length < 1)
 		{
-			p("Script requires the following arguments:\n"
+			log("Script requires the following arguments:\n"
 					+ "1. filename=<expressionFN.txt> - Expression file with genes on rows samples on columns\n"
 					+ "2. writeFolder=<writeFolderFN.txt> - Folder where the files will be written (default=parentFolder(input.txt))\n"
 					+ "3. geoFN=<geoFn.txt> - Optional file with geometric mean per gene to use (default=null)\n");
@@ -212,7 +212,7 @@ public class RlogLargeMatrix extends Script<RlogLargeMatrix>
 					roundValues = Boolean.parseBoolean(value);
 				break;
 				default:
-					p("Incorrect argument supplied:\n"+ args[a] +"\nexiting");
+					log("Incorrect argument supplied:\n"+ args[a] +"\nexiting");
 					System.exit(1);
 			}
 		}

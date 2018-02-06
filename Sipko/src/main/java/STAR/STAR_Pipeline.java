@@ -161,13 +161,6 @@ public class STAR_Pipeline extends Script<STAR_Pipeline>
 		mergeV_FirstPass.setWriteFn_Splice_2ndPassInput(sTARv_FirstPass.getOutputRoot() + "Expression_SJ_Merged_1stPass_readCutoff"+mergeV_FirstPass.getReadSumCutoff()+".txt");
 		mergeV_FirstPass.setWriteSpliceSummaryFn(sTARv_FirstPass.getOutputRoot() + "Expression_SJ_Summary_1stPass.txt");
 
-		
-//		SpliceMerger_InfiniteFileSizes mergeV_FirstPass = (SpliceMerger) this.spliceMerger.clone(this.getOutputFolder() + this.spliceMerger.getNewJsonFN("FirstPass"));
-//		mergeV_FirstPass.setWriteFN_Splice(FileUtils.makeFolderNameEndWithSlash(this.getOutputFolder()) + "SJ_Merged_1stPass.out.tab");
-//		mergeV_FirstPass.setInputFolder_Splice(sTARv_FirstPass.get_STAR_Folder());
-//		mergeV_FirstPass.setWriteFolder_SplicePerGene(sTARv_FirstPass.getOutputRoot());
-//		mergeV_FirstPass.writeConfig();
-
 		// set fileSearcher arguments for the second pass
 		fileSearcherSecondPass.setWriteName(this.getOutputFolder() + "fastQfilesSecondPass.txt");
 		fileSearcherSecondPass.setJsonFN(this.getOutputFolder() + fileSearcherSecondPass.getNewJsonFN());
@@ -194,7 +187,7 @@ public class STAR_Pipeline extends Script<STAR_Pipeline>
 		sTARv_SecondPass.set_STAR_Folder(sTARv_SecondPass.getOutputRoot() + "Results/");
 		String deduplicateAddString =  "deduplicated";
 		sTARv_SecondPass.jobType.setOutMode("BAM SortedByCoordinate", deduplicateAddString);
-		sTARv_SecondPass.jobType.setsTAR_Extra_Arguments("--limitBAMsortRAM 10000000000");
+		sTARv_SecondPass.jobType.setsTAR_Extra_Arguments("--limitBAMsortRAM 30000000000");
 		sTARv_SecondPass.jobType.setCountExpression(true);
 		sTARv_SecondPass.jobType.setSjdbFileChrStartEnd(null);
 		sTARv_SecondPass.writeConfig();
@@ -204,15 +197,10 @@ public class STAR_Pipeline extends Script<STAR_Pipeline>
 		laneMerger_StarOuptut_SecondPass.setStarResultsFolderName(sTARv_SecondPass.get_STAR_Folder());
 		
 		// second pass merge splice junction files arguments
-//		SpliceMerger mergeV_SecondPass = (SpliceMerger) this.spliceMerger.clone(this.getOutputFolder() + this.spliceMerger.getNewJsonFN("SecondPass"));
-//		mergeV_SecondPass.setWriteFN_Splice(sTARv_SecondPass.getOutputRoot() + "SJ_Merged_2ndPass.out.tab");
-//		mergeV_SecondPass.setInputFolder_Splice(sTARv_SecondPass.get_STAR_Folder());
-//		mergeV_SecondPass.setWriteFolder_SplicePerGene(sTARv_SecondPass.getOutputRoot());
-//		mergeV_SecondPass.setWriteFN_Splice_2ndPassInput("SJ_Merged_potential_3rdPass.input.tab");
-//		mergeV_SecondPass.writeConfig();
 		SpliceMerger mergeV_SecondPass = new SpliceMerger();
 		mergeV_SecondPass.setspliceFilesFolder(sTARv_SecondPass.get_STAR_Folder());
 		mergeV_SecondPass.setSpliceFileExtencion("SJ.out.tab.gz");
+		mergeV_SecondPass.setColumnHeaderStringToUse(2);
 		mergeV_SecondPass.setRequiredStrings(new String[]{deduplicateAddString});
 		mergeV_SecondPass.setWriteFn(sTARv_SecondPass.getOutputRoot() + "Expression_SJ_Merged_2ndPass.txt.gz");
 		
@@ -361,14 +349,14 @@ public class STAR_Pipeline extends Script<STAR_Pipeline>
 	{
 		if (folderName == null)
 		{
-			p("folderName is null: please set variable folderName\t");
+			log("folderName is null: please set variable folderName\t");
 			System.exit(2);
 		}
 		File folder = new File(folderName);
 		File parent = new File(folder.getParent());
 		if (!parent.exists())
 		{
-			p("Exiting, parent folder" + parent.getAbsolutePath() + " does not exist:\t");
+			log("Exiting, parent folder" + parent.getAbsolutePath() + " does not exist:\t");
 			System.exit(2);
 		}
 

@@ -14,8 +14,8 @@ public class RowZscoreCalculator extends RowJob
 	
 	private RowJobExecutor executorWithAvgStdevsToUse =null;
 	
-//	final String zScoresName = "zScores";
-//
+	final String zScoresName = "zScores";
+
 //	RowZscoreCalculator()
 //	{
 //		this.setValueNames(new String[]{zScoresName});
@@ -34,17 +34,20 @@ public class RowZscoreCalculator extends RowJob
 			if(executorWithAvgStdevsToUse == null)
 				executorWithAvgStdevsToUse = rowExecutor;
 			
+			//calculate averages
 			double avg = 0;
 			if(rowAverageCalculator!= null && executorWithAvgStdevsToUse.getJobVarIsCalulated(rowAverageCalculator.getAverageName(), threadNumber))
 				avg = executorWithAvgStdevsToUse.getJobValue(rowAverageCalculator.getAverageName(), threadNumber);
 			else
 				avg = getAvg(rowExecutor, threadNumber);
 			double stdev = 0;
+			//calculate standard deviations
 			if(rowStdevCalculator!=null && executorWithAvgStdevsToUse.getJobVarIsCalulated(rowStdevCalculator.getStdevName(), threadNumber))
 				stdev = executorWithAvgStdevsToUse.getJobValue(rowStdevCalculator.getStdevName(), threadNumber);
 			else
 				stdev= getStdev(rowExecutor, threadNumber);
 			
+			//z-scores
 			double[] zScores = convertToZscores(rowExecutor.getRowName(threadNumber), rowExecutor.getInputValues(threadNumber), avg, stdev);
 			super.writeResult(zScores, rowExecutor, lineNumber, threadNumber);
 		}catch(Exception e){e.printStackTrace();}

@@ -58,7 +58,7 @@ public class FilePerGeneMerger extends Script<FilePerGeneMerger>
 			}
 			if(writeFn==null)
 			{
-				p("writeFn variable not set; exiting");
+				log("writeFn variable not set; exiting");
 				System.exit(2);
 			}
 			
@@ -82,14 +82,14 @@ public class FilePerGeneMerger extends Script<FilePerGeneMerger>
 					}
 					else
 					{
-						p("Colnames do not have same order. No function was implemented to manage this yet; exiting");
+						log("Colnames do not have same order. No function was implemented to manage this yet; exiting");
 						System.exit(2);
 					}
 				}
 			}
 			mergedWriter.close();
 ;
-			p("Done merging files. File written to: " + writeFn);
+			log("Done merging files. File written to: " + writeFn);
 		}catch(Exception e){e.printStackTrace();}
 	}
 

@@ -87,10 +87,10 @@ public class SpliceMerger_InfiniteFileSizes extends Script<SpliceMerger_Infinite
 
 			//HashTable<SplicesiteName,number of reads overlapping>
 			Hashtable<String, SpliceSitesCount> spliceSitesCounts = mergeSpliceFiles(fileNamesCorrected);
-			p("Splicejunction reads counted");
+			log("Splicejunction reads counted");
 			writeSpliceSitesCounts(	spliceSitesCounts,
 									spliceSiteToGene);
-			p("Splicejunction reads written");
+			log("Splicejunction reads written");
 
 			if (writeFolder_SplicePerGene != null)
 			{
@@ -99,7 +99,7 @@ public class SpliceMerger_InfiniteFileSizes extends Script<SpliceMerger_Infinite
 													fileNamesCorrected,
 													geneExpressionFns);
 
-				p("Reads per gene written to " + writeFolder);
+				log("Reads per gene written to " + writeFolder);
 				// mergeSpliceFilesAndZscores(v, fileNamesCorrected, spliceSiteToGene);// writeFN=file with all the splice variants and how often
 				writeSpliceSiteToGene(	spliceSiteToGene,
 										getWriteFolder_SplicePerGene() + "SpliceSiteToGene.txt"); // the number of times they occur in all the samples together as well as in how many samples they occur
@@ -127,7 +127,7 @@ public class SpliceMerger_InfiniteFileSizes extends Script<SpliceMerger_Infinite
 		new File(folderSplicePerGeneExpression).mkdir();
 
 		ArrayList<String> keys = new ArrayList<>();
-		p("geneToSpliceSites.size = " + geneToSpliceSites.size());
+		log("geneToSpliceSites.size = " + geneToSpliceSites.size());
 
 		for (String gene : geneToSpliceSites.keySet())
 		{
@@ -160,7 +160,7 @@ public class SpliceMerger_InfiniteFileSizes extends Script<SpliceMerger_Infinite
 			for (String fn : fileNamesCorrected)
 			{
 				if (i % 100 == 0)
-					p("File =" + i + "/" + fileNamesCorrected.size());
+					log("File =" + i + "/" + fileNamesCorrected.size());
 				HashMap<String, String[]> spliceToData = getSpliceToData(fn);
 
 				// write this sample to the gene files
@@ -246,9 +246,9 @@ public class SpliceMerger_InfiniteFileSizes extends Script<SpliceMerger_Infinite
 			}
 		} catch (Exception e)
 		{
-			p("Crashed after creating " + geneWriters.size() + " gene writers");
-			p("Increased maximum number of files that may be opened simultaneously in the operating system settings");
-			p("Exiting");
+			log("Crashed after creating " + geneWriters.size() + " gene writers");
+			log("Increased maximum number of files that may be opened simultaneously in the operating system settings");
+			log("Exiting");
 			e.printStackTrace();
 			System.exit(2);
 		}
@@ -456,7 +456,7 @@ public class SpliceMerger_InfiniteFileSizes extends Script<SpliceMerger_Infinite
 		{
 			e.printStackTrace();
 		}
-		p("Merged splicejunction File written to:" + getWriteFN_Splice());
+		log("Merged splicejunction File written to:" + getWriteFN_Splice());
 	}
 
 	private Hashtable<String, SpliceSitesCount> mergeSpliceFiles(ArrayList<String> fileNamesCorrected)
@@ -525,7 +525,7 @@ public class SpliceMerger_InfiniteFileSizes extends Script<SpliceMerger_Infinite
 		// return output
 		Pair<ArrayList<String>, HashMap<String, String[]>> pair = new Pair<ArrayList<String>, HashMap<String, String[]>>(	fileNamesWithGeneNames,
 																															spliceSiteToGene);
-		p("SpliceSites detected:\t" + spliceSiteToGene.size());
+		log("SpliceSites detected:\t" + spliceSiteToGene.size());
 		
 		return pair;
 	}

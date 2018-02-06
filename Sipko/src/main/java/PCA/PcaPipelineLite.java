@@ -233,10 +233,10 @@ public class PcaPipelineLite extends Script<PcaPipelineLite>
 
 			//read in matrix (genes are on the rows, PCs are on the columns in the eigenFile)
 			ArrayList<Integer> pcList = parsePCs(PCs);
-			p("userList=" + pcList);
+			log("userList=" + pcList);
 			
 			int largestPC = getLargest(pcList);
-			p("largest PC corrected=" + largestPC);
+			log("largest PC corrected=" + largestPC);
 
 			MatrixStruct eigenVectors = new MatrixStruct(	eigenVectorFn.getAbsolutePath(),
 															largestPC + 1,
@@ -246,7 +246,7 @@ public class PcaPipelineLite extends Script<PcaPipelineLite>
 			String preppedMatrixFN = centeredFN;
 
 			preppedMatrixFN = FileUtils.removeExtention(preppedMatrixFN) + "_transposed.txt.gz";
-			p("Transposing matrix");
+			log("Transposing matrix");
 			MyMatrix transposeMatrix = new MyMatrix(centeredFN);
 			transposeMatrix.transpose();
 			transposeMatrix.write(preppedMatrixFN);
@@ -262,11 +262,11 @@ public class PcaPipelineLite extends Script<PcaPipelineLite>
 
 			int gene = 0;
 
-			p("Adjusting PCs:\t" + pcList);
+			log("Adjusting PCs:\t" + pcList);
 			while ((line = sampleReader.readLine()) != null)
 			{
 				if (gene % 1000 == 0)
-					p(gene + " genes finished");
+					log(gene + " genes finished");
 				String[] rowCells = line.split("\t");
 				String rowName = rowCells[0];
 				double[] rowValues = new double[rowCells.length - 1];
@@ -278,7 +278,7 @@ public class PcaPipelineLite extends Script<PcaPipelineLite>
 						rowValues[c] = Double.parseDouble(rowCells[c + 1]);
 					} catch (Exception e)
 					{
-						p("Unparsable value = " + rowValues[c]);
+						log("Unparsable value = " + rowValues[c]);
 						e.printStackTrace();
 					}
 				}
@@ -310,7 +310,7 @@ public class PcaPipelineLite extends Script<PcaPipelineLite>
 
 				if (gene == 0)//create new file
 				{
-					p("Writing corrected data to:\t" + writeFN);
+					log("Writing corrected data to:\t" + writeFN);
 					sampleStruct.write(writeFN);
 				}
 				else//append
@@ -324,7 +324,7 @@ public class PcaPipelineLite extends Script<PcaPipelineLite>
 			//				String cronbachFN = scoreFn.toString().replace(".gz", "").replace(".txt", "") + ".cronbachsAlpha.txt";
 			//				FileWriter fw = new FileWriter(cronbachFN);
 
-			p("Done, Results saved in: " + this.writeFolderCorrected);
+			log("Done, Results saved in: " + this.writeFolderCorrected);
 			break;
 		}
 		}
@@ -521,7 +521,7 @@ public class PcaPipelineLite extends Script<PcaPipelineLite>
 			this.writeFolderCorrected = this.getFolderName(this.writeFolder) + FileUtils.removeExtention(sample.getName()) + "/";
 		}
 		FileUtils.makeDir(this.writeFolderCorrected);
-		p("Output folder for correced files:" + this.writeFolderCorrected);
+		log("Output folder for correced files:" + this.writeFolderCorrected);
 	}
 
 	private void selectGenes(	MyMatrix expressionStruct,
@@ -533,10 +533,10 @@ public class PcaPipelineLite extends Script<PcaPipelineLite>
 
 	public void normalize() throws IOException, NotConvergedException, InterruptedException
 	{
-		p(" 1. Reading expression file:\n" + this.expFile);
+		log(" 1. Reading expression file:\n" + this.expFile);
 		MyMatrix expressionStruct = new MyMatrix(this.expFile);
 		System.out.println("1=" + expressionStruct.rows());
-		p("rows = " + expressionStruct.rows() + "cols = " + expressionStruct.cols());
+		log("rows = " + expressionStruct.rows() + "cols = " + expressionStruct.cols());
 		// transposes matrix if genes/transcripts are not on rows
 		expressionStruct.putGenesOnRows();
 
@@ -776,7 +776,7 @@ public class PcaPipelineLite extends Script<PcaPipelineLite>
 							MyMatrix eigenVectors,
 							ArrayList<Integer> PCsToAdjust)
 	{
-		p("PCsToAdjust = " + PCsToAdjust);
+		log("PCsToAdjust = " + PCsToAdjust);
 		for (int pc : PCsToAdjust)// correct this sample for the selected PCs
 		{
 			if (pc > eigenVectors.rows())

@@ -16,7 +16,7 @@ public class Run
 	{
 		if (args.length != 1 && args.length != 3)
 		{
-			System.out.println("This splice site pipeline requires a json input file. Options:\n" + "1. Supply the pathname to the json input file, for example:\n" + "</root/directory/config.json>\n" + "2. Request for an empty configuration file for a certian script:\n " + "getjson package.classname </root/directory/config.json> \n");
+			System.out.println("This splice site pipeline requires a \"file.json\" config file. Options:\n" + "1. Supply the pathname to the json input file, for example:\n" + "</root/directory/config.json>\n" + "2. Request for an empty configuration file for a certian script:\n " + "getjson package.classname </root/directory/config.json> \n");
 			System.exit(1);
 		}
 

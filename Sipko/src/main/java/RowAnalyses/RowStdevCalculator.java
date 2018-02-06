@@ -13,6 +13,7 @@ public class RowStdevCalculator extends RowJob
 	public RowStdevCalculator()
 	{
 		this.setValueNames(new String[]{stdevName});
+		this.setHasSingleColHeader(true);
 	}
 	
 	@Override

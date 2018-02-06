@@ -18,6 +18,7 @@ public class RowAboveCutoffCounter extends RowJob
 	public RowAboveCutoffCounter()
 	{
 		this.setValueNames(new String[]{aboveCutoffCountName});
+		this.setHasSingleColHeader(true);
 	}
 	
 	@Override

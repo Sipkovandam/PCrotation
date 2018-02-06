@@ -27,7 +27,7 @@ public class RatioCalculator extends Script<RatioCalculator>
 			File folder = new File(expressionFolder);
 			File[] expressionFiles = folder.listFiles();
 			
-			p("Files listed, calculating ratios and merging files");
+			log("Files listed, calculating ratios and merging files");
 			String header = "\t";
 			
 			int i = 0;

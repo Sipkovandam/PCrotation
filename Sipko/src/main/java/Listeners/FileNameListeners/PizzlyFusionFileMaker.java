@@ -36,11 +36,11 @@ public class PizzlyFusionFileMaker extends FileNameListener
 		// p("execute output: \n"+exec.getOutput());
 		if(exec.getError().length()>1)
 		{
-			p("Warning: Pizzly execute error: \t" + exec.getError());
-			p("Warning: Command leading to error: \t" + command);
+			log("Warning: Pizzly execute error: \t" + exec.getError());
+			log("Warning: Command leading to error: \t" + command);
 		}
 		else
-			p("Pizzly completed running with no errors on file:" + fileName);
+			log("Pizzly completed running with no errors on file:" + fileName);
 	}
 
 	public String getPizzlyExecute()

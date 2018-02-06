@@ -34,9 +34,9 @@ public class InterpolisToStarSpliceFile extends Script<InterpolisToStarSpliceFil
 			while((line=reader.readLine())!=null)
 			{
 				if(n<3)
-					p("First 3 input lines :" + line);
+					log("First 3 input lines :" + line);
 				if(n%100000 == 0)
-					p(n + " lines done");
+					log(n + " lines done");
 				String[] eles = line.split("\t");
 				String[] counts= eles[7].split(",");
 				int spanningReads = 0;

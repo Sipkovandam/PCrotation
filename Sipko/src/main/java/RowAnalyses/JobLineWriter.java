@@ -47,7 +47,7 @@ public class JobLineWriter
 				colheader = FileUtils.StringArrayToWriteString(dataColHeaders);
 			}
 			
-			String fileName = writeFolder+writeFn;
+			String fileName = FileUtils.makeFolderNameEndWithSlash(writeFolder)+writeFn;
 			fileWriter = FileUtils.createWriter(fileName);
 			String header = "Rowname"+colheader+"\n";
 			fileWriter.write(header);
@@ -78,12 +78,13 @@ public class JobLineWriter
 	public void writeLinesInBuffer() throws IOException, InterruptedException
 	{
 		String line = linesToWrite[currentRow];
-	
 		while(line != null)
 		{
 			linesToWrite[currentRow] = null;
-			
-			writer.write(line);
+			if(!line.equals("dontWriteMe"))//value in case a line is not to be written
+			{
+				writer.write(line);
+			}
 			currentRow++;
 			if(currentRow>=writeBufferSize)
 				currentRow = 0;

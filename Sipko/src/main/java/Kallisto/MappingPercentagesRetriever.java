@@ -50,7 +50,7 @@ public class MappingPercentagesRetriever extends Script<MappingPercentagesRetrie
 				
 				if(errorLine==null)
 				{
-					p("Warning, this file does not contain mapping percentages:\n" + line);
+					log("Warning, this file does not contain mapping percentages:\n" + line);
 					continue;
 				}
 

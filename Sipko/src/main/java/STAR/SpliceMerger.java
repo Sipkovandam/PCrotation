@@ -26,6 +26,8 @@ public class SpliceMerger extends Script<SpliceMerger>
 	private String writeFn = null;
 	private String writeFN_Splice_2ndPassInputComment = "/root/directory/mergedSpliceSites.sj.out; optional // filenames of the input file for the splice junctions to be used in the second pass. These are all junctions in the fused in the first pass plus those where reads overlapping <= <readCutoff> reads";
 	private String writeFN_Splice_2ndPassInput = null;// file where all the splice variants merged into 1 file with info on numbe of spliced reads overlapping each in all samples together
+	private String columnHeaderStringToUseInputComment = "1; MANDATORY // 0 to use the file name itself of the files that are searched, 1 for to outter directory name, 2 for the directory above that one, etc";
+	private int columnHeaderStringToUse = 1;// file where all the splice variants merged into 1 file with info on numbe of spliced reads overlapping each in all samples together
 	
 	private String writeSpliceSummaryFnComment = "/root/folder/SJ_Merged_2ndPass_annotated.out.tab; OPTIONAL// filename where the sum of read counts for each splice junction is written. This is written in a format that can be used by STAR for the 2nd pass";
 	private String writeSpliceSummaryFn = null;
@@ -80,7 +82,7 @@ public class SpliceMerger extends Script<SpliceMerger>
 			while((spliceFn=spliceFnsReader.readLine())!= null)
 			{
 				//get the splice file headern (folderName where the file is located)
-				spliceHeaders[fileIndex]=new File(new File(spliceFn).getParent()).getName();
+				spliceHeaders[fileIndex]=getHeaderName(spliceFn);
 				//get the splice counts per splice junction (annotated junctions only)
 				List<Object> returnObjects = addSpliceCounts(spliceFn, spliceSiteToCounts, nSpliceFiles, fileIndex, isAnnotated);
 				spliceSiteToCounts = (HashMap<String, int[]>) returnObjects.get(0);
@@ -93,9 +95,17 @@ public class SpliceMerger extends Script<SpliceMerger>
 			writeSpliceSiteCountsSummary(nSpliceFiles, spliceHeaders, spliceSiteToCounts, writeSpliceSummaryFn);
 			
 		}catch(Exception e){e.printStackTrace();}
-		p("Done! File written to:" + writeFn);
+		log("Done! File written to:" + writeFn);
 	}
 	
+	private String getHeaderName(String spliceFn)
+	{
+		File toUse = new File(spliceFn);
+		for(int i =0; i < columnHeaderStringToUse; i++)//gets upper directory each time
+			toUse=new File(toUse.getParent());
+		return toUse.getName();
+	}
+
 	private void writeSpliceSiteCountsSummaryAnnotatedCutoff(int nSpliceFiles,
 																String[] spliceHeaders,
 																HashMap<String, int[]> spliceSiteToCounts, 
@@ -160,7 +170,7 @@ public class SpliceMerger extends Script<SpliceMerger>
 
 	private void writeSpliceSiteCountsSummary(int nSpliceFiles, String[] spliceHeaders, HashMap<String, int[]> spliceSiteToCounts, String writeSpliceSummaryFn2) throws FileNotFoundException, IOException
 	{
-		p(""+writeSpliceSummaryFn);
+		log(""+writeSpliceSummaryFn);
 		BufferedWriter spliceWriter = FileUtils.createWriter(writeSpliceSummaryFn);
 		//write headers
 		if(exonsInsteadOfJunctions)
@@ -205,7 +215,13 @@ public class SpliceMerger extends Script<SpliceMerger>
 					spliceWriter.write("\t"+spliceFeatures[6]+"\t"+((double)sum)/Double.parseDouble(spliceFeatures[6]));
 				spliceWriter.write("\n");
 						
-			} catch (Exception e)
+			} catch (NullPointerException e)
+			{
+				log("Error message:");
+				e.getMessage();
+				e.printStackTrace();
+			}
+			catch (Exception e)
 			{
 				e.printStackTrace();
 			}
@@ -292,8 +308,10 @@ public class SpliceMerger extends Script<SpliceMerger>
 		
 		
 		List<Object> returnObjects = null;
+		log("SpliceFile = " + spliceFn);
 		while ((spliceLine = spliceReader.readLine()) != null)
 		{
+			log("line = " + spliceLine);
 			returnObjects = addSpliceCount(spliceSiteToCounts,
 												spliceLine,
 												fileIndex,
@@ -301,7 +319,8 @@ public class SpliceMerger extends Script<SpliceMerger>
 												countIndex,
 												nSpliceFiles, isAnnotated);
 		}
-
+		if(returnObjects == null)
+			throw new NullPointerException("File is missing or empty:\t" + spliceFn);
 		return returnObjects;
 	}
 
@@ -452,5 +471,15 @@ public class SpliceMerger extends Script<SpliceMerger>
 	public void setRequiredStrings(String[] requiredStrings)
 	{
 		this.requiredStrings = requiredStrings;
+	}
+
+	public int getColumnHeaderStringToUse()
+	{
+		return columnHeaderStringToUse;
+	}
+
+	public void setColumnHeaderStringToUse(int columnHeaderStringToUse)
+	{
+		this.columnHeaderStringToUse = columnHeaderStringToUse;
 	}
 }

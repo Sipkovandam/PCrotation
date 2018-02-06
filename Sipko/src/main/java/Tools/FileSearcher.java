@@ -141,7 +141,7 @@ public class FileSearcher extends Script<FileSearcher> {
 			
 			writerFailed.close();
 			writer.close();
-			p("File writen to:" + writeName);
+			log("File writen to:" + writeName);
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
