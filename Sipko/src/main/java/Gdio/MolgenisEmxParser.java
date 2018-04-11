@@ -19,6 +19,7 @@ public class MolgenisEmxParser extends Script<MolgenisEmxParser>
 {
 	//Script has special treatment for ...EntryDate :)\
 	//still need to remove duplicate values from persons tabel after running this script
+	//assumes forwardread files end with: _1.fq.gz and backward read files end with _2.fq.gz
 	String sipkoFormattedSheet = "";
 	String emptyEmxFile = "";
 	String writeFn = "";
@@ -231,8 +232,12 @@ public class MolgenisEmxParser extends Script<MolgenisEmxParser>
 
 				//add files to filesheet
 				String[] forwardFiles = featureName_To_Feature.get("fastqsForward").split(",");
+				
+				boolean newSample = true; 
 				for (String forwardFile : forwardFiles)
 				{
+					featureName_To_Feature.put(	"FileColumnSampleID",
+												"");
 					featureName_To_Feature.put(	"FileName",
 												forwardFile);
 					featureName_To_Feature.put(	"FileID",
@@ -242,7 +247,7 @@ public class MolgenisEmxParser extends Script<MolgenisEmxParser>
 					String fileTypeForwardFile = getFileType(forwardFile);
 					featureName_To_Feature.put(	"FileType",
 					                           	fileTypeForwardFile);
-					
+										
 					addToSheet(	"gdio_File",
 								featureName_To_Feature,
 								excelFileWriter);
@@ -254,17 +259,22 @@ public class MolgenisEmxParser extends Script<MolgenisEmxParser>
 										featureName_To_Feature.get("connectedFiles1"),
 										featureName_To_Feature.get("connectedFiles1_SampleName"),
 										featureName_To_Feature,
-										excelFileWriter);
+										excelFileWriter, newSample);
 					//backwardReads
 					if (forwardFile.endsWith("_1.fq.gz"))
 					{
 						String backwardName=forwardFile.replace("_1.fq.gz",
 								"_2.fq.gz");
+						featureName_To_Feature.put(	"FileColumnSampleID",
+								"");
 						featureName_To_Feature.put(	"FileName",backwardName
 													);
 						String fileTypeBackward = getFileType(backwardName);
 						featureName_To_Feature.put(	"FileType",
 						                           	fileTypeBackward);
+						
+						featureName_To_Feature.put(	"SampleFileID",
+													getNewIDnumber("SampleFileID"));
 						
 						featureName_To_Feature.put(	"ParentFileID",
 													featureName_To_Feature.get("FileID"));
@@ -280,13 +290,17 @@ public class MolgenisEmxParser extends Script<MolgenisEmxParser>
 						addToSheet(	"gdio_FileRelation",
 									featureName_To_Feature,
 									excelFileWriter);
+						addToSheet(	"gdio_SampleFile",
+									featureName_To_Feature,
+									excelFileWriter);
 
 						addConnectedFiles(	featureName_To_Feature.get("FileID"),
 											featureName_To_Feature.get("connectedFiles1"),
 											featureName_To_Feature.get("connectedFiles1_SampleName"),
 											featureName_To_Feature,
-											excelFileWriter);
+											excelFileWriter, false);
 					}
+					newSample=false;
 				}
 				addToSheet(	"gdio_AnonymizerHash",
 							featureName_To_Feature,
@@ -323,41 +337,52 @@ public class MolgenisEmxParser extends Script<MolgenisEmxParser>
 									String childFn,
 									String sampleNameInFile,
 									HashMap<String, String> featureName_To_Feature,
-									ExcelFileParser excelFileWriter)
+									ExcelFileParser excelFileWriter, boolean newSample)
 	{
 		if(childFn==null || childFn.equals(""))
 			return;
 		
+		HashMap<String, String> featureName_To_Feature2 = (HashMap<String, String>) featureName_To_Feature.clone();
+		
 		String fileType = getFileType(childFn);
-		featureName_To_Feature.put(	"FileType",
+		featureName_To_Feature2.put(	"FileType",
 		                           	fileType);
 		
-		featureName_To_Feature.put(	"FileRelationID",
+		featureName_To_Feature2.put(	"FileRelationID",
 									getNewIDnumber("FileRelationID"));
-		featureName_To_Feature.put(	"ParentFileID",
+		featureName_To_Feature2.put(	"ParentFileID",
 		                           	parentFileID);
 		
 		
-		featureName_To_Feature.put(	"ChildFileID",
-		                           	featureName_To_Feature.get("FileID"));
-		featureName_To_Feature.put(	"FileColumnSampleName",
+		featureName_To_Feature2.put(	"FileColumnSampleID",
 									sampleNameInFile);
-		featureName_To_Feature.put(	"FileName",
+		featureName_To_Feature2.put(	"FileName",
 		                           	childFn);
 		
-		//important this one is done last
+		//important this one is done last // this also adds new files to the file table if needed
 		String connectedFileID=getConnectedFileID(childFn,
-			                      					featureName_To_Feature,
+		                                          featureName_To_Feature2,
 			                    					excelFileWriter);
-		featureName_To_Feature.put(	"FileID",
+		
+		featureName_To_Feature2.put(	"FileID",
 			                           	connectedFileID);	
 		
+		featureName_To_Feature2.put(	"ChildFileID",
+		                           	connectedFileID);
+		
+		if(newSample)
+		{
+			featureName_To_Feature2.put(	"SampleFileID",
+										getNewIDnumber("SampleFileID"));
+			
+			addToSheet(	"gdio_SampleFile",
+			           	featureName_To_Feature2,
+						excelFileWriter);
+		}
+		
 		addToSheet(	"gdio_FileRelation",
-					featureName_To_Feature,
+		           	featureName_To_Feature2,
 					excelFileWriter);
-
-		featureName_To_Feature.put(	"FileColumnSampleName",
-									null);
 	}
 
 	private String getConnectedFileID(String childFn, HashMap<String, String> featureName_To_Feature, ExcelFileParser excelFileWriter)
@@ -368,9 +393,12 @@ public class MolgenisEmxParser extends Script<MolgenisEmxParser>
 			connectedFileID=getNewIDnumber("FileID");
 			featureName_To_Feature.put(	"FileID",
 			                           	connectedFileID);
+			
 			addToSheet(	"gdio_File",
 						featureName_To_Feature,
 						excelFileWriter);
+			
+
 			fileName_To_FileID.put(childFn, connectedFileID);
 		}
 		return connectedFileID;

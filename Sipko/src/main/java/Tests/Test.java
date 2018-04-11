@@ -30,15 +30,30 @@ public class Test extends Script<Test> {
 	
 	public void run()
 	{
-		
-		String equal = "test";
-		ClusterVariables slurmVariables = new SharkVariables();
-		System.out.println("slurmVariables=" + slurmVariables.getMaxMemory());
 
-		String test = "/groups/umcg-gdio/tmp04/umcg-svandam/Data/RNAseq/Counts/GRCh37/BloodStudy_BiosQcAnnique/Kallisto/Results/161221_NB501043_0096_AH775HBGX2_L1_ATGAGC"; 
+		HashMap<String,String> test = new HashMap<String,String>();
 		
-		if(equal.equals("test"))
-			System.out.println("test result:" + test.matches("_0694_|_0713_|_0096_"));
+		test.put("one", "1");
+		test.put("two", "2");
+		test.put("three", "3");
+		
+		
+		HashMap<String,String> test2 = (HashMap<String, String>) test.clone();
+		
+		test2.put("one", "100");
+		test2.put("fff", "333");
+		log(test.get("one"));
+		log(test2.get("one"));
+		log(test.size());
+		log(test2.size());
+//		String equal = "test";
+//		ClusterVariables slurmVariables = new SharkVariables();
+//		System.out.println("slurmVariables=" + slurmVariables.getMaxMemory());
+//
+//		String test = "/groups/umcg-gdio/tmp04/umcg-svandam/Data/RNAseq/Counts/GRCh37/BloodStudy_BiosQcAnnique/Kallisto/Results/161221_NB501043_0096_AH775HBGX2_L1_ATGAGC"; 
+//		
+//		if(equal.equals("test"))
+//			System.out.println("test result:" + test.matches("_0694_|_0713_|_0096_"));
 		
 /*		final SamReader reader = SamReaderFactory.makeDefault().open(new File("bla"));
 		for (final SAMRecord samRecord : reader) {

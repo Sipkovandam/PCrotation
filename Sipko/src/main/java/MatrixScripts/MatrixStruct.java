@@ -13,6 +13,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Enumeration;
+import java.util.HashMap;
 import java.util.Hashtable;
 
 import no.uib.cipr.matrix.DenseMatrix;
@@ -438,7 +439,7 @@ public class MatrixStruct
 	public void keepRows1Matrix(MatrixStruct sample)
 	{
 		//keeps only the IDs in Sample
-		Hashtable<String, Integer> toKeep = new Hashtable<String, Integer>();
+		HashMap<String, Integer> toKeep = new HashMap<String, Integer>();
 		int newPos = 0;
 		for (int r = 0; r < this.rows(); r++)
 		{
@@ -458,7 +459,7 @@ public class MatrixStruct
 	{
 		//the order that is preserved is the one from the matrix that calls the function.
 		//Does not work if either of the matrixes has multiple rows with the same IDs
-		Hashtable<String, Integer> toKeep = new Hashtable<String, Integer>();
+		HashMap<String, Integer> toKeep = new HashMap<String, Integer>();
 		int newPos = 0;
 		for (int r = 0; r < this.rows(); r++)
 		{
@@ -482,7 +483,7 @@ public class MatrixStruct
 		return this.rowHash;
 	}
 
-	public void keepIDs(Hashtable<String, Integer> toKeep)
+	public void keepIDs(HashMap<String, Integer> toKeep)
 	{
 		MatrixStruct temp = new MatrixStruct(	toKeep.size(),
 												this.cols());
@@ -1355,7 +1356,7 @@ public class MatrixStruct
 
 	public void removeRows(MatrixStruct removeGenes)
 	{
-		Hashtable<String, Integer> toKeep = new Hashtable<String, Integer>();
+		HashMap<String, Integer> toKeep = new HashMap<String, Integer>();
 		int newPos = 0;
 		for (int r = 0; r < this.rows(); r++)
 		{

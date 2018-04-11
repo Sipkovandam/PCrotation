@@ -19,6 +19,7 @@ import MatrixScripts.LogTransform;
 import MatrixScripts.Transpose;
 import Kallisto.KeepThresholdSamples;
 import Kallisto.RemoveBadSamples;
+import Kallisto.SumTranscriptsToGenes;
 import PCA.IdentifyDiseaseGenes;
 import PCA.IdentifySimilarSamples;
 import PCA.DeSeqNorm;
@@ -28,7 +29,6 @@ import PrepData.GetSamplesWithEmptyCells;
 import STAR.SpliceMerger_InfiniteFileSizes;
 import STAR.STAR_Pipeline;
 import Slurm.ClusterHandler;
-import Slurm.SumTranscriptsToGenes;
 import no.uib.cipr.matrix.NotConvergedException;
 
 public class Toolkit

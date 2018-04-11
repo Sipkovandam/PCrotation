@@ -20,27 +20,22 @@ public class GetRows extends Script<GetRows>
 	String writeName = null;
 	String remove = null;
 	
+	@Override
 	public void run()
 	{
 		try
 		{
-			MyMatrix file2 = null;
+			init();
 			
-			if(!this.rowsToGetFn.contains(",") && this.rowsToGetFn.contains(".txt"))
-				file2 = new MyMatrix(this.rowsToGetFn);
-			else{
-				String[] rowNames = this.rowsToGetFn.split(",");
-				file2 = new MyMatrix(rowNames.length, 1);
-				file2.rowNames = rowNames;
-				file2.colNames[0] = "-";
-			}
+			MyMatrix rowsToInclude = getIncludeRowMatrix();
 			
 			BufferedReader reader = FileUtils.createReader(this.fileName);
 			BufferedWriter writer = FileUtils.createWriter(this.writeName);
 			String line = reader.readLine();
 			writer.write(line+"\n");//write the first line by default (headers)
-			Hashtable<String, Integer> toGet = file2.namesToHash(file2.rowNames);
+			Hashtable<String, Integer> toGet = rowsToInclude.namesToHash(rowsToInclude.rowNames);
 			String[] results = new String[toGet.size()];
+			
 			while((line = reader.readLine()) != null)
 			{	
 				if(remove != null)
@@ -52,6 +47,7 @@ public class GetRows extends Script<GetRows>
 					//writer.write(line+"\n");
 				}
 			}
+			
 			for(int r = 0; r < results.length; r++)
 			{
 				if(results[r] == null)
@@ -64,6 +60,27 @@ public class GetRows extends Script<GetRows>
 			reader.close();
 			System.out.println("File written to:" + this.writeName);
 		}catch(Exception e){e.printStackTrace();}
+	}
+
+	private void init()
+	{
+		if(this.writeName==null)
+			this.writeName=FileUtils.addBeforeExtention(this.fileName,"_selectedRows");
+		
+	}
+
+	private MyMatrix getIncludeRowMatrix()
+	{
+		MyMatrix file2=null;
+		if(!this.rowsToGetFn.contains(",") && this.rowsToGetFn.contains(".txt"))
+			file2 = new MyMatrix(this.rowsToGetFn);
+		else{
+			String[] rowNames = this.rowsToGetFn.split(",");
+			file2 = new MyMatrix(rowNames.length, 1);
+			file2.rowNames = rowNames;
+			file2.colNames[0] = "-";
+		}
+		return file2;
 	}
 
 	public String getFileName()

@@ -15,7 +15,6 @@ import Tools.Script;
 public class GetCols extends Script<GetCols>{
 	//get some columns from a file works with really large files
 	String fileName = null;
-	//String fileName2 = "E:/Groningen/Data/PublicSamples/Test9/PublicSamplesWithoutDownSyndrome.txt";
 	String fileName2 = null;//column names that should be kept (should be a matrix with the names you want to keep on the rows). Alternatively a comma separated list of names can be supplied.
 	String writeName = null;
 	String remove = null;
@@ -25,19 +24,10 @@ public class GetCols extends Script<GetCols>{
 	{
 		try
 		{
-			if(writeName==null)
-				writeName=FileUtils.removeExtention(fileName)+"_colsFrom_"+ FileUtils.removeExtention(new File(fileName2).getName()) +".txt.gz";
+			init();
 			
 			//get names to keep
-			MyMatrix namesToKeepOnRows = null;
-			if(!fileName2.contains(",") && fileName2.contains(".txt"))
-				namesToKeepOnRows = new MyMatrix(fileName2);
-			else{
-				String[] rowNames = fileName2.split(",");
-				namesToKeepOnRows = new MyMatrix(rowNames.length, 1);
-				namesToKeepOnRows.rowNames = rowNames;
-				namesToKeepOnRows.colNames[0] = "-";
-			}
+			MyMatrix namesToKeepOnRows = getNamesToKeep(this.fileName2);
 			
 			//Read the first line and get the new indexes of the columns that should be kept
 			BufferedReader inputReader = FileUtils.createReader(fileName);
@@ -76,6 +66,26 @@ public class GetCols extends Script<GetCols>{
 		}
 	}
 
+	private MyMatrix getNamesToKeep(String fileName22)
+	{
+		MyMatrix namesToKeepOnRows = null;
+		if(!fileName2.contains(",") && fileName2.contains(".txt"))
+			namesToKeepOnRows = new MyMatrix(fileName2);
+		else{
+			String[] rowNames = fileName2.split(",");
+			namesToKeepOnRows = new MyMatrix(rowNames.length, 1);
+			namesToKeepOnRows.rowNames = rowNames;
+			namesToKeepOnRows.colNames[0] = "-";
+		}
+		return namesToKeepOnRows;
+	}
+
+	private void init()
+	{
+		if(writeName==null)
+			writeName=FileUtils.removeExtention(fileName)+"_colsFrom_"+ FileUtils.removeExtention(new File(fileName2).getName()) +".txt.gz";
+	}
+
 	private ArrayList<Integer> writeColumnHeaders(String[] colNames, BufferedWriter writer, MyMatrix namesToKeepOnRows, int extraColumns2) throws IOException
 	{
 		ArrayList<Integer> keepColNumbers = new ArrayList<Integer>();
@@ -95,5 +105,55 @@ public class GetCols extends Script<GetCols>{
 		}
 		writer.write("\n");	
 		return keepColNumbers;
+	}
+
+	public String getFileName()
+	{
+		return fileName;
+	}
+
+	public void setFileName(String fileName)
+	{
+		this.fileName = fileName;
+	}
+
+	public String getFileName2()
+	{
+		return fileName2;
+	}
+
+	public void setFileName2(String fileName2)
+	{
+		this.fileName2 = fileName2;
+	}
+
+	public String getWriteName()
+	{
+		return writeName;
+	}
+
+	public void setWriteName(String writeName)
+	{
+		this.writeName = writeName;
+	}
+
+	public String getRemove()
+	{
+		return remove;
+	}
+
+	public void setRemove(String remove)
+	{
+		this.remove = remove;
+	}
+
+	public int getExtraColumns()
+	{
+		return extraColumns;
+	}
+
+	public void setExtraColumns(int extraColumns)
+	{
+		this.extraColumns = extraColumns;
 	}
 }

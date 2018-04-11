@@ -24,9 +24,10 @@ public class QueryConverter extends Script<QueryConverter>
 			BufferedReader queryReader = FileUtils.createReader(inputQueryFn);
 			String queryLine = null;
 			StringBuilder newQuery = new StringBuilder();
+			newQuery.append("\\COPY (");
 			while((queryLine=queryReader.readLine())!=null)
 			{
-				queryLine=queryLine.replace(",", " ,").replace(")", " )").replace("(", "( ");
+				queryLine=queryLine.replace(",", " ,").replace(")", " )").replace("(", "( ").replace("[", "").replace("]", "");
 				String[] words=queryLine.split(" ");
 				
 				for(String word: words)
@@ -74,7 +75,7 @@ public class QueryConverter extends Script<QueryConverter>
 					newQuery.append(" ");
 				}
 			}
-			String result = newQuery.toString().replace(";\"", "\";");
+			String result = newQuery.toString().replace(";\"", "\") TO 'flatTable.txt'  WITH CSV HEADER DELIMITER E'\t';");
 			BufferedWriter resultWriter = FileUtils.createWriter(queryWriteFn);
 			resultWriter.write(result+"\n");
 			resultWriter.close();

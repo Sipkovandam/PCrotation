@@ -19,6 +19,7 @@ import java.io.Reader;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Hashtable;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
@@ -229,11 +230,20 @@ public class FileUtils
 																int keyCol,
 																int valueCol)
 	{
+		return readStringStringHash(	ensgToGeneSymbolFN,
+										keyCol,
+										valueCol, null);
+	}
+	
+	public static HashMap<String, String> readStringStringHash(	String ensgToGeneSymbolFN,
+																int keyCol,
+																int valueCol, String mode)
+	{
 		return readStringStringHash(ensgToGeneSymbolFN,
 									false,
 									0,
 									keyCol,
-									valueCol);
+									valueCol, mode);
 	}
 
 	public static HashMap<String, String> readStringStringHash(	String ensgToGeneSymbolFN,
@@ -244,14 +254,14 @@ public class FileUtils
 									wholeLineValue,
 									skipHeaderRows,
 									0,
-									1);
+									1, null);
 	}
 
 	public static HashMap<String, String> readStringStringHash(	String ensgToGeneSymbolFN,
 																boolean wholeLineValue,
 																int skipHeaderRows,
 																int keyCol,
-																int valueCol)
+																int valueCol, String mode)
 	{
 		if(!new File(ensgToGeneSymbolFN).exists())
 		{
@@ -266,6 +276,11 @@ public class FileUtils
 			BufferedReader reader = createReader(ensgToGeneSymbolFN);
 			reader.lines().skip(skipHeaderRows).forEach(line ->
 			{
+				if(mode != null && mode.equals("noQuotes"))
+				{
+					line=line.replace("\"", "");
+				}
+				
 				String[] cells = line.split("\t",
 											2);
 				if (cells.length > 1 && wholeLineValue)
@@ -274,9 +289,9 @@ public class FileUtils
 				else if (!wholeLineValue)
 				{
 					cells = line.split("\t");
-					if(cells.length==1)
+					if(cells.length <= valueCol)
 						conversionHash.put(	cells[keyCol],
-						                   	"");
+						                   	null);
 					else
 						conversionHash.put(	cells[keyCol],
 					                   	cells[valueCol]);
@@ -764,6 +779,18 @@ public class FileUtils
 		line=stringbuilder.toString();
 		return line;
 	}
+	public static String doubleArrayToWriteString(Double[] values)
+	{
+		String line = "";
+		StringBuilder stringbuilder = new StringBuilder();
+		for(double value : values)
+		{
+			stringbuilder.append("\t").append(value);
+		}
+		line=stringbuilder.toString();
+		return line;
+	}
+	
 	public static String StringArrayToWriteString(String[] dataColHeaders)
 	{
 		String line = "";
@@ -836,6 +863,7 @@ public class FileUtils
 	public static BufferedReader getWebsiteReader(String webUrl) throws IOException
 	{
 		URL geneNetwork = new URL(webUrl);
+		System.setProperty("jsse.enableSNIExtension", "false");
 		System.out.println(webUrl);
         URLConnection yc =geneNetwork.openConnection();
         System.out.println("yc=" + yc);
@@ -880,5 +908,87 @@ public class FileUtils
 		}
 		
 		return lineBuilder.toString();
+	}
+	public static String removeWhiteSpace(String string)
+	{
+		String newString = string.replaceAll("\\s","");
+		return newString;
+	}
+	
+	public static double[] sumDoubleArrays(	double[] values,
+											double[] values2)
+	{
+		if(values.length!= values2.length)
+		{
+			System.out.println("Error, arrays are not of equal length");
+			System.exit(1);
+		}
+		
+		double[] sum = new double[values.length];
+		
+		for(int v =0; v<values.length;v++)
+		{
+			sum[v]=values[v]+values2[v];
+		}
+		
+		return sum;
+	}
+	public static HashSet<String> readHashSet(	String gavinPathogenicFilteredFn,
+												int column) throws FileNotFoundException, IOException
+	{
+		HashSet<String> columnNames = new HashSet<String>();
+		
+		BufferedReader fileReader = createReader(gavinPathogenicFilteredFn);
+		String line = null;
+		while((line=fileReader.readLine())!=null)
+		{
+			String[] eles=line.split("\t");
+			if(line.length()<column)
+			{
+				System.out.println("Line has less elements than the requested column. Error in FileUtils.java; exiting");
+				System.exit(1);
+			}
+			columnNames.add(eles[column]);
+		}
+		return columnNames;
+	}
+	public static boolean hasValueForEntry(	HashMap<String, String> hash,
+									String key)
+	{
+		if(!hash.containsKey(key)|| hash.get(key)==null || hash.get(key).equals(""))
+			return false;
+		return true;
+	}
+	public static int getRankInFile(String fileName, String searchString)
+	{
+		try
+		{
+			int n = 0;
+			BufferedReader reader = FileUtils.createReader(fileName);
+			String line = null;
+			while ((line = reader.readLine()) != null)
+			{
+				if (line.contains(searchString))
+					return n;
+				n++;
+			}
+			reader.close();
+		} catch (FileNotFoundException e)
+		{
+			e.printStackTrace();
+		} catch (IOException e)
+		{
+			e.printStackTrace();
+		}
+		return -1;
+	}
+	public static String[] makeDeepCopy(String[] elements)
+	{
+		String[] copy = new String[elements.length];
+		for(int e = 0; e < elements.length; e++)
+		{
+			copy[e]=elements[e];
+		}
+		return copy;
 	}
 }

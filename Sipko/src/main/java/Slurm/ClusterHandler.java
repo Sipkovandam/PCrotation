@@ -243,32 +243,32 @@ public class ClusterHandler <M> extends Script<ClusterHandler<M>> implements Clo
 		
 		writeClusterCommand(writer,
 							true,
-							clusterCommands.getFileHeader() + "\n");
+							clusterCommands.getFileHeader());
 		writeClusterCommand(writer,
 							true,
-							clusterCommands.getJobName() + "j" + jN + fileNumber + ".sh" + "\n");
+							clusterCommands.getJobName() + "j" + jN + fileNumber + ".sh");
 		writeClusterCommand(writer,
 							true,
-							clusterCommands.getLogsFolder() + logsFolder + fileNumber + ".out\n");
+							clusterCommands.getLogsFolder() + logsFolder + fileNumber + ".out");
 		writeClusterCommand(writer,
 							true,
-							clusterCommands.getErrorsFolder() + errorsFolder + fileNumber + ".err\n");
+							clusterCommands.getErrorsFolder() + errorsFolder + fileNumber + ".err");
 		writeClusterCommand(writer,
 							true,
-							clusterCommands.getWalltime() + walltime + "\n");
+							clusterCommands.getWalltime() + walltime);
 		writeClusterCommand(writer,
 							true,
-							clusterCommands.getThreads() + threads + "\n");
+							clusterCommands.getThreads() + threads);
 		writeClusterCommand(writer,
 							true,
-							clusterCommands.getMaxMemory() + maxMemory + "\n");
+							clusterCommands.getMaxMemory() + maxMemory);
 
 		writeClusterCommand(writer,
 							true,
 							clusterCommands.getExtra());
 		writeClusterCommand(writer,
 							true,
-							clusterCommands.getLoadModule() + jobName + clusterCommands.getLoadModule2() + "\n");
+							clusterCommands.getLoadModule() + jobName + clusterCommands.getLoadModule2());
 
 		return clusterCommands;
 	}

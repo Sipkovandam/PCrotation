@@ -1,6 +1,7 @@
 package PCA;
 
 import java.io.IOException;
+import java.util.ArrayList;
 
 import MatrixScripts.MyMatrix;
 import Tools.FileUtils;
@@ -19,6 +20,7 @@ public class CorrelationLarge extends Script<CorrelationLarge>{
 	private String writeFn = null;
 	private int threads = 20;
 	private boolean correlation = false;
+	private boolean overRows = true;
 	private transient boolean writeParralel=false;//if true writes the output in parallel proceeding to the next step with the resulting matrix
 
 	@Override
@@ -32,17 +34,14 @@ public class CorrelationLarge extends Script<CorrelationLarge>{
 		MyMatrix covMat=null;
 		try
 		{
-			MyMatrix expression = passMatrix;
-			if(passMatrix==null)
-				expression = new MyMatrix(expressionFN);
-		
 			writeFn = checkWriteFn();
 
 //			int rowsWithoutVariance=expression.removeNoVariance();
 //			if(rowsWithoutVariance>0)
 //				FileUtils.addBeforeExtention(writeFn, "RowsWithoutVarianceRemoved");
 				
-			covMat = correlation(writeFn, expression,correlation,threads);
+			covMat = correlation(writeFn, expressionFN,correlation,threads);
+			log("Writing file from which duplicates are removed:\t" + writeFn);
 			covMat.write(writeFn,false,writeParallel);
 			if(!writeParallel)
 				System.out.println("Done, file written to: "+ writeFn);
@@ -68,27 +67,51 @@ public class CorrelationLarge extends Script<CorrelationLarge>{
 		return writeFn;
 	}
 
-	public static MyMatrix correlation(String writeFile, MyMatrix expression, boolean correlation, int threads) throws IOException 
+	public MyMatrix correlation(String writeFile, String expressionFn, boolean correlation, int threads) throws IOException 
 	{
 		double[][] matrix = null;
+		log("Loading matrix");
+		DoubleMatrixDataset<String, String> doubleMatrixDataset = DoubleMatrixDataset.loadDoubleData(expressionFn);
 		
-		DoubleMatrixDataset doubleMatrixDataset = new  DoubleMatrixDataset();
+		DoubleMatrixDataset<String, String> orientedMatrix = doubleMatrixDataset;
+		if(!overRows)
+			orientedMatrix=doubleMatrixDataset.viewDice();
+		
 		
 		if(correlation)
 		{
-			ConcurrentCorrelation calculator = new ConcurrentCorrelation(threads);
-			matrix = calculator.pairwiseCorrelation(expression.values);			
+			log("Calculating correlation");
+			matrix = getCorrelation(orientedMatrix, threads);			
 		}
 		else
 		{
-			ConcurrentCovariation calculatorGenes = new ConcurrentCovariation(threads);
-			matrix = calculatorGenes.pairwiseCovariation(expression.values);
+			log("Calculating covariation");
+			matrix = getCovariance(orientedMatrix, threads);	
 		}
-		MyMatrix covMat = new MyMatrix(expression.rowNames, expression.rowNames, matrix);
-		MyMatrix averages = covMat.getAverageCols(true);
-		averages.write(writeFile.replace(".txt", "_absoluteAverages.txt"));
+		ArrayList<String> rowNames = orientedMatrix.getRowObjects();
+		MyMatrix covMat = new MyMatrix(rowNames.toArray(new String[rowNames.size()]), rowNames.toArray(new String[rowNames.size()]), matrix);
 		
 		return covMat;
+	}
+	
+	public static double[][] getCorrelation(DoubleMatrixDataset<String, String> expression, int threads) throws IOException 
+	{
+		double[][] matrix = null;
+		
+		//use proper library to get correlations
+		ConcurrentCorrelation calculator = new ConcurrentCorrelation(threads);
+		matrix = calculator.pairwiseCorrelation(expression.getMatrix().toArray());
+		return matrix;
+	}
+	
+	public static double[][] getCovariance(DoubleMatrixDataset<String, String> expression, int threads) throws IOException 
+	{
+		double[][] matrix = null;
+		
+		//use proper library to get correlations
+		ConcurrentCovariation calculator = new ConcurrentCovariation(threads);
+		matrix = calculator.pairwiseCovariation(expression.getMatrix().toArray());
+		return matrix;
 	}
 
 	public String getExpressionFN()
@@ -139,5 +162,15 @@ public class CorrelationLarge extends Script<CorrelationLarge>{
 	public void setWriteParralel(boolean writeParralel)
 	{
 		this.writeParralel = writeParralel;
+	}
+
+	public boolean isOverRows()
+	{
+		return overRows;
+	}
+
+	public void setOverRows(boolean overRows)
+	{
+		this.overRows = overRows;
 	}
 }

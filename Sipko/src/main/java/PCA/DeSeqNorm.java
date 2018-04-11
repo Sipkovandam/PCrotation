@@ -12,15 +12,14 @@ public class DeSeqNorm
 	//This is doing the DESeq normalization, which does not use replicate information.
 	
 	//static String expressionFN = "E:/Groningen/Data/Annique/LLD_and_BIOS_Kallisto_EstimatedTranscriptCounts.ProbesWithZeroVarianceRemoved_removedBadSamples.txt.gz";
-	static String expressionFN = "E:/Groningen/Scripts/Tests/Rlog.java/Samples.txt";
+	static String expressionFN = null;
 	
 	static String writeFolder = null;//if null becomes new File(expressionFN).getParent()+"/";
 	static String geoFN = null;//if null calculates geometric means based on this dataset
 	static boolean writeAll = true;	//write all intemediary files too
 	static double logAdd = 1;//previously used to multiply the results by this number, but seems pointless since it does not have any effect, so does not do anything anymore
 	static boolean log = false;
-	static boolean genes = true;
-	static boolean roundValues = true;//rounds expression values to whole counts
+	static boolean roundValues = false;//rounds expression values to whole counts
 	
 	public static void main(String[] args) throws IOException 
 	{
@@ -34,8 +33,7 @@ public class DeSeqNorm
 			new File(writeFolder).mkdirs();
 		
 		MyMatrix expression = new MyMatrix(expressionFN);
-		if(genes)
-			expression.putGenesOnRows();
+		
 		if(roundValues)
 			expression.roundValues();
 		double start = System.nanoTime();
@@ -207,5 +205,55 @@ public class DeSeqNorm
 					System.exit(1);
 			}
 		}
+	}
+
+	public static String getExpressionFN()
+	{
+		return expressionFN;
+	}
+
+	public static void setExpressionFN(String expressionFN)
+	{
+		DeSeqNorm.expressionFN = expressionFN;
+	}
+
+	public static String getWriteFolder()
+	{
+		return writeFolder;
+	}
+
+	public static void setWriteFolder(String writeFolder)
+	{
+		DeSeqNorm.writeFolder = writeFolder;
+	}
+
+	public static String getGeoFN()
+	{
+		return geoFN;
+	}
+
+	public static void setGeoFN(String geoFN)
+	{
+		DeSeqNorm.geoFN = geoFN;
+	}
+
+	public static double getLogAdd()
+	{
+		return logAdd;
+	}
+
+	public static void setLogAdd(double logAdd)
+	{
+		DeSeqNorm.logAdd = logAdd;
+	}
+
+	public static boolean isLog()
+	{
+		return log;
+	}
+
+	public static void setLog(boolean log)
+	{
+		DeSeqNorm.log = log;
 	}
 }

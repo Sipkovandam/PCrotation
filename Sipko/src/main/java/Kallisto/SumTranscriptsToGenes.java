@@ -1,4 +1,4 @@
-package Slurm;
+package Kallisto;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -59,8 +59,6 @@ public class SumTranscriptsToGenes extends Script<SumTranscriptsToGenes>
 					transcriptsPerGeneCounts.put(eles[1], 1);
 				}
 			}
-			
-
 			reader.close();
 		} catch (FileNotFoundException e) {e.printStackTrace();} catch (IOException e) {e.printStackTrace();}
 		

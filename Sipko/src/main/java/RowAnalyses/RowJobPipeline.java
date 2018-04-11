@@ -13,7 +13,7 @@ public class RowJobPipeline extends Script<RowJobPipeline>
 	String fileNameComment = "/root/directory/valueMatrix.txt; OPTIONAL; Input file for which the rowAverages should be calculated";
 	String fileName = null;
 	String writeFolder= null;
-	String stepListComment = "//e.g. averages,center,removeNoVarianceRows,log2; MANDATORY //comma separated list of all steps to take in this order";
+	String stepListComment = "//e.g. averages,stdevs,center,removeNoVarianceRows,log2,zscores,abovecutoffAbsolute2; MANDATORY //comma separated list of all steps to take in this order";
 	String stepList = "";
 	
 	int nThreads=1;
@@ -32,9 +32,9 @@ public class RowJobPipeline extends Script<RowJobPipeline>
 
 			RowJobExecutor rowJobExecutor = new RowJobExecutor(this.nThreads);
 			rowJobExecutor.setWriteFolder(FileUtils.makeFolderNameEndWithSlash(this.writeFolder));
-			for(String step: steps)
+			for(int s = 0; s < steps.length;s++)
 			{
-				
+				String step= steps[s];
 				String fileForNextStep = currentName;
 				log("step = " + step);
 				switch (step)
@@ -43,7 +43,16 @@ public class RowJobPipeline extends Script<RowJobPipeline>
 						RowAverageCalculator rowAverageCalculator = new RowAverageCalculator();
 						rowAverageCalculator.setWriteFn(FileUtils.removeExtention(newName)+"_rowAverages.txt");
 						rowJobExecutor.addJob(rowAverageCalculator);
-						continue;
+						if(s<steps.length-1)
+							continue;
+						break;
+					case "stdevs":
+						RowStdevCalculator rowAverageStdevcalculator = new RowStdevCalculator();
+						rowAverageStdevcalculator.setWriteFn(FileUtils.removeExtention(newName)+"_rowStdevs.txt");
+						rowJobExecutor.addJob(rowAverageStdevcalculator);
+						if(s<steps.length-1)
+							continue;
+						break;
 					case "center":
 						RowCenterer center = new RowCenterer();
 						newName=getNewName("_centered.txt.gz", currentName);
@@ -65,6 +74,27 @@ public class RowJobPipeline extends Script<RowJobPipeline>
 						rowJobExecutor.addJob(rowLog2);
 						fileForNextStep=writeFolder+newName;
 						break;
+					case "zscores":
+						RowZscoreCalculator rowZscoreCalculator = new RowZscoreCalculator();
+						newName=getNewName("_zscores.txt.gz", currentName);
+						rowZscoreCalculator.setWriteFn(newName);
+						rowJobExecutor.addJob(rowZscoreCalculator);
+						fileForNextStep=writeFolder+newName;
+						break;
+					default :
+						if(step.contains("abovecutoff"))
+						{
+							RowAboveCutoffCounter rowAboveCutoffCounter = new RowAboveCutoffCounter();
+							if(step.contains("absolute"))
+								rowAboveCutoffCounter.setAbsolute(true);
+							step=step.replace("absolute", "");
+							double cutoff = Double.parseDouble(step.replace("abovecutoff",""));
+							rowAboveCutoffCounter.setCutoff(cutoff);
+							newName=getNewName("_"+step.replace("=", "")+".txt.gz", currentName);
+							rowAboveCutoffCounter.setWriteFn(newName);
+							rowJobExecutor.addJob(rowAboveCutoffCounter);
+							break;
+						}
 				}
 				log("Executing " + rowJobExecutor.getRowJobs().size() + " jobs");
 				RowJobExecutor.useExecutorsOnFile(rowJobExecutor, currentName);
@@ -76,8 +106,6 @@ public class RowJobPipeline extends Script<RowJobPipeline>
 					rowJobExecutor.setWriteFolder(FileUtils.makeFolderNameEndWithSlash(this.writeFolder));
 				}
 			}
-			
-			
 			
 			System.out.println("Done! Files written to: " + writeFolder);
 		}catch(Exception e){e.printStackTrace();}

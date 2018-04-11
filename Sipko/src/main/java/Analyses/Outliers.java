@@ -2,6 +2,7 @@ package Analyses;
 
 import java.util.ArrayList;
 import java.util.Enumeration;
+import java.util.HashMap;
 import java.util.Hashtable;
 
 import MatrixScripts.MatrixStruct;
@@ -98,7 +99,7 @@ public class Outliers {
 	}
 
 	private static MatrixStruct getHighCOV(MatrixStruct samples, MatrixStruct stats) {
-		Hashtable<String, Integer> keepgenes = new Hashtable<String, Integer>();
+		HashMap<String, Integer> keepgenes = new HashMap<String, Integer>();
 		int outRow = 0;
 		for(int r = 0; r< stats.rows(); r++)
 		{

@@ -10,7 +10,6 @@ import java.util.Hashtable;
 
 import JuhaPCA.PCA;
 import MatrixScripts.MyMatrix;
-import Slurm.SumTranscriptsToGenes;
 import Tools.FileUtils;
 import Tools.JSONutil;
 import Tools.Script;
@@ -42,6 +41,9 @@ public class CombineKallisto extends Script<CombineKallisto>{
 				mappingPercentagesFn= FileUtils.makeFolderNameEndWithSlash(writeFolder)+"mappingPercentages.txt";
 			
 			String combindedFN = writeFolder + "counts.txt.gz";
+			if(kallistoColumn==3)
+				combindedFN = writeFolder + "tpm.txt.gz";
+			
 			if(genesFN == null)
 			{
 				genesFN=FileUtils.replaceEnd(combindedFN, "_GENES.txt.gz");

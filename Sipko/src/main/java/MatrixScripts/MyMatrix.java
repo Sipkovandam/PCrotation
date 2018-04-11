@@ -22,6 +22,7 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.Enumeration;
+import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.List;
 import java.util.Random;
@@ -151,6 +152,13 @@ public class MyMatrix
 					false,
 					false);
 	}
+	public MyMatrix(String fileName,
+					boolean hasRowColNames, boolean hasColNames)
+	{
+		readFile(	fileName,
+		         	hasRowColNames,
+		         	hasColNames);
+	}
 
 	public MyMatrix(String[] rowNames,
 					String[] colNames,
@@ -197,6 +205,19 @@ public class MyMatrix
 		readFile(	fileName,
 					true,
 					true, -1,-1,-1);
+	}
+
+	public MyMatrix(double[][] values)
+	{
+		this(new String [values.length],
+					new String[values[0].length],
+					values);
+		
+		this.firstField="";
+		numberNames(rowNames,
+				"Row");
+		numberNames(colNames,
+				"Col");
 	}
 
 	public void readFile(String fileName)
@@ -295,9 +316,9 @@ public class MyMatrix
 			if (hasColNames && hasRowNames)
 				values = new double[nRows - 1][nCols - minusCol];
 			else if (hasColNames && !hasRowNames)
-				values = new double[nRows][nCols - minusCol];
+				values = new double[nRows-1][nCols] ;
 			else if (!hasColNames && hasRowNames)
-				values = new double[nRows - 1][nCols];
+				values = new double[nRows][nCols - minusCol];
 			else
 				values = new double[nRows][nCols];
 			
@@ -320,7 +341,10 @@ public class MyMatrix
 				}
 				
 				if(!hasColNames)
+				{
 					colNames[outCol] = "Col" + Integer.toString(y);
+					firstField = null;
+				}
 				else
 					colNames[outCol] = eles[y];
 				
@@ -518,7 +542,6 @@ public class MyMatrix
 			this.values = vals;
 			matrix = new GetVal(values);
 			this.rowNames = rN;
-		
 	}
 
 	public void write(String fileName)
@@ -647,19 +670,7 @@ public class MyMatrix
 				writer = getWriter(	fileName,
 									append);
 
-			String format = "#";
-
-			int nDecimals = decimals;
-			if (nDecimals < 0)
-				nDecimals = 2;
-			for (int i = 0; i < nDecimals; i++)
-			{
-				if (i == 0)
-					format += ".";
-				format += "#";
-			}
-
-			DecimalFormat df = new DecimalFormat(format);
+			DecimalFormat df = getFormat(decimals);
 			//DecimalFormat df = new DecimalFormat();//This causes the format to be with a , on 1,000.00, super ennoying...
 			//df.setMaximumFractionDigits(2);
 			for (int x = 0; x < maxX; x++)
@@ -677,7 +688,8 @@ public class MyMatrix
 
 					for (int y = 0; y < maxY; y++)
 					{
-						printOrWrite(	"\t" + colNames[y],
+						printOrWrite("\t",writer);
+						printOrWrite(	colNames[y],
 										writer);
 					}
 
@@ -691,13 +703,15 @@ public class MyMatrix
 				{
 					if (decimals >= 0)
 					{
-						printOrWrite(	"\t" + df.format(values[x][y]),
+						printOrWrite("\t",writer);
+						printOrWrite(	df.format(values[x][y]),
 										writer);
 						//line += "\t"+df.format(values[x][y]);
 					}
 					else
 					{
-						printOrWrite(	"\t" + values[x][y],
+						printOrWrite("\t",writer);
+						printOrWrite(	Double.toString(values[x][y]),
 										writer);
 					}
 				}
@@ -718,6 +732,24 @@ public class MyMatrix
 			System.out.println("Oh noes! An error in your print function.");
 			e.printStackTrace();
 		}
+	}
+
+	private DecimalFormat getFormat(int decimals)
+	{
+		String format = "#";
+
+		int nDecimals = decimals;
+		if (nDecimals < 0)
+			nDecimals = 2;
+		for (int i = 0; i < nDecimals; i++)
+		{
+			if (i == 0)
+				format += ".";
+			format += "#";
+		}
+
+		DecimalFormat df = new DecimalFormat(format);
+		return df;
 	}
 
 	private BufferedWriter getWriter(String fileName) throws IOException
@@ -857,10 +889,8 @@ public class MyMatrix
 	private boolean hasVariance(int row)
 	{
 		double firstValue = this.values[row][0];
-		System.out.println("firstval=\t" + firstValue);
 		for (int y = 0; y < this.colNames.length; y++)
 		{
-			System.out.println("val=\t" + this.values[row][y]+"\t" + firstValue);
 			if (firstValue != this.values[row][y])
 				return true;
 		}
@@ -1266,7 +1296,8 @@ public class MyMatrix
 									writer);
 					for (int y = 0; y < maxX; y++)
 					{
-						printOrWrite(	"\t" + rowNames[y],
+						printOrWrite("\t",writer);
+						printOrWrite(	rowNames[y],
 										writer);
 					}
 
@@ -1280,13 +1311,15 @@ public class MyMatrix
 				{
 					if (decimals >= 0)
 					{
-						printOrWrite(	"\t" + df.format(values[y][x]),
+						printOrWrite("\t",writer);
+						printOrWrite(	df.format(values[y][x]),
 										writer);
 						//line += "\t"+df.format(values[x][y]);
 					}
 					else
 					{
-						printOrWrite(	"\t" + values[y][x],
+						printOrWrite("\t",writer);
+						printOrWrite(	Double.toString(values[y][x]),
 										writer);
 					}
 				}
@@ -1827,7 +1860,7 @@ public class MyMatrix
 	public void keepRows1Matrix(MyMatrix sample)
 	{
 		//keeps only the IDs in Sample
-		Hashtable<String, Integer> toKeep = new Hashtable<String, Integer>();
+		HashMap<String, Integer> toKeep = new HashMap<String, Integer>();
 		int newPos = 0;
 		for (int r = 0; r < this.rows(); r++)
 		{
@@ -1846,7 +1879,7 @@ public class MyMatrix
 	{
 		//the order that is preserved is the one from the matrix that calls the function.
 		//Does not work if either of the matrixes has multiple rows with the same IDs
-		Hashtable<String, Integer> toKeep = new Hashtable<String, Integer>();
+		HashMap<String, Integer> toKeep = new HashMap<String, Integer>();
 		int newPos = 0;
 		for (int r = 0; r < this.rows(); r++)
 		{
@@ -1862,16 +1895,19 @@ public class MyMatrix
 		sample.keepIDs(toKeep);
 	}
 
-	public void keepIDs(Hashtable<String, Integer> toKeep)
+	//also puts the output matrix rows in the same order
+	public void keepIDs(HashMap<String, Integer> toKeep)
 	{
 		MyMatrix temp = new MyMatrix(	toKeep.size(),
 										this.cols());
 		for (int r = 0; r < this.rows(); r++)
 		{
+			log("rowHeaders" + this.getRowHeaders()[r] + "\t" + toKeep.get(this.getRowHeaders()[r]));
 			if (toKeep.get(this.getRowHeaders()[r]) == null)
 				continue;
+			
 			int row = toKeep.get(this.getRowHeaders()[r]);
-			//			System.out.println(this.rowHeaders[r] + " tokeepsize = " + toKeep.size());
+			
 			temp.setRow(row,
 						this.getRowHeaders()[r],
 						this.getRowValues(r));
@@ -1921,7 +1957,35 @@ public class MyMatrix
 		}
 		return stDev;
 	}
+	public double[] getColValues(String colName)
+	{
+		if(!this.getColHash().containsKey(colName))
+			return null;
+		
+		int c = this.getColHash().get(colName);
+		return this.getColValues(c);
+	}
 
+	public Double[] getColValues(String colName, boolean nonPrimitives)
+	{
+		if(!this.getColHash().containsKey(colName))
+			return null;
+		
+		int c = this.getColHash().get(colName);
+		return this.getColValues(c, true);
+	}
+	public Double[] getColValues(int c, boolean nonPrimitives)
+	{
+		Double[] col = new Double[this.rows()];
+
+		for (int r = 0; r < this.rows(); r++)
+		{
+			col[r] = this.matrix.get(	r,
+										c);
+		}
+		return col;
+	}
+	
 	public double[] getColValues(int c)
 	{
 		double[] col = new double[this.rows()];
@@ -2506,7 +2570,7 @@ public class MyMatrix
 
 	public void removeRows(MatrixStruct removeGenes)
 	{
-		Hashtable<String, Integer> toKeep = new Hashtable<String, Integer>();
+		HashMap<String, Integer> toKeep = new HashMap<String, Integer>();
 		int newPos = 0;
 		for (int r = 0; r < this.rows(); r++)
 		{
@@ -2814,5 +2878,15 @@ public class MyMatrix
 		this.values=newMatrix.values;
 		
 		return newMatrix;
+	}
+
+	public String getRowInfoInOneLine(int row)
+	{
+		String line = this.rowNames[row];
+		for(int c = 0; c< this.cols(); c++)
+		{
+			line+="\t"+this.colNames[c]+"="+this.values[row][c];
+		}
+		return line;
 	}
 }

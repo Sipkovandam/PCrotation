@@ -29,6 +29,9 @@ public class ZscoreCalculator extends Script<ZscoreCalculator>
 	{
 		try
 		{
+			MyMatrix test=new MyMatrix();
+			
+			
 			System.out.println("Done! File written to: " + writeFn);
 			if(writeFn==null)
 			{

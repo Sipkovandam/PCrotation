@@ -5,10 +5,10 @@ public class SlurmVariables extends ClusterVariables
 	private final String fileHeader = "#!/bin/bash";
 	private final String jobName = "#SBATCH --job-name=";
 	private final String logsFolder = "#SBATCH --output=";
-	private final String errorsFolder = "#SBATCH --errorsFolder=";
-	private final String walltime = "#SBATCH --walltime=";
+	private final String errorsFolder = "#SBATCH --error=";
+	private final String walltime = "#SBATCH --time=";
 	private final String threads = "#SBATCH --threads=";
-	private final String maxMemory = "#SBATCH --maxMemory=";
+	private final String maxMemory = "#SBATCH --mem=";
 	
 	private final String extra ="#SBATCH --nodes=1\n"+
 						"#SBATCH --export=NONE\n" + 

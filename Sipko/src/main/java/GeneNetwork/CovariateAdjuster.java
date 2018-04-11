@@ -22,8 +22,38 @@ public class CovariateAdjuster extends Script<CovariateAdjuster>
 			if(writeFolder==null)
 				writeFolder=new File(expressionMatrix).getParent();
 			FileUtils.makeDir(writeFolder);
-			new NormalizationConsoleGUI(new String[]{"--adjustcovariates", "--cov", covariateMatrix, "--covpca", "--in", expressionMatrix, "--out", writeFolder, "--sampleInclude", });
+			new NormalizationConsoleGUI(new String[]{"--adjustcovariates", "--cov", covariateMatrix, "--covpca", "--in", expressionMatrix, "--out", writeFolder, "--sampleInclude", sampleIncludeList});
 		}catch(Exception e){e.printStackTrace();}
+	}
+
+	public String getExpressionMatrix()
+	{
+		return expressionMatrix;
+	}
+
+	public void setExpressionMatrix(String expressionMatrix)
+	{
+		this.expressionMatrix = expressionMatrix;
+	}
+
+	public String getCovariateMatrix()
+	{
+		return covariateMatrix;
+	}
+
+	public void setCovariateMatrix(String covariateMatrix)
+	{
+		this.covariateMatrix = covariateMatrix;
+	}
+
+	public String getWriteFolder()
+	{
+		return writeFolder;
+	}
+
+	public void setWriteFolder(String writeFolder)
+	{
+		this.writeFolder = writeFolder;
 	}
 
 }

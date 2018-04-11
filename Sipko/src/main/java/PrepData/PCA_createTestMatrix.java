@@ -1,6 +1,7 @@
 package PrepData;
 
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.List;
 
@@ -85,7 +86,7 @@ public class PCA_createTestMatrix
 		MyMatrix expressionStruct = new MyMatrix(publicHealthyFN);//reload matrix
 		expressionStruct.putGenesOnRows();//put genes on rows if they are not already
 		
-		Hashtable<String,Integer> toKeep = new Hashtable<String,Integer>();
+		HashMap<String,Integer> toKeep = new HashMap<String,Integer>();
 		for(int g = 0; g < nGenes; g++)
 		{
 			toKeep.put(geneAvg.getRowHeaders()[g], g);

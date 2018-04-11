@@ -80,7 +80,7 @@ public class SplicingAnalysisPipeline2 extends Script<SplicingAnalysisPipeline>
 																							false,
 																							1,
 																							1,
-																							0);
+																							0,null);
 
 			//get all the different index lists over which the statistics should be calculated
 			StringFilters stringFiltersBios = new StringFilters();
@@ -325,7 +325,7 @@ public class SplicingAnalysisPipeline2 extends Script<SplicingAnalysisPipeline>
 																						false,
 																						2,
 																						1,
-																						9);
+																						9,null);
 
 				String vcfFn = vcfFolder + familyName + ".txt";
 				HashMap<String, ArrayList<String>> ensgToPositions = FileUtils.readGavinVcfHash(vcfFn,
