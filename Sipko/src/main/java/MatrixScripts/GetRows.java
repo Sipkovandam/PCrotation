@@ -19,6 +19,7 @@ public class GetRows extends Script<GetRows>
 	//String fileName2 = "ENSG00000268903,ENSG00000269981,ENSG00000225630";
 	String writeName = null;
 	String remove = null;
+	boolean header = true;
 	
 	@Override
 	public void run()
@@ -31,8 +32,12 @@ public class GetRows extends Script<GetRows>
 			
 			BufferedReader reader = FileUtils.createReader(this.fileName);
 			BufferedWriter writer = FileUtils.createWriter(this.writeName);
-			String line = reader.readLine();
-			writer.write(line+"\n");//write the first line by default (headers)
+			String line = null;
+			if(header)
+			{
+				line=reader.readLine();
+				writer.write(line+"\n");//write the first line by default (headers)
+			}
 			Hashtable<String, Integer> toGet = rowsToInclude.namesToHash(rowsToInclude.rowNames);
 			String[] results = new String[toGet.size()];
 			
@@ -52,7 +57,6 @@ public class GetRows extends Script<GetRows>
 			{
 				if(results[r] == null)
 					continue;
-				//System.out.println("r= "+(results[r]));
 				writer.write(results[r]+"\n");
 			}
 			
@@ -73,7 +77,7 @@ public class GetRows extends Script<GetRows>
 	{
 		MyMatrix file2=null;
 		if(!this.rowsToGetFn.contains(",") && this.rowsToGetFn.contains(".txt"))
-			file2 = new MyMatrix(this.rowsToGetFn);
+			file2 = new MyMatrix(this.rowsToGetFn,true,false);
 		else{
 			String[] rowNames = this.rowsToGetFn.split(",");
 			file2 = new MyMatrix(rowNames.length, 1);

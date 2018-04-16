@@ -25,7 +25,9 @@ public class RunTest
 		
 //		args = new String[]{"E:/Groningen/Test/MatrixScripts.Transpose/config_MatrixScripts.Transpose_2017-06-05.json"};
 //		args = new String[]{"E:/Groningen/Test/Kallisto._Kallisto_Pipeline/config_Kallisto._Kallisto_Pipeline_2017-10-19.json"};
-		args = new String[]{"E:/Groningen/Test/GeneNetwork.WebsiteMatrixCreator/config_GeneNetwork.WebsiteMatrixCreator_2018-04-06.json"};
+		//args = new String[]{"E:/Groningen/Test/GeneNetwork.WebsiteMatrixCreator/config_GeneNetwork.WebsiteMatrixCreator_GO_C.json"};
+		args = new String[]{"E:/Groningen/Data/Annotation/GRCh38/PathwaysPatrick/config_MatrixScripts.GetRows_GO_F.json"};
+		
 		Run.run(args);
 	}
 }

@@ -187,6 +187,7 @@ public class MyMatrix
 			for (int c = 0; c < denseMatrix.numColumns(); c++)
 				this.values[r][c] = denseMatrix.get(r,
 													c);
+		this.matrix=new GetVal(values);
 		return values;
 	}
 
@@ -197,6 +198,7 @@ public class MyMatrix
 		this.setRowHeaders(rowHeaders);
 		this.setColHeaders(colHeaders);
 		this.values = DenseMatrixToValues(matrix);
+		this.matrix=new GetVal(values);
 	}
 
 	public MyMatrix(String fileName,
@@ -1208,7 +1210,7 @@ public class MyMatrix
 
 		this.values = temp.values;
 		this.rowNames = temp.rowNames;
-
+		this.matrix=new GetVal(values);
 		//resulting file (temp), has PCs on RowNames, samples as colNames
 	}
 
@@ -1898,22 +1900,35 @@ public class MyMatrix
 	//also puts the output matrix rows in the same order
 	public void keepIDs(HashMap<String, Integer> toKeep)
 	{
-		MyMatrix temp = new MyMatrix(	toKeep.size(),
+		int n = 0;
+		for(int r = 0; r < this.rows(); r++)
+			if (toKeep.get(this.getRowHeaders()[r]) != null)
+				n++;
+			
+		if(n < toKeep.size())
+			log("Warning list of IDs to keep is:\t" + toKeep.size() + " but only " + n + " IDs are present in the rownames of this matrix");
+		
+		// /2, because I put both the keys and values as keys in the hash.
+		MyMatrix temp = new MyMatrix(	toKeep.size()/2,
 										this.cols());
+		
+		log("temp rowsnames=\t" + temp.rowNames.length+"\tvalRows" + temp.values.length + "\tcolsnames\t"+ temp.colNames.length + "\tvalCols" + temp.values[0].length);
+		
 		for (int r = 0; r < this.rows(); r++)
 		{
-			log("rowHeaders" + this.getRowHeaders()[r] + "\t" + toKeep.get(this.getRowHeaders()[r]));
 			if (toKeep.get(this.getRowHeaders()[r]) == null)
 				continue;
 			
 			int row = toKeep.get(this.getRowHeaders()[r]);
-			
 			temp.setRow(row,
 						this.getRowHeaders()[r],
 						this.getRowValues(r));
 		}
+		log("temp rowsnames2=\t" + temp.rowNames.length+"\tvalRows" + temp.values.length + "\tcolsnames\t"+ temp.colNames.length + "\tvalCols" + temp.values[0].length);
 		this.setRowHeaders(temp.getRowHeaders());
-		this.matrix = temp.matrix;
+		this.values = temp.values;
+		this.matrix=new GetVal(values);
+		log("temp rowsnames3=\t" + this.rowNames.length+"\tvalRows" + this.values.length + "\tcolsnames\t"+ this.colNames.length + "\tvalCols" + this.values[0].length);
 	}
 
 	public MyMatrix stDevRows()
@@ -2876,6 +2891,7 @@ public class MyMatrix
 		this.rowNames=newMatrix.rowNames;
 		this.colNames=newMatrix.colNames;
 		this.values=newMatrix.values;
+		this.matrix=new GetVal(values);
 		
 		return newMatrix;
 	}

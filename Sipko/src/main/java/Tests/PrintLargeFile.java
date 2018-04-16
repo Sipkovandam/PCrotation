@@ -10,9 +10,9 @@ public class PrintLargeFile
 	{
 		try
 		{
-			String fn = "E:/Groningen/Data/Annotation/GRCh38/GeneNetwork/reactome_predictions_auc_gnInputFormat.txt";
-			int rows=5;
-			int cols=2;
+			String fn = "E:/Groningen/Data/Annotation/GRCh38/GeneNetwork/hpo_predictions_bonSigOnly.txt.gz";
+			int rows=1;
+			int cols=5;
 			
 			BufferedReader reader= FileUtils.createReader(fn);
 			
@@ -22,7 +22,10 @@ public class PrintLargeFile
 			{
 				String[] eles = line.split("\t");
 				String printBit = eles[0];
-				for(int c=0; c <  cols;c++)
+				if(cols<1)
+					cols=eles.length;
+				
+				for(int c=1; c <  cols;c++)
 				{
 					printBit+="\t" + eles[c];
 				}

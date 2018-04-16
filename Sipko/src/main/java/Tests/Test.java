@@ -30,22 +30,27 @@ public class Test extends Script<Test> {
 	
 	public void run()
 	{
-
-		HashMap<String,String> test = new HashMap<String,String>();
 		
-		test.put("one", "1");
-		test.put("two", "2");
-		test.put("three", "3");
-		
-		
-		HashMap<String,String> test2 = (HashMap<String, String>) test.clone();
-		
-		test2.put("one", "100");
-		test2.put("fff", "333");
-		log(test.get("one"));
-		log(test2.get("one"));
-		log(test.size());
-		log(test2.size());
+		String bla = "appelsap                  \t";
+		log(bla+"...");
+		log(bla.replaceAll(" *\t", "\t")+"...");
+		log(bla.replaceAll(" *\t", "\t")+"...");
+//
+//		HashMap<String,String> test = new HashMap<String,String>();
+//		
+//		test.put("one", "1");
+//		test.put("two", "2");
+//		test.put("three", "3");
+//		
+//		
+//		HashMap<String,String> test2 = (HashMap<String, String>) test.clone();
+//		
+//		test2.put("one", "100");
+//		test2.put("fff", "333");
+//		log(test.get("one"));
+//		log(test2.get("one"));
+//		log(test.size());
+//		log(test2.size());
 //		String equal = "test";
 //		ClusterVariables slurmVariables = new SharkVariables();
 //		System.out.println("slurmVariables=" + slurmVariables.getMaxMemory());

@@ -70,7 +70,7 @@ public class GetCols extends Script<GetCols>{
 	{
 		MyMatrix namesToKeepOnRows = null;
 		if(!fileName2.contains(",") && fileName2.contains(".txt"))
-			namesToKeepOnRows = new MyMatrix(fileName2);
+			namesToKeepOnRows = new MyMatrix(this.fileName2,true,false);
 		else{
 			String[] rowNames = fileName2.split(",");
 			namesToKeepOnRows = new MyMatrix(rowNames.length, 1);

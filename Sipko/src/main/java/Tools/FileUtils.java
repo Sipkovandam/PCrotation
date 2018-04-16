@@ -257,6 +257,8 @@ public class FileUtils
 									1, null);
 	}
 
+	//mode noBullshit = remove quotes and spaces at the beginning/end of a line or at the beginning/end of a tab
+	//mode noQuotes = remove quotes in the line (everywhere)
 	public static HashMap<String, String> readStringStringHash(	String ensgToGeneSymbolFN,
 																boolean wholeLineValue,
 																int skipHeaderRows,
@@ -275,14 +277,16 @@ public class FileUtils
 		{
 			BufferedReader reader = createReader(ensgToGeneSymbolFN);
 			reader.lines().skip(skipHeaderRows).forEach(line ->
-			{
+			{		
 				if(mode != null && mode.equals("noQuotes"))
-				{
 					line=line.replace("\"", "");
-				}
+				if(mode != null && mode.equals("noBullshit"))
+					//remove quotes and spaces at the beginning/end of a line or at the beginning/end of a tab
+					line=line.replace("\"", "").replaceAll(" *$", "").replaceAll("^ *", "").replaceAll(" *\t", "\t").replaceAll("\t ", "\t");
 				
 				String[] cells = line.split("\t",
 											2);
+				
 				if (cells.length > 1 && wholeLineValue)
 					conversionHash.put(	cells[keyCol],
 										cells[1]);
@@ -990,5 +994,18 @@ public class FileUtils
 			copy[e]=elements[e];
 		}
 		return copy;
+	}
+	//Ugly code since there are much better solutions...
+	public static HashMap<String, String> invertHash_KeysToValues_ValuesToKeys(HashMap<String, String> termId_To_TermName)
+	{
+		HashMap<String,String> inverse = new HashMap<String, String>();
+		for(String key : termId_To_TermName.keySet())
+		{
+			String value = termId_To_TermName.get(key);
+			if(inverse.containsKey(value))
+				System.out.println("Warning in inverting hash: multiple keys with same value present, key=\t" + key + " \t" + value);
+			inverse.put(value, key);
+		}
+		return inverse;
 	}
 }
