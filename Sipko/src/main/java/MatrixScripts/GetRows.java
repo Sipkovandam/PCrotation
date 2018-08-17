@@ -20,6 +20,7 @@ public class GetRows extends Script<GetRows>
 	String writeName = null;
 	String remove = null;
 	boolean header = true;
+	boolean originalOrder = false;
 	
 	@Override
 	public void run()
@@ -41,6 +42,7 @@ public class GetRows extends Script<GetRows>
 			Hashtable<String, Integer> toGet = rowsToInclude.namesToHash(rowsToInclude.rowNames);
 			String[] results = new String[toGet.size()];
 			
+			int l = 0;
 			while((line = reader.readLine()) != null)
 			{	
 				if(remove != null)
@@ -48,8 +50,13 @@ public class GetRows extends Script<GetRows>
 				String rowName = line.split("\t")[0];
 				if(toGet.containsKey(rowName))
 				{
-					results[toGet.get(rowName)] = line;
+					if(originalOrder)
+						results[l] = line;
+					else
+						results[toGet.get(rowName)] = line;
 					//writer.write(line+"\n");
+					
+					l++;
 				}
 			}
 			
@@ -125,5 +132,15 @@ public class GetRows extends Script<GetRows>
 	public void setRemove(String remove)
 	{
 		this.remove = remove;
+	}
+
+	public boolean isOriginalOrder()
+	{
+		return originalOrder;
+	}
+
+	public void setOriginalOrder(boolean originalOrder)
+	{
+		this.originalOrder = originalOrder;
 	}
 }

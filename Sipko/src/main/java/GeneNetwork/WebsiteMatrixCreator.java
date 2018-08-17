@@ -29,7 +29,7 @@ public class WebsiteMatrixCreator extends Script<WebsiteMatrixCreator>
 
 	String writeFolder = null;
 	
-	boolean toUpperCase = true;
+//	boolean toUpperCase = true;
 
 	transient MyMatrix sortOrder = null;
 	transient HashMap<String, Integer> term_To_RowNumber = null;
@@ -81,20 +81,23 @@ public class WebsiteMatrixCreator extends Script<WebsiteMatrixCreator>
 											"");
 			writeLine.setLength(0);
 			String[] eles = inputLine.split("\t");
-			String termId = eles[0].toUpperCase();
-			String termName = eles[2].toUpperCase();
+			String termId = eles[0];
+			String termName = eles[2];
+			writeLine.append(termId);
+			writeLine.append("\t");
 			writeLine.append(termName);
+			//hpo term file has an extra column
 			writeLine.append("\t-\t");
 			writeLine.append(eles[1]);
 			writeLine.append("\t-");
 
-			if (term_To_RowNumber.get(termName) != null)
+			if (term_To_RowNumber.get(termId) != null)
 			{
-				int rowNumber = term_To_RowNumber.get(termName);
+				int rowNumber = term_To_RowNumber.get(termId);
 				writeBuffer[rowNumber] = writeLine.toString();
 			}
 			else
-				log("term=\t" + termName + "\tsizeofHash=\t" + term_To_RowNumber.size() + "\tfirstKey=\t" + term_To_RowNumber.keySet().iterator().next());
+				log("term=\t" + termId + "\tsizeofHash=\t" + term_To_RowNumber.size() + "\tfirstKey=\t" + term_To_RowNumber.keySet().iterator().next());
 
 		}
 
@@ -109,15 +112,16 @@ public class WebsiteMatrixCreator extends Script<WebsiteMatrixCreator>
 
 		String[] termNames = termId_To_TermName.values().toArray(new String[termId_To_TermName.values().size()]);
 		String[] termCodes = termId_To_TermName.keySet().toArray(new String[termId_To_TermName.values().size()]);
-		HashMap<String, String> termName_To_termId=FileUtils.invertHash_KeysToValues_ValuesToKeys(termId_To_TermName);
-		Arrays.sort(termNames);
+//		HashMap<String, String> termName_To_termId=FileUtils.invertHash_KeysToValues_ValuesToKeys(termId_To_TermName);
+//		Arrays.sort(termNames);
+		Arrays.sort(termCodes);
 		HashMap<String, Integer> termName_To_RowNumber = new HashMap<String, Integer>();
-		for (int t = 0; t < termNames.length; t++)
+		for (int t = 0; t < termCodes.length; t++)
 		{
-			termName_To_RowNumber.put(	termNames[t],
+			termName_To_RowNumber.put(	termCodes[t],
 										t);
-			termName_To_RowNumber.put(	termName_To_termId.get(termNames[t]),
-										t);
+//			termName_To_RowNumber.put(	termId_To_TermName.get(termCodes[t]),
+//										t);
 		}
 		return termName_To_RowNumber;
 	}
@@ -136,10 +140,9 @@ public class WebsiteMatrixCreator extends Script<WebsiteMatrixCreator>
 			String termName = termId_To_TermName.get(zscoreMatrix.colNames[c]);
 			zscoreMatrix.colNames[c] = termName;
 		}
-		String writeFn = FileUtils.removeExtention(zScoreFn) + "_termNames.txt.gz";
+		String writeFn = FileUtils.makeFolderNameEndWithSlash(writeFolder)+new File(FileUtils.removeExtention(zScoreFn) + "_termNames_tranposed.txt").getName();
 		zscoreMatrix.transpose();
 		zscoreMatrix.keepIDs(this.term_To_RowNumber);
-		zscoreMatrix.transpose();
 		zscoreMatrix.write(writeFn);
 		log("Zscore matrix file has:\t"+zscoreMatrix.cols()+" coluns, File written to: \t" + writeFn);
 	}
@@ -170,8 +173,8 @@ public class WebsiteMatrixCreator extends Script<WebsiteMatrixCreator>
 
 			if (termName == null)
 				continue;
-			if (toUpperCase)
-				termName = termName.toUpperCase();
+//			if (toUpperCase)
+//				termName = termName.toUpperCase();
 			String line = termName + "\t" + aucMatrix.values[r][1] + "\t" + aucMatrix.values[r][2] + "\t" + aucMatrix.values[r][0];
 			int rowNumber = term_To_RowNumber.get(termName);
 			writeBuffer[rowNumber] = line.toString();
@@ -216,8 +219,8 @@ public class WebsiteMatrixCreator extends Script<WebsiteMatrixCreator>
 						continue;
 
 					line.append("\t");
-					if (toUpperCase)
-						termName = termName.toUpperCase();
+//					if (toUpperCase)
+//						termName = termName.toUpperCase();
 					line.append(termName);
 				}
 			}
@@ -276,12 +279,12 @@ public class WebsiteMatrixCreator extends Script<WebsiteMatrixCreator>
 		for (String termId : termId_To_TermName.keySet())
 		{
 			String termName = termId_To_TermName.get(termId);
-			if(checkDoubleValues.contains(termName))//this is necessary because differen matrixes use different ID types and some are ambiguous meaning they lack a row/column compared to the other files
-				continue;
-
-			checkDoubleValues.add(termName);
+//			if(checkDoubleValues.contains(termName))//this is necessary because differen matrixes use different ID types and some are ambiguous meaning they lack a row/column compared to the other files
+//				continue;
+//			checkDoubleValues.add(termName);
+			
 			termId_To_TermName_upperCase.put(	termId,
-									termName.toUpperCase());
+			                                 	termId);
 		}
 
 		return termId_To_TermName_upperCase;

@@ -116,6 +116,8 @@ public class PcaPipelineLite extends Script<PcaPipelineLite>
 	private double addLogVal = 0.5; // Value to add before taking the logaritm
 	String deSeqNormComment = "//true for DESeq normalization of the data before the PCA";
 	private boolean deSeqNorm = true; // If true uses DEseq normalization
+	String quantileNormComment = "//true for quantile normalization of the data before the PCA";
+	public boolean quantileNorm = false;
 
 	// if these variables are set the PC correction will be run after the eigenvectors are created (or if eigenvectors already exist only this part is run)
 	String sampleFileComment = "Optional; e.g. /root/directory/filesToCorrect.txt//Filename of the file containing the samples for which the expression should be corrected";
@@ -453,7 +455,7 @@ public class PcaPipelineLite extends Script<PcaPipelineLite>
 		FileUtils.makeDir(writeFolderCorrected);
 		JuhaPCA.PCA.log(" 3. Removing rows that do not exist in the averages vector from public data");
 		geneAverages.keepRows(singleSample);
-
+		
 		if (deSeqNorm)
 		{
 			JuhaPCA.PCA.log(" 6. rLog transformation");
@@ -544,7 +546,8 @@ public class PcaPipelineLite extends Script<PcaPipelineLite>
 		expressionStruct.removeNoVariance();
 
 		JuhaPCA.PCA.log(" 5.1 Writing file from which genes without variance are removed");
-		expressionStruct.write(this.writeFolder + "noVarianceRowsRemoved.txt.gz");
+		String noVarianceRowsRemovedWriteFn= "noVarianceRowsRemoved.txt.gz";
+		expressionStruct.write(this.writeFolder + noVarianceRowsRemovedWriteFn);
 		
 		// keep only a subset of genes
 		selectGenes(expressionStruct,
@@ -554,6 +557,14 @@ public class PcaPipelineLite extends Script<PcaPipelineLite>
 		//expressionStruct.removeNoVariance(this.writeFolder + "noVarRemoved.txt.gz");
 
 		System.out.println("3=" + expressionStruct.rows());
+		if (this.quantileNorm)// quantile Normalize if true
+		{
+			expressionStruct=null;
+			new QuantileNormalize().quantileNormalize(noVarianceRowsRemovedWriteFn,
+												this.writeFolder);
+			expressionStruct= new MyMatrix(this.writeFolder+noVarianceRowsRemovedWriteFn+".QuantileNormalized.txt.gz");
+		}
+		
 		if (this.deSeqNorm)// Does not log the values, just does the DEseq based correction
 		{
 			// String writeGeoFN = this.writeFolder+ "geoMean.txt";

@@ -1008,4 +1008,17 @@ public class FileUtils
 		}
 		return inverse;
 	}
+	public static HashMap<String, HashSet<String>> addStringToHashSetInHash(String omimNumber,
+												String gene, HashMap<String, HashSet<String>> omim_To_MissingGenes)
+	{
+		HashSet<String> set = omim_To_MissingGenes.get(omimNumber);
+		if(set==null)
+			set = new HashSet<String>();
+		set.add(gene);
+		
+		omim_To_MissingGenes.put(omimNumber, set);
+		
+		return omim_To_MissingGenes;
+		
+	}
 }

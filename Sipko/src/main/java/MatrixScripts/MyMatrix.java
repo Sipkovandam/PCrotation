@@ -415,7 +415,7 @@ public class MyMatrix
 					{
 						System.out.println("FileName =  " + fileName);
 						System.out.println("x =  " + x + " y = " + y + " cols[y] = " + colNames[y]);
-						System.out.println("rows.length =  " + values.length + "cols.length  = " + values[x].length);
+						System.out.println("rows.length =  " + values.length + " cols.length  = " + values[x].length);
 						System.out.println("eles.length =  " + eles.length);
 						System.out.println("exception =  " + e1);
 						values[x][y] = 0;
@@ -1470,10 +1470,21 @@ public class MyMatrix
 		return this.rowNames;
 	}
 
+	public void resetRowHash()
+	{
+		this.rowHash=null;
+		getRowHash();
+	}
+	
 	public Hashtable<String, Integer> getRowHash()
 	{
+		return getRowHash(true);
+	}
+	
+	public Hashtable<String, Integer> getRowHash(boolean reportWarnings)
+	{
 		if (this.rowHash == null || this.rowHash.size() != this.getRowHeaders().length)
-			this.rowHash = makeHash(this.rowNames);
+			this.rowHash = makeHash(this.rowNames, reportWarnings);
 		return this.rowHash;
 	}
 
@@ -1486,11 +1497,23 @@ public class MyMatrix
 
 	static public Hashtable<String, Integer> makeHash(String[] names)
 	{
+		return makeHash(names, true);
+	}
+	
+	static public Hashtable<String, Integer> makeHash(String[] names, boolean reportWarnings)
+	{
 		Hashtable<String, Integer> hash = new Hashtable<String, Integer>();
 		for (int n = 0; n < names.length; n++)
 		{
 			if (hash.containsKey(names[n]))
-				System.out.println("Warning duplicate rowNames are found; Rowhash may refer to incorrect indexes\t" + n);
+			{
+				if(reportWarnings)
+				{
+					System.out.println(reportWarnings);
+					System.out.println("Warning duplicate rowNames are found; Rowhash may refer to incorrect indexes\t" + n);
+				}
+				continue;
+			}
 			if (hash.containsKey(""))
 				System.out.println("Warning EMPTY rowNames are found!\t");
 			hash.put(	names[n],
@@ -1909,7 +1932,7 @@ public class MyMatrix
 			log("Warning list of IDs to keep is:\t" + toKeep.size() + " but only " + n + " IDs are present in the rownames of this matrix");
 		
 		// /2, because I put both the keys and values as keys in the hash.
-		MyMatrix temp = new MyMatrix(	toKeep.size()/2,
+		MyMatrix temp = new MyMatrix(	toKeep.size(),
 										this.cols());
 		
 		log("temp rowsnames=\t" + temp.rowNames.length+"\tvalRows" + temp.values.length + "\tcolsnames\t"+ temp.colNames.length + "\tvalCols" + temp.values[0].length);

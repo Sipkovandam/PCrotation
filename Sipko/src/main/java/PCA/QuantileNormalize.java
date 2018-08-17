@@ -24,6 +24,14 @@ public class QuantileNormalize extends Script<QuantileNormalize>
 		}catch(Exception e){e.printStackTrace();}
 	}
 
+	public void quantileNormalize(	String expressionStruct,
+											String writeFolder)
+	{
+		this.expressionFn=expressionStruct;
+		this.writeFolder=writeFolder;
+		this.run();
+	}
+
 //	public void quantileNormalize(MyMatrix expressionStruct) throws IOException {		
 //		
 //	}
